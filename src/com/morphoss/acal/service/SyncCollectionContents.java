@@ -220,6 +220,12 @@ public class SyncCollectionContents extends ServiceJob {
 		this.requestor = null;
 		this.cr = null;
 		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "SyncCollectionContents end");
+		
+		if ( collectionData.getAsInteger(DavCollections.ACTIVE_ADDRESSBOOK) != 0 ) {
+			ServiceJob sj = new AddressbookToContacts(collectionId);
+			sj.TIME_TO_EXECUTE = 5L;
+			context.addWorkerJob(sj);
+		}
 	}
 
 	/**
@@ -401,12 +407,13 @@ public class SyncCollectionContents extends ServiceJob {
 							|| aNode.get(0).getText().equalsIgnoreCase("HTTP/1.1 201 Created")
 							|| aNode.get(0).getText().equalsIgnoreCase("HTTP/1.1 200 OK") ) {
 	
-					if ( Constants.LOG_DEBUG )
-						Log.println(Constants.LOGD,TAG,"Updating node "+responseHref+" with "+action.toString() );
+					if ( Constants.LOG_DEBUG && Constants.debugSyncCollectionContents )
+						Log.d(TAG,"Processing sync response for node "+name );
+					
 					// We are dealing with an update or insert
 					if ( !parseResponseNode(response, cv) ) continue;
-					if ( cv.getAsInteger(DavResources.NEEDS_SYNC) == 1 ) needSyncAfterwards = true; 
-	
+					if ( cv.getAsBoolean(DavResources.NEEDS_SYNC) ) needSyncAfterwards = true; 
+					Log.i(TAG,"Updating node "+name+" which "+(needSyncAfterwards?"needs sync":"is now in sync") );
 				}
 				else if ( action == WriteActions.INSERT ) {
 					// It looked like an INSERT because it's not in our DB, but in fact
