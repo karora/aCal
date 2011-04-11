@@ -52,7 +52,13 @@ public class AcalProperty {
 	private String name;
 	private String value;
 	String paramsBlob[];
-	
+
+	/**
+	 * Construct an AcalProperty object from a string, presumably culled from a VCOMPONENT
+	 * of some kind, such as a VEVENT or VCARD.
+	 * @param blob
+	 * @return
+	 */
 	public static AcalProperty fromString(String blob) {
 		Matcher m = propertyValueSplit.matcher(blob);
 		String tmpblob;
@@ -77,6 +83,13 @@ public class AcalProperty {
 		return new AcalProperty(name,value,paramsBlob);
 	}
 
+	/**
+	 * Construct an AcalProperty from a name, value and array of parameters.  The parameters 
+	 * are unparsed strings.
+	 * @param name
+	 * @param value
+	 * @param paramsBlob
+	 */
 	protected AcalProperty(String name, String value, String[] paramsBlob) {
 		this.name = name;
 		this.value = value;
@@ -90,7 +103,12 @@ public class AcalProperty {
 			this.paramsBlob = fixedParams;
 		}
 	}
-	
+
+	/**
+	 * Construct an AcalProperty from a simple name / value pair.
+	 * @param name
+	 * @param value
+	 */
 	public AcalProperty(String name, String value) {
 		this.name = name;
 		this.value = value;
@@ -98,6 +116,11 @@ public class AcalProperty {
 		this.params = new HashMap<String,String>();
 	}
 
+	/**
+	 * Set the value of parameter "name" to "value" for this AcalProperty.
+	 * @param name
+	 * @param value
+	 */
 	public synchronized void setParam(String name, String value) {
 		if (!paramsSet) populateParams();
 		paramsBlob = null;
@@ -146,29 +169,50 @@ public class AcalProperty {
 		this.paramsSet = false;
 
 	}
-	
+
+	/**
+	 * Returns the name of this property.
+	 * @return
+	 */
 	public synchronized String getName() {
 		return this.name;
 	}
-	
+
+	/**
+	 * Returns the value of this property.
+	 * @return
+	 */
 	public synchronized  String getValue() {
 		return this.value;
 	}
-	
+
+	/**
+	 * Returns the value of any parameter of the specified name.
+	 * @param name
+	 * @return
+	 */
 	public synchronized String getParam(String name) {
 		populateParams();
 		String ret = params.get(name.toUpperCase());
 		destroyParams();
 		return ret;
 	}
-	
+
+	/**
+	 * Retrieves a map of all parameter names and their values.
+	 * @return
+	 */
 	public synchronized Map<String,String> getParams() {
 		populateParams();
 		Map<String,String> ret = Collections.unmodifiableMap(this.params);
 		destroyParams();
 		return ret;
 	}
-	
+
+	/**
+	 * Returns a set of the parameter names.
+	 * @return
+	 */
 	public synchronized Set<String> getParamNames() {
 		populateParams();
 		Set<String> ret = Collections.unmodifiableSet(params.keySet());
@@ -177,16 +221,19 @@ public class AcalProperty {
 	}
 
 
+	/**
+	 * Return the property as an RFC formatted string, including line wrapping. 
+	 */
 	public synchronized String toString() {
 		return toRfcString();
 	}
 
 	/**
 	 * <p>
-	 * Return the property as a String, hopefully replicating it's original format, apart from line wrapping. 
+	 * Return the property as a String, hopefully replicating it's original format, apart from some
+	 * possible differences in the line wrapping algorithm used.  The string will be wrapped to ensure
+	 * all lines are length < 72 characters or less. 
 	 * </p>
-	 * 
-	 * @author Morphoss Ltd
 	 */
 	public synchronized String toRfcString() {
 		StringBuilder paramBuilder = new StringBuilder(name);
@@ -228,7 +275,6 @@ public class AcalProperty {
 	 */
 	private synchronized String rfc5545Wrap(String inString, int maxOctets) {
 		StringBuilder outString = new StringBuilder();
-		String thisLine;
 		int cutPos;
 		while( inString.getBytes().length >= maxOctets ) {
 			cutPos = maxOctets;
