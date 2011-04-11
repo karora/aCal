@@ -34,6 +34,8 @@ public class AddServerList extends ListActivity implements OnClickListener {
 
 	private static final int CREATE_SERVER_REQUEST = 1;
 	private Button manualConfiguration;
+	public static final int ACTION_LOGIN = 1;
+	public static final int ACTION_CREATE = 2;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

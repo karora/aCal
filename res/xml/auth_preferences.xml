@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  			xmlns:android="http://schemas.android.com/apk/res/android"
+			android:key="add_server_list"
+			android:title="Add Server"
+			android:summary="Add a server account">
+	<intent
+		android:action="com.morphoss.acal.activity.serverconfig.AddServerList.ACTION_CREATE"
+		android:targetPackage="com.morphoss.acal"
+		android:targetClass="com.morphoss.acal.activity.serverconfig.AddServerList" />
+</PreferenceScreen>
+	

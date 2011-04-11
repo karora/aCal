@@ -9,6 +9,7 @@
 <string name="appActivityMonthView">aCal - Month View</string>
 <string name="appActivityYearView">aCal - Year View</string>
 <string name="appActivityWeekView">aCal - Week View</string>
+<string name="AcalAccountType">com.morphoss.acal.AcalAccount</string>
 
 <dimen name="MonthDayTextSize">14sp</dimen>
 <color name="MonthDayFG">#001060</color>
