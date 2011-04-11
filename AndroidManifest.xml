@@ -244,8 +244,17 @@
 				<action android:name="com.morphoss.acal.dataservice.CalendarDataService" />
 			</intent-filter>
 		</service>
-		<receiver android:name="com.morphoss.acal.receivers.StartUpIntentReceiver" >
-			<intent-filter >
+	    <service android:name="com.morphoss.acal.service.AcalAuthenticator"
+	     		 android:exported="true" android:process=":auth">
+	     <intent-filter>
+	      	<action android:name="android.accounts.AccountAuthenticator" />
+	     </intent-filter>
+	     <meta-data android:name="android.accounts.AccountAuthenticator"
+	      			android:resource="@xml/authenticator" />
+	    </service>
+		
+		<receiver android:name="com.morphoss.acal.receivers.StartUpIntentReceiver">
+			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
 				<category android:name="android.intent.category.HOME" />
 			</intent-filter>
