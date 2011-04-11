@@ -55,46 +55,20 @@
 						android:paddingBottom="20sp"
 						android:inputType="textCapWords|textAutoCorrect|textEmailSubject"/>
 			
-					<!--  Collection Selection Button -->				
-					<Button 
-						android:id="@+id/EventEditCollectionButton" 
-						android:layout_below="@id/EventName" 
-						android:layout_width="fill_parent" 
-						android:layout_height="wrap_content"/>
-		
 					<!-- Outer Layout for from/to -->
 					<RelativeLayout  
 						android:id="@+id/EventFromToLayout" 
 						android:layout_width="fill_parent" 
 						android:layout_height="wrap_content"
 						android:orientation="vertical"
-						android:layout_below="@+id/EventEditCollectionButton" android:paddingBottom="5sp">
+						android:layout_below="@+id/EventName"
+						android:paddingBottom="5sp">
 			
-						<LinearLayout
-							android:id="@+id/EventAllDayLayout"
-							android:layout_height="wrap_content"
-							android:layout_width="fill_parent"
-							android:gravity="center_vertical">
-							<TextView 
-								android:text="@string/AllDayPrompt" 
-								android:id="@+id/EventFromAllDayLabel" 
-								android:layout_height="wrap_content"
-								android:layout_width="wrap_content"
-								style="@style/event_view_label" />
-		
-							<CheckBox
-								android:id="@+id/EventAllDay"
-								android:layout_height="wrap_content"
-								android:layout_width="wrap_content"
-								android:layout_toRightOf="@+id/EventFromAllDayLabel"/>
-						</LinearLayout>
-							
 						<!-- From content -->
 						<LinearLayout
 							android:id="@+id/EventFromContent"
 							android:layout_height="wrap_content"
-							android:layout_width="fill_parent"
-							android:layout_below="@+id/EventAllDayLayout">
+							android:layout_width="fill_parent">
 						
 							<TextView 
 								android:text="@string/FromPrompt" 
@@ -142,6 +116,26 @@
 								android:layout_weight="3"/>
 						</LinearLayout>
 								
+						<LinearLayout
+							android:id="@+id/EventAllDayLayout"
+							android:layout_height="wrap_content"
+							android:layout_width="fill_parent"
+							android:gravity="center_vertical"
+							android:layout_below="@+id/EventUntilContent">
+							<TextView 
+								android:text="@string/AllDayPrompt" 
+								android:id="@+id/EventFromAllDayLabel" 
+								android:layout_height="wrap_content"
+								android:layout_width="wrap_content"
+								style="@style/event_view_label" />
+		
+							<CheckBox
+								android:id="@+id/EventAllDay"
+								android:layout_height="wrap_content"
+								android:layout_width="wrap_content"
+								android:layout_toRightOf="@+id/EventFromAllDayLabel"/>
+						</LinearLayout>
+							
 					</RelativeLayout>
 			
 					<!-- Location Label and Button --> 
@@ -257,6 +251,13 @@
 							style="@style/event_view_content"/>
 					</LinearLayout>
 	
+					<!--  Collection Selection Button -->				
+					<Button 
+						android:id="@+id/EventEditCollectionButton" 
+						android:layout_below="@id/EventRepeatsLayout" 
+						android:layout_width="fill_parent" 
+						android:layout_height="wrap_content"/>
+		
 			</RelativeLayout>
 		</ScrollView>
 	</LinearLayout>
