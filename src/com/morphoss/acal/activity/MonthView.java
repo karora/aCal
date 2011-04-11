@@ -427,6 +427,7 @@ public class MonthView extends Activity implements OnGestureListener,
 			// List
 			eventList = (GridView) listRoot
 					.findViewById(R.id.month_default_list);
+			eventList.setSelector(R.drawable.no_border);
 			eventList.setOnTouchListener(this);
 
 		} catch (Exception e) {
