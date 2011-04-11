@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: aCal\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-04-06 17:49+1200\n"
-"PO-Revision-Date: 2011-04-07 00:00+0000\n"
-"Last-Translator: karora <andrew@mcmillan.net.nz>\n"
+"PO-Revision-Date: 2011-04-11 17:43-0300\n"
+"Last-Translator: Samuel Ribeiro da Costa Vale <srcvale@minaslivre.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -33,7 +33,7 @@ msgstr "Cancelar"
 msgid "appDescription"
 msgstr ""
 "Uma agenda para Android que armazena seus compromissos, tarefas, anotações "
-"econtatos em um servidor CalDAV / CardDAV remoto, como o DAViCal (Veja: "
+"e contatos em um servidor CalDAV / CardDAV remoto, como o DAViCal (Veja: "
 "http://davical.org)"
 
 msgid "Active"
@@ -359,7 +359,8 @@ msgstr "Tempo de espera"
 
 msgid "Snooze_PrefSummary"
 msgstr ""
-"Quantos minutos devem ser esperados quando utilizada a função de espera"
+"Quantos minutos devem ser aguardados quando utilizada a função espera "
+"(soneca)"
 
 msgid "DefaultCollection_PrefTitle"
 msgstr "Coleção padrão"
@@ -449,25 +450,25 @@ msgid "EveryDay"
 msgstr "Diariamente"
 
 msgid "EveryWeek"
-msgstr ""
+msgstr "Semanalmente"
 
 msgid "EveryMonth"
-msgstr ""
+msgstr "Mensalmente"
 
 msgid "EveryYear"
 msgstr "Anualmente"
 
 msgid "EveryNDays"
-msgstr ""
+msgstr "A cada %s dias"
 
 msgid "EveryNWeeks"
-msgstr ""
+msgstr "A cada %s semanas"
 
 msgid "EveryNMonths"
-msgstr ""
+msgstr "A cada %s meses"
 
 msgid "EveryNYears"
-msgstr ""
+msgstr "A cada %s anos"
 
 msgid "EveryMonday"
 msgstr "Toda segunda-feira"
@@ -494,7 +495,7 @@ msgid "EveryNthOfTheMonth"
 msgstr "Em cada dia %s do mês"
 
 msgid "EveryMonthOnTheNthSomeday"
-msgstr "Em todo(a) %s de cad mês"
+msgstr "Em todo(a) %s de cada mês"
 
 msgid "EventSaved"
 msgstr "Evento salvo."
@@ -524,25 +525,25 @@ msgid "ChooseRepeatFrequency"
 msgstr "Escolha a frequência de repetição"
 
 msgid "Add_Alarm"
-msgstr ""
+msgstr "Adicionar Alarme"
 
 msgid "errorMustHaveActiveCalendar"
-msgstr ""
+msgstr "Não é possível editar compromisso sem uma agenda ativa."
 
 msgid "errorSavingFile"
-msgstr ""
+msgstr "Erro ao salvar arquivo"
 
 msgid "ServerDataSaved"
-msgstr ""
+msgstr "Dados do servidor gravados. Arquivo: "
 
 msgid "NewManualServerConfiguration"
-msgstr ""
+msgstr "Configuração manual"
 
 msgid "ManualServerConfigurationBlurb"
-msgstr ""
+msgstr "Entrar manualmente as informações do servidor"
 
 msgid "SavedServerConfigurationBlurb"
-msgstr ""
+msgstr "Uma configuração de servidor gravada"
 
 msgid "alarmAtEventTime"
 msgstr "Na hora do compromisso"
@@ -575,28 +576,28 @@ msgid "changeThisAndFuture"
 msgstr "Esta e todas as instâncias futuras"
 
 msgid "internetNotAvailable"
-msgstr ""
+msgstr "Internet indisponível"
 
 msgid "couldNotDiscoverPort"
-msgstr ""
+msgstr "Não pude descobrir a porta HTTP do servidor CalDAV"
 
 msgid "couldNotDiscoverPrincipal"
-msgstr ""
+msgstr "Não pude descobrir o caminho com as informações fornecidas"
 
 msgid "foundPrincipalPath"
-msgstr ""
+msgstr "Caminho principal do servidor em &quot;%s&quot;"
 
 msgid "serverSupportsCalDAV"
-msgstr ""
+msgstr "Servidor suporta CalDAV."
 
 msgid "serverLacksCalDAV"
-msgstr ""
+msgstr "Servidor não suporta CalDAV."
 
 msgid "serverFailedValidation"
-msgstr ""
+msgstr "Ocorreu um erro ao validar o servidor:"
 
 msgid "saveSettingsAnyway"
-msgstr ""
+msgstr "Gostaria de salvar as configurações de qualquer modo?"
 
 msgid "serverValidationSuccess"
-msgstr ""
+msgstr "Servidor validado com sucesso."
