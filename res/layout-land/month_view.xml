@@ -3,29 +3,34 @@
 	android:layout_width="fill_parent" 
 	android:layout_height="fill_parent"
 	android:orientation="vertical"
-	android:background="@drawable/morphossbg"
-	android:weightSum="100">
+	android:background="@drawable/morphossbg">
 	
 	<LinearLayout android:id="@+id/month_grid_and_list" 
 		android:layout_width="fill_parent" 
 		android:orientation="horizontal"
 		android:layout_alignParentTop="true"
-		android:gravity="top" android:layout_gravity="bottom" android:layout_height="fill_parent" android:layout_weight="13">
+		android:gravity="top"
+		android:layout_gravity="bottom"
+		android:layout_height="1sp"
+		android:layout_weight="1">
 		<LinearLayout
 			android:layout_width="fill_parent" 
-			android:layout_height="fill_parent" android:layout_weight="1">
+			android:layout_height="fill_parent"
+			android:layout_weight="1">
 			
 			<com.morphoss.acal.widget.AcalViewFlipper 
 				android:id="@+id/month_grid_flipper" 
 				android:layout_width="fill_parent" 
-				android:layout_height="fill_parent"/>
+				android:layout_height="fill_parent"
+				android:layout_weight="1"/>
 		
 		</LinearLayout>
 		
 		
 		<LinearLayout
 			android:layout_width="fill_parent" 
-			android:layout_height="fill_parent" android:layout_weight="1">
+			android:layout_height="fill_parent"
+			android:layout_weight="1">
 			<com.morphoss.acal.widget.AcalViewFlipper 
 				android:id="@+id/month_list_flipper" 
 				android:layout_width="fill_parent" 
@@ -35,10 +40,9 @@
 	<LinearLayout
 		android:id="@+id/button_layout" 
 		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent"
-		android:background="#50500000"
-		android:gravity="bottom"
-		android:layout_weight="87.3">
+		android:layout_height="40dp"
+		android:background="#50a0a030"
+		android:gravity="bottom">
 	
 		<LinearLayout
 			android:layout_width="fill_parent" 
@@ -50,7 +54,7 @@
 				style="@style/bottom_button"
 				android:gravity="center"
 				android:text="@string/Today"
-				android:width="70sp"/>
+				android:width="70dp"/>
 		</LinearLayout>
 		<LinearLayout
 			android:layout_width="fill_parent" 
@@ -64,7 +68,7 @@
 				android:gravity="center"
 				style="@style/bottom_button"
 				android:text="@string/Year"
-				android:width="70sp" android:includeFontPadding="true" android:padding="0sp"/>
+				android:width="70dp" android:includeFontPadding="true" android:padding="0sp"/>
 		</LinearLayout>
 		<LinearLayout
 			android:layout_width="fill_parent" 
@@ -75,7 +79,7 @@
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:text="+"
-				android:width="70sp"
+				android:width="70dp"
 				style="@style/bottom_add_button" android:gravity="center"/>
 		</LinearLayout>
 	</LinearLayout>

@@ -24,9 +24,12 @@ import java.util.HashMap;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
@@ -115,12 +118,24 @@ public class MonthAdapter extends BaseAdapter {
 
 	public View getView(int position, View contentView, ViewGroup parent) {
 
+		int gridHeight = 0;
+		int headerHeight = 0;
+		int boxHeight = 0;
+		if ( parent != null ) {
+			gridHeight = parent.getHeight();
+			headerHeight = gridHeight / 12;
+			boxHeight = (gridHeight - headerHeight) / 6;
+			headerHeight = gridHeight - (boxHeight * 6);
+			boxHeight -= 1;  // Allow for vertical spacing
+		}
+		
 		if (position <7) {
 			//Column headers
 			LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			TextView dayBox = null;
+			TextView dayColumnHeader = null;
 			View v = (View) inflater.inflate(R.layout.month_view_assets, null);
-			dayBox = (TextView) v.findViewById(R.id.DayBoxColumnHeader);
+			dayColumnHeader = (TextView) v.findViewById(R.id.DayColumnHeader);
+
 			int day = (position+firstCol)%7;
 			String colText = "";
 			switch (day) {
@@ -132,8 +147,11 @@ public class MonthAdapter extends BaseAdapter {
 				case AcalDateTime.SATURDAY: colText=(context.getString(R.string.Sat)); break;
 				case AcalDateTime.SUNDAY: colText=(context.getString(R.string.Sun)); break;
 			}
-			dayBox.setText(colText);
-			dayBox.setVisibility(View.VISIBLE);
+			dayColumnHeader.setText(colText);
+			dayColumnHeader.setTextSize( TypedValue.COMPLEX_UNIT_DIP, (float) 0.47 * headerHeight);
+			
+			if ( headerHeight != 0 ) dayColumnHeader.setHeight(headerHeight - dayColumnHeader.getCompoundPaddingBottom());
+			dayColumnHeader.setVisibility(View.VISIBLE);
 			return v;
 		}
 		position -=7;
@@ -146,7 +164,6 @@ public class MonthAdapter extends BaseAdapter {
 
 		AcalDateTime bDate = null;
 		boolean in_month = false;
-
 
 		//What day of the month are we?
 		if (position < offset) {
@@ -167,18 +184,27 @@ public class MonthAdapter extends BaseAdapter {
 		View v = (View) inflater.inflate(R.layout.month_view_assets, null);
 		
 		MonthDayBox mDayBox = null; 
+		float textScaleFactor = 0.0f;
 	
 		if ( in_month && bDate.get(AcalDateTime.DAY_OF_YEAR) == this.selectedDate.get(AcalDateTime.DAY_OF_YEAR) && this.selectedDate.getYear() == this.displayDate.getYear() ) {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxHighlightDay);
 			mDayBox.setEvents(context.getEventsForDay(bDate));
+			textScaleFactor = 0.5f;
 		} else if ( in_month ) {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxInMonth);
 			mDayBox.setEvents(context.getEventsForDay(bDate));
+			textScaleFactor = 0.4f;
 		} else if   ((bDate.get(AcalDateTime.DAY_OF_YEAR) == this.selectedDate.get(AcalDateTime.DAY_OF_YEAR))&&
 				(bDate.get(AcalDateTime.YEAR) == this.selectedDate.get(AcalDateTime.YEAR))) {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxOutMonthHighlighted);
+			textScaleFactor = 0.4f;
 		} else {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxOutMonth);
+			textScaleFactor = 0.35f;
+		}
+		if ( boxHeight != 0 ) {
+			mDayBox.setHeight(boxHeight - mDayBox.getCompoundPaddingBottom());
+			mDayBox.setTextSize( TypedValue.COMPLEX_UNIT_DIP, textScaleFactor * (float) boxHeight);
 		}
 		
 		mDayBox.setVisibility(View.VISIBLE);

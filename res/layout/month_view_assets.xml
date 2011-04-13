@@ -6,7 +6,7 @@
   android:padding="0sp">
 
 	<com.morphoss.acal.views.MonthDayBox
-		android:id="@+id/DayBoxColumnHeader"
+		android:id="@+id/DayColumnHeader"
 		style="@style/MonthDayColumnHeader"
 		android:layout_height="fill_parent" 
   		android:layout_width="fill_parent" 

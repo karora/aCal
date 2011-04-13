@@ -373,11 +373,7 @@ public class MonthView extends Activity implements OnGestureListener,
 			gridViewFlipper.setAnimationCacheEnabled(true);
 
 			// Add parent if directed to do so
-			if (addParent)
-				gridRoot = inflater.inflate(R.layout.month_grid_view,
-						gridViewFlipper);
-			else
-				gridRoot = inflater.inflate(R.layout.month_grid_view, null);
+			gridRoot = inflater.inflate(R.layout.month_grid_view, (addParent?gridViewFlipper:null));
 
 			// Title
 			monthTitle = (TextView) gridRoot
