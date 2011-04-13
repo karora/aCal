@@ -167,7 +167,9 @@ public class MonthAdapter extends BaseAdapter {
 
 
 		AcalDateTime bDate = null;
-		boolean in_month = false;
+		boolean inMonth = false;
+		AcalDateTime today = new AcalDateTime();
+		today.applyLocalTimeZone();
 
 		//What day of the month are we?
 		if (position < offset) {
@@ -180,7 +182,7 @@ public class MonthAdapter extends BaseAdapter {
 			bDate.set(AcalDateTime.DAY_OF_MONTH,  (position+1) - (offset+this.daysInThisMonth));
 		} else {
 			//this month
-			in_month = true;
+			inMonth = true;
 			bDate = (AcalDateTime) displayDate.clone();
 			bDate.set(AcalDateTime.DAY_OF_MONTH, position-offset+1);
 		}
@@ -190,11 +192,11 @@ public class MonthAdapter extends BaseAdapter {
 		MonthDayBox mDayBox = null; 
 		float textScaleFactor = 0.0f;
 	
-		if ( in_month && bDate.get(AcalDateTime.DAY_OF_YEAR) == this.selectedDate.get(AcalDateTime.DAY_OF_YEAR) && this.selectedDate.getYear() == this.displayDate.getYear() ) {
+		if ( inMonth && bDate.get(AcalDateTime.DAY_OF_YEAR) == this.selectedDate.get(AcalDateTime.DAY_OF_YEAR) && this.selectedDate.getYear() == this.displayDate.getYear() ) {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxHighlightDay);
 			mDayBox.setEvents(context.getEventsForDay(bDate));
 			textScaleFactor = 0.6f;
-		} else if ( in_month ) {
+		} else if ( inMonth ) {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxInMonth);
 			mDayBox.setEvents(context.getEventsForDay(bDate));
 			textScaleFactor = 0.55f;
@@ -205,6 +207,9 @@ public class MonthAdapter extends BaseAdapter {
 		} else {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxOutMonth);
 			textScaleFactor = 0.5f;
+		}
+		if ( today.getYearDay() == bDate.getYearDay() && today.getYear() == bDate.getYear() ) {
+			mDayBox.setToday();
 		}
 		if ( boxHeight != 0 ) {
 			mDayBox.setHeight(boxHeight - mDayBox.getCompoundPaddingBottom());

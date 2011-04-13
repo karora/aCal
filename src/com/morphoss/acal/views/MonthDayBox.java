@@ -32,6 +32,7 @@ import com.morphoss.acal.davacal.AcalEvent;
 public class MonthDayBox extends TextView {
 
 	private List<AcalEvent> events;
+	private boolean isToday = false;
 	private Context context;
 	
 	public MonthDayBox(Context context) {
@@ -57,6 +58,21 @@ public class MonthDayBox extends TextView {
 		super.draw(arg0);
 		Paint p = new Paint();
 		p.setStyle(Paint.Style.FILL);
+		if ( isToday ) {
+			float width = getWidth();
+			float height = getHeight();
+			int x = (int) (width/16f);
+			int y = (int) (height/16f);
+			if ( x < 1 ) x =1;
+			if ( y < 1 ) y =1;
+			if ( x < y ) x =y;
+			if ( y < x ) y =x;
+			p.setColor(0xffe77720);
+			arg0.drawRect(0, 0, width, y, p);
+			arg0.drawRect(0, 0, x, height, p);
+			arg0.drawRect(width-x, 0, width, height, p);
+			arg0.drawRect(0, height-y, width, height, p);
+		}
 		if (events != null && !events.isEmpty()) {
 			//Get the range of hours for todays events (min = 9am -> 5pm)
 			int startHour = 9;	int endHour = 17;
@@ -93,11 +109,15 @@ public class MonthDayBox extends TextView {
 				}
 				//draw
 				p.setColor((e.colour|0xff000000)-0x77000000);
-				arg0.drawRect(0,stHour*hourHeight, width, finHour*hourHeight, p);
+				arg0.drawRect((isToday?getWidth()/15:0),stHour*hourHeight, width, finHour*hourHeight, p);
 				
 			}
 			
 		}
+	}
+
+	public void setToday() {
+		isToday = true;
 	}
 
 	
