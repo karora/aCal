@@ -5,7 +5,7 @@
 	android:layout_height="256dp"
 	>
 
-	<com.morphoss.acal.activity.AmbilWarnaKotak
+	<com.morphoss.acal.activity.ColourPickerView
 		android:id="@+id/ambilwarna_viewKotak"
 		android:layout_x="8dp"
 		android:layout_y="8dp"

@@ -14,6 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Based (with some changes) on:
+ * 	http://code.google.com/p/android-color-picker/
+ * which is available under the Apache 2 license.
  */
 
 package com.morphoss.acal.activity;
@@ -32,7 +35,7 @@ import android.view.View;
 
 import com.morphoss.acal.R;
 
-public class AmbilWarnaKotak extends View {
+public class ColourPickerView extends View {
 	
 	Paint paint;
 	Shader dalam;
@@ -43,15 +46,15 @@ public class AmbilWarnaKotak extends View {
 	float ukuranUiPx; // diset di constructor
 	float[] tmp00 = new float[3];
 
-	public AmbilWarnaKotak(Context context) {
+	public ColourPickerView(Context context) {
 		this(context, null);
 	}
 
-	public AmbilWarnaKotak(Context context, AttributeSet attrs) {
+	public ColourPickerView(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
 
-	public AmbilWarnaKotak(Context context, AttributeSet attrs, int defStyle) {
+	public ColourPickerView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		
 		satudp = context.getResources().getDimension(R.dimen.ambilwarna_satudp);

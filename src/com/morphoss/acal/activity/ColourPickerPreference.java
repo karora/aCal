@@ -14,6 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Based (with some changes) on:
+ * 	http://code.google.com/p/android-color-picker/
+ * which is available under the Apache 2 license.
  */
 
 package com.morphoss.acal.activity;

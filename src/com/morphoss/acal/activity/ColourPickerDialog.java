@@ -14,8 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Based (with some changes) on:
+ * 	http://code.google.com/p/android-color-picker/
+ * which is available under the Apache 2 license.
  */
-
 package com.morphoss.acal.activity;
 
 import android.app.AlertDialog;
@@ -37,7 +39,7 @@ public class ColourPickerDialog {
 	private AlertDialog dialog;
 	private OnColourPickerListener listener;
 	private View viewHue;
-	private AmbilWarnaKotak viewKotak;
+	private ColourPickerView viewKotak;
 	private ImageView hueSlider;
 	private View viewWarnaLama;
 	private View viewWarnaBaru;
@@ -76,7 +78,7 @@ public class ColourPickerDialog {
 		View view = LayoutInflater.from(context).inflate(R.layout.colourpicker_dialog, null);
 		this.primaryView = view;
 		this.viewHue = view.findViewById(R.id.colourpicker_viewHue);
-		this.viewKotak = (AmbilWarnaKotak) view.findViewById(R.id.ambilwarna_viewKotak);
+		this.viewKotak = (ColourPickerView) view.findViewById(R.id.ambilwarna_viewKotak);
 		this.hueSlider = (ImageView) view.findViewById(R.id.ambilwarna_panah);
 		this.viewWarnaLama = view.findViewById(R.id.ambilwarna_warnaLama);
 		this.viewWarnaBaru = view.findViewById(R.id.ambilwarna_warnaBaru);
