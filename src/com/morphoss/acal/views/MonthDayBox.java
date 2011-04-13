@@ -58,11 +58,13 @@ public class MonthDayBox extends TextView {
 		super.draw(arg0);
 		Paint p = new Paint();
 		p.setStyle(Paint.Style.FILL);
+		float width = getWidth();
+		float height = getHeight();
+		int x = 0;
+		int y = 0;
 		if ( isToday ) {
-			float width = getWidth();
-			float height = getHeight();
-			int x = (int) (width/16f);
-			int y = (int) (height/16f);
+			x = (int) (width/16f);
+			y = (int) (height/16f);
 			if ( x < 1 ) x =1;
 			if ( y < 1 ) y =1;
 			if ( x < y ) x =y;
@@ -86,9 +88,8 @@ public class MonthDayBox extends TextView {
 			}
 			int numHours = endHour-startHour;
 			
-			float height = getHeight();
-			int width = getWidth()/5;
-			float hourHeight = height/numHours;
+			int barWidth = (int) (width/5f);
+			float hourHeight = (height - (2*y))/numHours;
 			for (AcalEvent e : events) {
 				float stHour = e.dtstart.getHour();
 				float finHour = AcalDateTime.addDuration(e.dtstart, e.duration).getHour();
@@ -109,7 +110,7 @@ public class MonthDayBox extends TextView {
 				}
 				//draw
 				p.setColor((e.colour|0xff000000)-0x77000000);
-				arg0.drawRect((isToday?getWidth()/15:0),stHour*hourHeight, width, finHour*hourHeight, p);
+				arg0.drawRect(x,y+(stHour*hourHeight), x+barWidth, y+(finHour*hourHeight), p);
 				
 			}
 			
