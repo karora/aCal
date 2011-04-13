@@ -335,7 +335,7 @@ public class CollectionConfiguration extends PreferenceActivity implements OnPre
         preferenceHelper(defaultTimezone, getString(R.string.Default_timezone), DavCollections.DEFAULT_TIMEZONE, defaultSummaries.get(DavCollections.DEFAULT_TIMEZONE));
 
         //colour
-        ColorPickerPreference collectionColor = new ColorPickerPreference(this, null);
+        ColourPickerPreference collectionColor = new ColourPickerPreference(this, null);
         try {
         	int col = Color.parseColor(collectionData.getAsString(DavCollections.COLOUR));
         	collectionColor.setColor(col);

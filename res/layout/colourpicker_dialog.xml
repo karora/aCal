@@ -9,8 +9,8 @@
 	<include
 		android:layout_width="296dp"
 		android:layout_height="256dp"
-		android:id="@+id/ambilwarna_includePemilih"
-		layout="@layout/ambilwarna_pemilih" />
+		android:id="@+id/colourpicker_includeWidget"
+		layout="@layout/colourpicker_widget" />
 
 	<LinearLayout
 		android:layout_width="fill_parent"

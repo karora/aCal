@@ -32,16 +32,16 @@ import android.widget.ImageView;
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.R;
 
-public class AmbilWarnaDialog {
-	private static final String TAG = "aCal AmbilWarnaDialog";
+public class ColourPickerDialog {
+	private static final String TAG = "aCal ColourPickerDialog";
 	private AlertDialog dialog;
-	private OnAmbilWarnaListener listener;
+	private OnColourPickerListener listener;
 	private View viewHue;
 	private AmbilWarnaKotak viewKotak;
-	private ImageView panah;
+	private ImageView hueSlider;
 	private View viewWarnaLama;
 	private View viewWarnaBaru;
-	private ImageView viewKeker;
+	private ImageView viewPointer;
 	public View primaryView;
 	
 	private float satudp;
@@ -53,14 +53,14 @@ public class AmbilWarnaDialog {
 	private float ukuranUiDp = 240.f;
 	private float ukuranUiPx; // diset di constructor
 	
-	public interface OnAmbilWarnaListener {
-		void onCancel(AmbilWarnaDialog dialog);
-		void onOk(AmbilWarnaDialog dialog, int color);
+	public interface OnColourPickerListener {
+		void onCancel(ColourPickerDialog dialog);
+		void onOk(ColourPickerDialog dialog, int color);
 	}
 	
 	
 	
-	public AmbilWarnaDialog(Context context, int color, OnAmbilWarnaListener listener) {
+	public ColourPickerDialog(Context context, int color, OnColourPickerListener listener) {
 		this.listener = listener;
 		this.warnaLama = color;
 		this.warnaBaru = color;
@@ -73,17 +73,17 @@ public class AmbilWarnaDialog {
 		this.ukuranUiPx = ukuranUiDp * satudp;
 		if (Constants.LOG_DEBUG)Log.d(TAG, "satudp = " + satudp + ", ukuranUiPx=" + ukuranUiPx);  //$NON-NLS-1$//$NON-NLS-2$
 		
-		View view = LayoutInflater.from(context).inflate(R.layout.ambilwarna_dialog, null);
+		View view = LayoutInflater.from(context).inflate(R.layout.colourpicker_dialog, null);
 		this.primaryView = view;
-		this.viewHue = view.findViewById(R.id.ambilwarna_viewHue);
+		this.viewHue = view.findViewById(R.id.colourpicker_viewHue);
 		this.viewKotak = (AmbilWarnaKotak) view.findViewById(R.id.ambilwarna_viewKotak);
-		this.panah = (ImageView) view.findViewById(R.id.ambilwarna_panah);
+		this.hueSlider = (ImageView) view.findViewById(R.id.ambilwarna_panah);
 		this.viewWarnaLama = view.findViewById(R.id.ambilwarna_warnaLama);
 		this.viewWarnaBaru = view.findViewById(R.id.ambilwarna_warnaBaru);
-		this.viewKeker = (ImageView) view.findViewById(R.id.ambilwarna_keker);
+		this.viewPointer = (ImageView) view.findViewById(R.id.colourpicker_pointer);
 
-		letakkanPanah();
-		letakkanKeker();
+		positionSlider();
+		positionPointer();
 		this.viewKotak.setHue(hue);
 		this.viewWarnaLama.setBackgroundColor(color);
 		this.viewWarnaBaru.setBackgroundColor(color);
@@ -105,7 +105,7 @@ public class AmbilWarnaDialog {
 					warnaBaru = hitungWarna();
 					// update view
 					viewKotak.setHue(hue);
-					letakkanPanah();
+					positionSlider();
 					viewWarnaBaru.setBackgroundColor(warnaBaru);
 					
 					return true;
@@ -134,7 +134,7 @@ public class AmbilWarnaDialog {
 
 					warnaBaru = hitungWarna();
 					// update view
-					letakkanKeker();
+					positionPointer();
 					viewWarnaBaru.setBackgroundColor(warnaBaru);
 					
 					return true;
@@ -149,8 +149,8 @@ public class AmbilWarnaDialog {
 		db.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				if (AmbilWarnaDialog.this.listener != null) {
-					AmbilWarnaDialog.this.listener.onOk(AmbilWarnaDialog.this, warnaBaru);
+				if (ColourPickerDialog.this.listener != null) {
+					ColourPickerDialog.this.listener.onOk(ColourPickerDialog.this, warnaBaru);
 				}
 			}
 		});
@@ -158,8 +158,8 @@ public class AmbilWarnaDialog {
 		db.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				if (AmbilWarnaDialog.this.listener != null) {
-					AmbilWarnaDialog.this.listener.onCancel(AmbilWarnaDialog.this);
+				if (ColourPickerDialog.this.listener != null) {
+					ColourPickerDialog.this.listener.onCancel(ColourPickerDialog.this);
 				}
 			}
 		});
@@ -169,24 +169,24 @@ public class AmbilWarnaDialog {
 	}
 	
 	@SuppressWarnings("deprecation")
-	protected void letakkanPanah() {
+	protected void positionSlider() {
 		float y = ukuranUiPx - (hue * ukuranUiPx / 360.f);
 		if (y == ukuranUiPx) y = 0.f;
 		
-		AbsoluteLayout.LayoutParams layoutParams = (AbsoluteLayout.LayoutParams) panah.getLayoutParams();
+		AbsoluteLayout.LayoutParams layoutParams = (AbsoluteLayout.LayoutParams) hueSlider.getLayoutParams();
 		layoutParams.y = (int) (y + 4);
-		panah.setLayoutParams(layoutParams);
+		hueSlider.setLayoutParams(layoutParams);
 	}
 
 	@SuppressWarnings("deprecation")
-	protected void letakkanKeker() {
+	protected void positionPointer() {
 		float x = sat * ukuranUiPx;
 		float y = (1.f - val) * ukuranUiPx;
 		
-		AbsoluteLayout.LayoutParams layoutParams = (AbsoluteLayout.LayoutParams) viewKeker.getLayoutParams();
+		AbsoluteLayout.LayoutParams layoutParams = (AbsoluteLayout.LayoutParams) viewPointer.getLayoutParams();
 		layoutParams.x = (int) (x + 3);
 		layoutParams.y = (int) (y + 3);
-		viewKeker.setLayoutParams(layoutParams);
+		viewPointer.setLayoutParams(layoutParams);
 	}
 
 	float[] tmp01 = new float[3];

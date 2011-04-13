@@ -26,16 +26,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.morphoss.acal.activity.AmbilWarnaDialog.OnAmbilWarnaListener;
+import com.morphoss.acal.activity.ColourPickerDialog.OnColourPickerListener;
 
-public class ColorPickerPreference extends DialogPreference  {
-	public static final String TAG = "aCal ColorPickerPreference";
+public class ColourPickerPreference extends DialogPreference  {
+	public static final String TAG = "aCal ColourPickerPreference";
 
 	private Context context;
-	private AmbilWarnaDialog dialog;
+	private ColourPickerDialog dialog;
 	private int color;
 	
-	public ColorPickerPreference(Context context, AttributeSet attrs) {
+	public ColourPickerPreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		this.context = context;
 	}
@@ -70,25 +70,25 @@ public class ColorPickerPreference extends DialogPreference  {
 	public void onClick(DialogInterface dialog, int which) {
 		switch (which) {
 		case -1: {
-				ColorPickerPreference.this.color = this.dialog.warnaBaru;
-				ColorPickerPreference.this.callChangeListener(this.dialog.warnaBaru);
+				ColourPickerPreference.this.color = this.dialog.warnaBaru;
+				ColourPickerPreference.this.callChangeListener(this.dialog.warnaBaru);
 				break;
 			}
 		}
 	}
 	
 	protected View onCreateDialogView() {
-	dialog =  new AmbilWarnaDialog(this.context,color, new OnAmbilWarnaListener() {
+	dialog =  new ColourPickerDialog(this.context,color, new OnColourPickerListener() {
 
 			@Override
-			public void onCancel(AmbilWarnaDialog dialog) {
-				ColorPickerPreference.this.callChangeListener(color);				
+			public void onCancel(ColourPickerDialog dialog) {
+				ColourPickerPreference.this.callChangeListener(color);				
 			}
 
 			@Override
-			public void onOk(AmbilWarnaDialog dialog, int color) {
-				ColorPickerPreference.this.color = color;
-				ColorPickerPreference.this.callChangeListener(color);
+			public void onOk(ColourPickerDialog dialog, int color) {
+				ColourPickerPreference.this.color = color;
+				ColourPickerPreference.this.callChangeListener(color);
 			}
 			
 		});
