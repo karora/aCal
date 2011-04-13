@@ -189,6 +189,7 @@
 <string name="ModifiedThisAndFuture">Modified this and all future instances of this event.</string>
 <string name="ErrorSavingEvent">Error saving event data - please try again.</string>
 
+<string name="NewEventTitle">New Event</string>
 <string name="ChooseACollection">Choose a Collection</string>
 <string name="ChooseAlarmTime">Choose an Alarm Time</string>
 <string name="ChooseInstancesToChange">Which instances are to change?</string>
