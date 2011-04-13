@@ -121,12 +121,16 @@ public class MonthAdapter extends BaseAdapter {
 		int gridHeight = 0;
 		int headerHeight = 0;
 		int boxHeight = 0;
+		float boxScaleFactor = 1.0f;
 		if ( parent != null ) {
 			gridHeight = parent.getHeight();
+			int boxWidth = (parent.getWidth() / 7) - 1;
 			headerHeight = gridHeight / 12;
 			boxHeight = (gridHeight - headerHeight) / 6;
 			headerHeight = gridHeight - (boxHeight * 6);
 			boxHeight -= 1;  // Allow for vertical spacing
+			if ( boxWidth > (boxHeight * 1.3) ) boxScaleFactor = 1.2f;
+			else if ( boxWidth < (boxHeight * 0.9) )  boxScaleFactor = 0.9f;
 		}
 		
 		if (position <7) {
@@ -148,7 +152,7 @@ public class MonthAdapter extends BaseAdapter {
 				case AcalDateTime.SUNDAY: colText=(context.getString(R.string.Sun)); break;
 			}
 			dayColumnHeader.setText(colText);
-			dayColumnHeader.setTextSize( TypedValue.COMPLEX_UNIT_DIP, (float) 0.47 * headerHeight);
+			dayColumnHeader.setTextSize( TypedValue.COMPLEX_UNIT_PX, (float) 0.55 * boxScaleFactor * headerHeight);
 			
 			if ( headerHeight != 0 ) dayColumnHeader.setHeight(headerHeight - dayColumnHeader.getCompoundPaddingBottom());
 			dayColumnHeader.setVisibility(View.VISIBLE);
@@ -189,22 +193,22 @@ public class MonthAdapter extends BaseAdapter {
 		if ( in_month && bDate.get(AcalDateTime.DAY_OF_YEAR) == this.selectedDate.get(AcalDateTime.DAY_OF_YEAR) && this.selectedDate.getYear() == this.displayDate.getYear() ) {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxHighlightDay);
 			mDayBox.setEvents(context.getEventsForDay(bDate));
-			textScaleFactor = 0.5f;
+			textScaleFactor = 0.6f;
 		} else if ( in_month ) {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxInMonth);
 			mDayBox.setEvents(context.getEventsForDay(bDate));
-			textScaleFactor = 0.4f;
+			textScaleFactor = 0.55f;
 		} else if   ((bDate.get(AcalDateTime.DAY_OF_YEAR) == this.selectedDate.get(AcalDateTime.DAY_OF_YEAR))&&
 				(bDate.get(AcalDateTime.YEAR) == this.selectedDate.get(AcalDateTime.YEAR))) {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxOutMonthHighlighted);
-			textScaleFactor = 0.4f;
+			textScaleFactor = 0.55f;
 		} else {
 			mDayBox = (MonthDayBox) v.findViewById(R.id.DayBoxOutMonth);
-			textScaleFactor = 0.35f;
+			textScaleFactor = 0.5f;
 		}
 		if ( boxHeight != 0 ) {
 			mDayBox.setHeight(boxHeight - mDayBox.getCompoundPaddingBottom());
-			mDayBox.setTextSize( TypedValue.COMPLEX_UNIT_DIP, textScaleFactor * (float) boxHeight);
+			mDayBox.setTextSize( TypedValue.COMPLEX_UNIT_PX, textScaleFactor * boxScaleFactor * (float) boxHeight);
 		}
 		
 		mDayBox.setVisibility(View.VISIBLE);
