@@ -220,7 +220,7 @@ public class EventEdit extends Activity implements OnGestureListener, OnTouchLis
 			AcalDuration duration = new AcalDuration();
 			duration.setDuration(0, AcalDateTime.SECONDS_IN_HOUR);
 			defaults.put( EVENT_FIELD.duration, duration );
-			defaults.put( EVENT_FIELD.summary, "New Event" );
+			defaults.put( EVENT_FIELD.summary, getString(R.string.NewEventTitle) );
 			defaults.put( EVENT_FIELD.location, "" );
 			defaults.put( EVENT_FIELD.description, "" );
 			
@@ -299,6 +299,9 @@ public class EventEdit extends Activity implements OnGestureListener, OnTouchLis
 
 		//Title
 		this.eventName = (TextView) this.findViewById(R.id.EventName);
+		if ( eventName.getText().equals(getString(R.string.NewEventTitle))) {
+			eventName.setSelected(true);
+		}
 
 		//Collection
 		this.collection = (Button) this.findViewById(R.id.EventEditCollectionButton);
@@ -376,7 +379,7 @@ public class EventEdit extends Activity implements OnGestureListener, OnTouchLis
 		
 		this.collection.setText(this.currentCollection.getAsString(DavCollections.DISPLAYNAME));
 		
-		this.applyButton.setText((eventAction.isModifyAction() ? "Apply" : "Add"));
+		this.applyButton.setText((eventAction.isModifyAction() ? getString(R.string.Apply) : getString(R.string.Add)));
 		
 		boolean allDay = allDayEvent.isChecked();
 		
