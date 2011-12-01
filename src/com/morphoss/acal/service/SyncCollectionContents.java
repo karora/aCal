@@ -172,9 +172,9 @@ public class SyncCollectionContents extends ServiceJob {
 			else 
 				syncMarkedResources( originalData );
 			
-			if ( (serverData.getAsInteger(Servers.HAS_SYNC) != null && (1 == serverData.getAsInteger(Servers.HAS_SYNC))
-										? doRegularSyncReport()
-										: doRegularSyncPropfind() ) ) {
+			boolean supportsSync = (serverData.getAsInteger(Servers.HAS_SYNC) != null
+											&& (1 == serverData.getAsInteger(Servers.HAS_SYNC)) );
+			if ( ( supportsSync ? doRegularSyncReport() : doRegularSyncPropfind() ) ) {
 				originalData = findSyncNeededResources();
 				syncMarkedResources(originalData);
 			}
