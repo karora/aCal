@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -45,6 +46,7 @@ public class VCalendar extends VComponent {
 	private Long earliestStart;
 	private Long latestEnd;
 	private boolean isPending = false;
+	public static final Pattern tzOlsonExtractor = Pattern.compile(".*((?:Antarctica|America|Africa|Atlantic|Asia|Australia|Indian|Europe|Pacific|US)/(?:(?:[^/\"]+)/)?[^/\"]+)\"?");
 
 
 	public VCalendar(ComponentParts splitter, Integer resourceId, Long earliestStart, Long latestEnd, AcalCollection collectionObject,VComponent parent) {
@@ -365,11 +367,30 @@ public class VCalendar extends VComponent {
 	}
 
 	
-	public String getOlsonName( String TzID ) {
-		Matcher m = Constants.tzOlsonExtractor.matcher(TzID);
+	
+	public static String staticGetOlsonName( String tzIdParam ) {
+		Matcher m = VCalendar.tzOlsonExtractor.matcher(tzIdParam);
 		if ( m.matches() ) {
 			return m.group(1);
 		}
+		if ( tzIdParam.equals("UTC") ) return tzIdParam;
+		if ( tzIdParam.equals("Etc/UTC") ) return "UTC";
+		if ( tzIdParam.equals("Etc/GMT") ) return "UTC";
+		if ( tzIdParam.equals("Eastern Standard Time") || tzIdParam.equals("Eastern Daylight Time") ) return "America/Los_Angeles";
+		Log.w(TAG,"Could not get Olson name from "+tzIdParam, new Exception("Unrecognized Time Zone"));
+		return tzIdParam;
+	}
+
+	
+	public String getOlsonName( String TzID ) {
+		Matcher m = VCalendar.tzOlsonExtractor.matcher(TzID);
+		if ( m.matches() ) {
+			return m.group(1);
+		}
+
+		if ( TzID.equals("UTC") ) return TzID;
+		if ( TzID.equals("Etc/UTC") ) return "UTC";
+		if ( TzID.equals("Etc/GMT") ) return "UTC";
 
 		if (childrenSet) {
 			for (VComponent vc : this.getChildren()) {
@@ -463,6 +484,9 @@ public class VCalendar extends VComponent {
 				}
 			}
 		}
+
+		Log.w(TAG,"Could not get Olson name from "+TzID, new Exception("Unrecognized Time Zone"));
+
 		/**
 		 * @todo: We should 
 		 */
