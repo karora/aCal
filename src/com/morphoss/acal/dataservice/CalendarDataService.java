@@ -68,6 +68,7 @@ import com.morphoss.acal.davacal.AcalAlarm;
 import com.morphoss.acal.davacal.AcalCollection;
 import com.morphoss.acal.davacal.AcalEvent;
 import com.morphoss.acal.davacal.Masterable;
+import com.morphoss.acal.davacal.PropertyName;
 import com.morphoss.acal.davacal.SimpleAcalEvent;
 import com.morphoss.acal.davacal.SimpleAcalTodo;
 import com.morphoss.acal.davacal.VCalendar;
@@ -302,9 +303,11 @@ public class CalendarDataService extends Service implements Runnable, DatabaseEv
 		if ( daysDiff > 0 && lastSetEarlyStamp > (now - 30000L) ) return;
 		lastSetEarlyStamp = now;
 
-		if (Constants.LOG_DEBUG) Log.d(TAG, "Considering setting early timestamp to "+wantEarlyStamp.fmtIcal() );
+		if (Constants.debugCalendarDataService && Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, 
+				"Considering setting early timestamp to "+wantEarlyStamp.fmtIcal() );
 		if ( daysDiff < 0 || daysDiff > 10 ) {
-			if (Constants.LOG_DEBUG)Log.d(TAG, "Setting early timestamp to "+wantEarlyStamp.fmtIcal() );
+			if (Constants.debugCalendarDataService && Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, 
+					"Setting early timestamp to "+wantEarlyStamp.fmtIcal() );
 
 			AcalDateTime oldEarlyStamp = earlyTimeStamp;
 			earlyTimeStamp = wantEarlyStamp;
@@ -334,7 +337,8 @@ public class CalendarDataService extends Service implements Runnable, DatabaseEv
 		int count = 0;
 		try {
 			long begin = System.currentTimeMillis();
-			if (Constants.debugCalendarDataService && Constants.LOG_DEBUG)	Log.d(TAG, "Processing resources queue with "+resourcesPending.size()+" elements.");
+			if (Constants.debugCalendarDataService && Constants.LOG_DEBUG)	Log.println(Constants.LOGD,TAG, 
+					"Processing resources queue with "+resourcesPending.size()+" elements.");
 			while (!resourcesPending.isEmpty()) {
 				if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Processing a pending resource");
 				count++;
@@ -631,16 +635,18 @@ public class CalendarDataService extends Service implements Runnable, DatabaseEv
 	 * @param blob			The new blob data.
 	 */
 	private void resourceChanged(ContentValues cv) {
-		if (Constants.debugCalendarDataService && Constants.LOG_VERBOSE)
-			Log.v(TAG, "Received notification of changed resource: "+cv.getAsInteger(DavResources._ID));
+		if (Constants.debugCalendarDataService && Constants.LOG_VERBOSE) Log.println(Constants.LOGV, TAG, 
+					"Received notification of changed resource: "+cv.getAsInteger(DavResources._ID));
 		String blob = cv.getAsString(DavResources.RESOURCE_DATA);
 		if (blob == null || blob.equalsIgnoreCase("")) {
-			if ( Constants.LOG_VERBOSE) Log.v(TAG, "Changed resource has no blob data. Ignoring.");
+			if (Constants.debugCalendarDataService && Constants.LOG_VERBOSE) Log.println(Constants.LOGV, TAG, 
+					"Changed resource has no blob data. Ignoring.");
 			return;
 		}
 		Long latestEnd = cv.getAsLong(DavResources.LATEST_END);
 		if ( latestEnd != null && earlyTimeStamp.after(AcalDateTime.fromMillis(latestEnd)) ) {
-			if ( Constants.LOG_VERBOSE) Log.v(TAG, "Changed resource is before earlyTimeStamp. Ignoring.");
+			if (Constants.debugCalendarDataService && Constants.LOG_VERBOSE) Log.println(Constants.LOGV, TAG, 
+					"Changed resource is before earlyTimeStamp. Ignoring.");
 			return;
 		}
 		resourcesPending.offer(cv);
@@ -659,7 +665,8 @@ public class CalendarDataService extends Service implements Runnable, DatabaseEv
 
 	private void pendingResourceDeleted(int rowid) {
 		if (this.newResources.containsKey(rowid)) newResources.remove(rowid);
-		if ( Constants.LOG_DEBUG ) Log.i(TAG,"Pending resource removed.");
+		if ( Constants.LOG_DEBUG ) Log.println(Constants.LOGD,TAG,
+				"Pending resource removed.");
 		openUnlessInTx();
 	}
 
@@ -1033,8 +1040,11 @@ public class CalendarDataService extends Service implements Runnable, DatabaseEv
 		catch (Exception e) {
 			if (this.interrupted) return;
 			if (Constants.LOG_DEBUG) {
-				Log.d(TAG, "Data Thread stopped unexpectedly: "+e.getMessage()+"\n\t\tAttempting to restart.");
-				Log.d(TAG,Log.getStackTraceString(e));
+				if (Constants.LOG_DEBUG) {
+					Log.println(Constants.LOGD, TAG, 
+							"Data Thread stopped unexpectedly: "+e.getMessage()+"\n\t\tAttempting to restart.");
+					Log.println(Constants.LOGD, TAG, Log.getStackTraceString(e)); 
+				}
 			}
 			this.openUnlessInTx();
 			resetWorker();
@@ -1193,7 +1203,7 @@ public class CalendarDataService extends Service implements Runnable, DatabaseEv
 		public void eventChanged(AcalEvent action) throws RemoteException {
 			int collectionId = action.getCollectionId();
 			AcalCollection collection = collections.get(collectionId);
-			Log.i(TAG,"eventChanged: dtstart = "+action.getStart());
+			Log.i(TAG,"Event changed: "+action.getSummary()+", "+action.getStart().toPropertyString(PropertyName.DTSTART));
 
 			switch (action.getAction()) {
 			case AcalEvent.ACTION_CREATE: {
