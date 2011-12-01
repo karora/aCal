@@ -42,7 +42,6 @@ public class Constants {
 	/** Generally useful patterns */
 	public static final Pattern lineSplitter = Pattern.compile("\\r?\\n"); 
 	public static final Pattern rfc5545UnWrapper = Pattern.compile("\r?\n ",Pattern.DOTALL);
-	public static final Pattern tzOlsonExtractor = Pattern.compile(".*((?:Antarctica|America|Africa|Atlantic|Asia|Australia|Indian|Europe|Pacific|US)/(?:(?:[^/\"]+)/)?[^/\"]+)\"?");
 	public final static Pattern splitOnCommas = Pattern.compile(",");
 	public static final Pattern	matchSegmentName	= Pattern.compile("([^/]+)$");
 
