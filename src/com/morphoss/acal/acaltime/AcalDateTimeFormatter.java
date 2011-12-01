@@ -51,7 +51,7 @@ public class AcalDateTimeFormatter {
  * @return
  */
 	public static String fmtShort(AcalDateTime dateTime, boolean prefer24hourFormat, boolean showDateIfToday, String stringIfToday) {
-		if ( dateTime == null ) return "- - - - - -";
+		if ( dateTime == null ) return "- - - -";
 		Date javaDate = dateTime.toJavaDate();
 		boolean showDate = true;
 		if (!showDateIfToday) {
