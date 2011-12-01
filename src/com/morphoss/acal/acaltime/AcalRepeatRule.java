@@ -102,9 +102,10 @@ public class AcalRepeatRule {
 		repeatRule.setUntil(newUntil);
 	}	
 
+	
 	public static AcalRepeatRule fromVCalendar( VCalendar vCal ) {
-		Masterable firstEvent = vCal.getMasterChild();
-		if ( firstEvent == null ) {
+		Masterable masterComponent = vCal.getMasterChild();
+		if ( masterComponent == null ) {
 			if ( Constants.debugRepeatRule && Constants.LOG_VERBOSE ) {
 				Log.w(TAG, "Cannot find master instance inside " + vCal.getName() );
 				Log.v(TAG, "Original blob is\n"+vCal.getOriginalBlob() );
@@ -112,33 +113,33 @@ public class AcalRepeatRule {
 			return null;
 		}
 
-		AcalProperty repeatFromDate = firstEvent.getProperty(PropertyName.DTSTART);
+		AcalProperty repeatFromDate = masterComponent.getProperty(PropertyName.DTSTART);
 		if ( repeatFromDate == null )
-			repeatFromDate = firstEvent.getProperty(PropertyName.DUE);
+			repeatFromDate = masterComponent.getProperty(PropertyName.DUE);
 		if ( repeatFromDate == null )
-			repeatFromDate = firstEvent.getProperty(PropertyName.COMPLETED);
+			repeatFromDate = masterComponent.getProperty(PropertyName.COMPLETED);
 		if ( repeatFromDate == null )
-			repeatFromDate = firstEvent.getProperty(PropertyName.DTEND);
+			repeatFromDate = masterComponent.getProperty(PropertyName.DTEND);
 		if ( repeatFromDate == null ) {
 			if ( Constants.debugRepeatRule && Constants.LOG_VERBOSE ) {
-				Log.v(TAG,"Cannot calculate instances of "+firstEvent.getName()+" without DTSTART/DUE inside " + vCal.getName() );
-				repeatFromDate = firstEvent.getProperty(PropertyName.DTSTART);
-				firstEvent = vCal.getMasterChild();
-				repeatFromDate = firstEvent.getProperty(PropertyName.DTSTART);
+				Log.v(TAG,"Cannot calculate instances of "+masterComponent.getName()+" without DTSTART/DUE inside " + vCal.getName() );
+				repeatFromDate = masterComponent.getProperty(PropertyName.DTSTART);
+				masterComponent = vCal.getMasterChild();
+				repeatFromDate = masterComponent.getProperty(PropertyName.DTSTART);
 				Log.v(TAG, "Original blob is\n"+vCal.getOriginalBlob() );
 			}
 			return null;
 		}
 
-		AcalRepeatRule ret = new AcalRepeatRule( repeatFromDate, firstEvent.getProperty(PropertyName.RRULE) );
+		AcalRepeatRule ret = new AcalRepeatRule( repeatFromDate, masterComponent.getProperty(PropertyName.RRULE) );
 		ret.sourceVCalendar = vCal;
 		if (vCal.isPending()) ret.setPending(true);
 		
-		ret.baseDuration = firstEvent.getDuration();
+		ret.baseDuration = masterComponent.getDuration();
 
 		PropertyName dateLists[] = {PropertyName.RDATE,PropertyName.EXDATE};
 		for( PropertyName dListPName : dateLists ) {
-			AcalProperty dateListProperty = firstEvent.getProperty(dListPName);
+			AcalProperty dateListProperty = masterComponent.getProperty(dListPName);
 			if ( dateListProperty == null )	continue;
 		
 			String value = dateListProperty.getValue();

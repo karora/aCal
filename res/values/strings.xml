@@ -112,9 +112,6 @@
 	<string name="thOct">Oct</string>
 	<string name="thNov">Nov</string>
 	<string name="thDec">Dec</string>
-	<!-- String sused by Show Upcoming Widget -->
-	<string name="ends">Ends</string>
-	<string name="days">Days</string>
 	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
 	<string name="oneCharMorning">a</string>
 	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
@@ -299,5 +296,7 @@
 	<string name="aCal_is_Free_Software">aCal is "Free Software" (that\'s "free" as in "freedom") which is licensed under the General Public License v3 or later.  You can download &lt;a href="http://gitorious.org/acal">the source code for aCal from Gitorious&lt;/a></string>
 	<string name="TaskMarkedComplete">Task marked as completed.</string>
 	<string name="TaskDeleted">Task was deleted.</string>
-	<string name="end">end</string>
+	<string name="endsAt">Ends %s</string>
+	<string name="days">Days</string>
+	<string name="noScheduledEvents">No scheduled events</string>
 </resources>
