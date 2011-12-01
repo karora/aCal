@@ -197,7 +197,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	 * @return
 	 */
 	public synchronized static ContentValues[] getCurrentData(Context context) {
-		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Retreiveing current data");
+		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Retrieving current data");
 		ContentValues[] cvs = new ContentValues[NUMBER_OF_EVENTS_TO_SHOW];
 		AcalDBHelper dbhelper = new AcalDBHelper(context);
 		SQLiteDatabase db = dbhelper.getReadableDatabase();
@@ -282,7 +282,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		
 		//1st, clear existing data
 		db.delete(TABLE, null, null);
-			db.yieldIfContendedSafely();
+		db.yieldIfContendedSafely();
+
 		//2nd Add each event
 		for (ContentValues cv : cvs) {
 			db.insert(TABLE, null, cv);
@@ -295,6 +296,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		db.close(); 
 	}
 
+	
 	public synchronized static ContentValues getCVFromEvent(Context context, AcalEvent event) {
 		ContentValues cv = new ContentValues();
 
@@ -313,6 +315,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		
 		return cv;
 	}
+
 	
 	public synchronized static String getEtag(Context context, int resource_id) {
 		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Getting Etag for resource "+resource_id);
@@ -355,6 +358,9 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 
 		if (start.getMillis() <= now.getMillis() ) {
 			return context.getString(R.string.endsAt, time); ///Event is occuring now
+		}
+		else if ( start.getEpochDay() == now.getEpochDay() ) {
+			return time;
 		}
 		else {
 			StringBuilder result = new StringBuilder(time);

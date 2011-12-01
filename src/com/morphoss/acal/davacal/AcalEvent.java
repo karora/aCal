@@ -195,10 +195,10 @@ public class AcalEvent implements Serializable, Parcelable, Comparable<AcalEvent
 	
 	@Override
 	public int compareTo(AcalEvent other) {
-		if ( getStart().before(other.getStart())) return -1;
-		if ( getStart().after(other.getStart())) return 1;
-		if ( getEnd().before(other.getEnd())) return -1;
-		if ( getEnd().after(other.getEnd())) return 1;
+		if ( getLocalStart().before(other.getLocalStart())) return -1;
+		if ( getLocalStart().after(other.getLocalStart())) return 1;
+		if ( getLocalEnd().before(other.getLocalEnd())) return -1;
+		if ( getLocalEnd().after(other.getLocalEnd())) return 1;
 		return 0;
 	}
 

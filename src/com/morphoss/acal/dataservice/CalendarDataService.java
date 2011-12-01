@@ -419,8 +419,8 @@ public class CalendarDataService extends Service implements Runnable, DatabaseEv
 		}
 		try {
 			//step 1, get the next N events
-			AcalDateTime now = new AcalDateTime();
-			AcalDateTime later = new AcalDateTime().addDays(ShowUpcomingWidgetProvider.NUM_DAYS_TO_LOOK_AHEAD);
+			AcalDateTime now = new AcalDateTime().applyLocalTimeZone();
+			AcalDateTime later = AcalDateTime.addDays(now, ShowUpcomingWidgetProvider.NUM_DAYS_TO_LOOK_AHEAD);
 			AcalDateRange range = new AcalDateRange(now,later);
 
 			List<AcalEvent> events = dataRequest.getEventsForDateRange(range);
