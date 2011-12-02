@@ -64,7 +64,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
-		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "onUpdate Called...");
+		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+				"onUpdate Called...");
 		for (int widgetId : appWidgetIds) {
 
 			Intent updateIntent = new Intent();	
@@ -73,7 +74,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 
 			PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 			
-			if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Processing for widget id: "+widgetId);
+			if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+					"Processing for widget id: "+widgetId);
 			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 			boolean prefer24Hour = prefs.getBoolean(context.getString(R.string.prefTwelveTwentyfour),false);
 			
@@ -147,7 +149,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			//set on click
 			//views.setOnClickPendingIntent(R.id.upcoming_container, pendingIntent);
 			
-			if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, 
+			if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG, 
 					"Processing widget "+widgetId+" completed.");
 		
 			appWidgetManager.updateAppWidget(widgetId, views);
@@ -160,16 +162,16 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			long timeTillNextAlarm = end;
 			if (start > 0 && start<end) timeTillNextAlarm = start;
 			
-			if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, 
+			if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG, 
 					"Next Event start/finish = "+timeTillNextAlarm);
 			if (timeTillNextAlarm< 1800000L) {
-				if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, 
+				if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG, 
 						"Setting update alarm for "+(timeTillNextAlarm/1000)+" seconds from now. due to event starting or ending");
 				// Get the AlarmManager service
 				 AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 				 am.set(AlarmManager.RTC, System.currentTimeMillis()+timeTillNextAlarm, pendingIntent);
 			} else {
-				if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, 
+				if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG, 
 						"No Events starting or ending in the next 30 mins, not setting alarm.");
 			}
 		}
@@ -184,7 +186,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		db.close();
 		dbhelper.close();
 		if (res >  0) aCalService.databaseDispatcher.dispatchEvent(new DatabaseChangedEvent(DatabaseChangedEvent.DATABASE_SHOW_UPCOMING_WIDGET_UPDATE,null,null));
-		if (Constants.LOG_DEBUG)  Log.println(Constants.LOGD, TAG, "Deleted "+res+" event(s) that have ended.");
+		if (Constants.LOG_DEBUG && Constants.debugWidget)  Log.println(Constants.LOGD, TAG,
+				"Deleted "+res+" event(s) that have ended.");
 	}
 	
 	/**
@@ -208,7 +211,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			for (int i=0; !cursor.isAfterLast() && i<NUMBER_OF_EVENTS_TO_SHOW; cursor.moveToNext(), i++) {
 				cvs[i] = new ContentValues();
 				DatabaseUtils.cursorRowToContentValues(cursor, cvs[i]);
-				if (Constants.LOG_VERBOSE) Log.println(Constants.LOGV, TAG, "Loaded event "+i+" from db");
+				if (Constants.LOG_VERBOSE && Constants.debugWidget) Log.println(Constants.LOGV, TAG,
+						"Loaded event "+i+" from db");
 			}
 		}
 		cursor.close();
@@ -218,7 +222,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	}
 
 	public synchronized static void checkIfUpdateRequired(Context context, List<AcalEvent> currentEvents) {
-		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Checking to see if widget update is required...");
+		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG, 
+				"Checking to see if widget update is required...");
 
 		//Turn events into content vals for easier processing
 		ContentValues[] cvs = new ContentValues[currentEvents.size()];
@@ -229,9 +234,11 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		}
 		
 		if (hasDataChanged(context, cvs)){
-			if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Data change detected, Updating DB");
+			if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+					"Data change detected, Updating DB");
 			updateData(context, cvs);
-			if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Sending update broadcast");
+			if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+					"Sending update broadcast");
 			StaticHelpers.updateWidgets(context, ShowUpcomingWidgetProvider.class);
 		}
 	}
@@ -244,7 +251,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	 */
 	public synchronized static boolean hasDataChanged(Context context, ContentValues[] newData) {
 		ContentValues[] oldData = getCurrentData(context);
-		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Comparing current data to db");
+		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+				"Comparing current data to db");
 		
 		if (oldData.length != newData.length) return true;
 		
@@ -265,7 +273,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			long now = new AcalDateTime().getMillis();
 			if (oldData[i].getAsLong(FIELD_DTEND) <= now) return true;
 		}
-		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Data does not appear to have changed.");
+		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+				"Data does not appear to have changed.");
 		return false;
 	}
 	
@@ -275,7 +284,8 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	 * @param currentEvents
 	 */
 	public static synchronized void updateData(Context context, ContentValues[] cvs) {
-		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Writing new values to DB");
+		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+				"Writing new values to DB");
 		AcalDBHelper dbhelper = new AcalDBHelper(context);
 		SQLiteDatabase db = dbhelper.getWritableDatabase();
 		db.beginTransaction();
@@ -318,21 +328,24 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 
 	
 	public synchronized static String getEtag(Context context, int resource_id) {
-		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Getting Etag for resource "+resource_id);
+		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+				"Getting Etag for resource "+resource_id);
 		ContentResolver cr = context.getContentResolver();
 		String ret = null;
 		Cursor c = null;
 		try {
 			c = cr.query(DavResources.CONTENT_URI, new String[]{DavResources.ETAG}, DavResources._ID+" = ?", new String[]{resource_id+""}, null);
 			if (c.getCount() < 1) {
-				if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Could not find value in DB");
+				if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+						"Could not find value in DB");
 				c.close();
 				return null;
 			}
 			c.moveToFirst();
 			ret = c.getString(0);
 		} catch (Exception e) {
-			if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Exception occured: "+e);
+			if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
+					"Exception occured: "+e);
 		}
 		if (c != null) c.close();
 		return ret;
@@ -360,7 +373,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			return context.getString(R.string.endsAt, time); ///Event is occuring now
 		}
 		else if ( start.getEpochDay() == now.getEpochDay() ) {
-			return time;
+			return time;  // Leave day of week off to identify it as 'today'
 		}
 		else {
 			StringBuilder result = new StringBuilder(time);
