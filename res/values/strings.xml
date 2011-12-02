@@ -224,11 +224,12 @@
 	<string name="couldNotDiscoverPrincipal">Could not discover principal path - using supplied values.</string>
 	<string name="foundPrincipalPath">Found server principal path at "%s"</string>
 	<string name="serverSupportsCalDAV">Server supports CalDAV.</string>
+	<string name="serverHasDAVNoCalDAV">The server supports DAV and your username/password worked, but CalDAV support was not found.</string>
 	<string name="serverLacksCalDAV">Server does not support CalDAV.</string>
 	<string name="serverFailedValidation">There was an error validating the server:</string>
 	<string name="saveSettingsAnyway">Would you like to save these settings anyway?</string>
 	<string name="serverValidationSuccess">Server validation was successful.</string>
-	<string name="authenticationFailed">Unable to authenticate with server.</string>
+	<string name="authenticationFailed">Authentication failed: check your username/password are correct.</string>
 	<string name="WeekViewPreferences">Week View settings</string>
 	<string name="AlarmPreferences">Alarm settings</string>
 	<string name="GeneralPreferences">General settings</string>
