@@ -153,6 +153,7 @@ public class CheckServerDialog {
 		 */
 		private void checkServer() throws TestsCancelledException {
 			TestPort tester = null;
+			successMessages = new ArrayList<String>();
 			try {
 				// Step 1, check for internet connectivity
 				updateProgress(context.getString(R.string.checkServer_Internet));
@@ -183,7 +184,7 @@ public class CheckServerDialog {
 
 					if ( !tester.hasCalDAV() ) {
 						// Try harder!
-						testers = TestPort.defaultIterator(requestor);
+						testers = TestPort.reIterate();
 						do {
 							tester = testers.next();
 							requestor.applyFromServer(serverData);
@@ -202,21 +203,35 @@ public class CheckServerDialog {
 					successMessages.add(String.format(context.getString(R.string.foundPrincipalPath), requestor.fullUrl()));
 					requestor.applyToServerSettings(serverData);
 				}
-				else if ( !tester.authOK() ) {
-					Log.w(TAG, "Failed Auth: " + requestor.fullUrl());
-					successMessages.add(context.getString(R.string.authenticationFailed));
-				}
 				else {
-					Log.w(TAG, "Found no CalDAV");
-					serverData.put(Servers.HAS_CALDAV, 0);
-					successMessages.add(context.getString(R.string.serverLacksCalDAV));
+					Iterator<TestPort> testers = TestPort.reIterate();
+					int maxAchievement = TestPort.PORT_IS_CLOSED;
+					do {
+						tester = testers.next();
+						if ( tester.getAchievement() > maxAchievement ) maxAchievement = tester.getAchievement(); 
+					}
+					while ( testers.hasNext() );
+
+					if ( maxAchievement == TestPort.AUTH_FAILED ) {
+						Log.w(TAG, "Failed Auth: " + requestor.fullUrl());
+						successMessages.add(context.getString(R.string.authenticationFailed));
+					}
+					else if ( maxAchievement == TestPort.AUTH_SUCCEEDED ) {
+						Log.w(TAG, "Found DAV but not CalDAV: " + requestor.fullUrl());
+						successMessages.add(context.getString(R.string.serverHasDAVNoCalDAV));
+					}
+					else {
+						Log.w(TAG, "Found no CalDAV");
+						serverData.put(Servers.HAS_CALDAV, 0);
+						successMessages.add(context.getString(R.string.serverLacksCalDAV));
+					}
 				}
 
 
 				// Step 6, Exit with success message
 				Message m = Message.obtain();
 				Bundle b = new Bundle();
-				b.putInt(TYPE, (tester.hasCalDAV() && tester.authOK() ? CHECK_COMPLETE : SHOW_FAIL_DIALOG));
+				b.putInt(TYPE, (tester.hasCalDAV() ? CHECK_COMPLETE : SHOW_FAIL_DIALOG));
 
 				StringBuilder successMessage = new StringBuilder("");
 				for( String msg : successMessages ) {

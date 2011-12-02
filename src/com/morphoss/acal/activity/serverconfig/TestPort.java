@@ -38,11 +38,22 @@ public class TestPort {
 	private String hostName;
 	private String path;
 	int connectTimeOut;
-	int socketTimeOut;
-	private Boolean isOpen;
-	private Boolean authOK;
-	private Boolean hasDAV;
-	private Boolean hasCalDAV;
+	int socketTimeOut			= 3000;
+	private Boolean isOpen 		= null;
+	private Boolean authOK 		= null;
+	private Boolean hasDAV		= null;
+	private Boolean hasCalDAV 	= null;
+
+	public final static int NO_CONNECTION = 0;
+	public final static int PORT_IS_CLOSED = 1;
+	public final static int PORT_IS_OPEN = 2;
+	public final static int NO_DAV_RESPONSE = 3;
+	public final static int SERVER_SUPPORTS_DAV = 4;
+	public final static int AUTH_FAILED = 5;
+	public final static int AUTH_SUCCEEDED = 6;
+	public final static int HAS_CALDAV = 7;
+	
+	private int achievement = NO_CONNECTION;
 
 	/**
 	 * Construct based on values from the AcalRequestor
@@ -55,11 +66,6 @@ public class TestPort {
 		this.port = requestor.getPort();
 		this.useSSL = requestor.getProtocol().equals("https");
 		connectTimeOut = 200 + (useSSL ? 300 : 0);
-		socketTimeOut = 3000;
-		isOpen = null;
-		authOK = null;
-		hasDAV = null;
-		hasCalDAV = null;
 	}
 
 
@@ -96,7 +102,10 @@ public class TestPort {
 
 				// No exception, so it worked!
 				this.isOpen = true;
-				if ( requestor.getStatusCode() == 401 ) this.authOK = false;
+				if ( requestor.getStatusCode() == 401 ) {
+					this.authOK = false;
+					setAchievement(AUTH_FAILED);
+				}
 				checkCalendarAccess(requestor.getResponseHeaders());
 
 				this.socketTimeOut = 15000;
@@ -107,9 +116,19 @@ public class TestPort {
 				if ( Constants.debugCheckServerDialog )
 					Log.println(Constants.LOGD, TAG, "Probe "+requestor.fullUrl()+" failed: " + e.getMessage());
 			}
+			setAchievement( this.isOpen ? PORT_IS_OPEN : PORT_IS_CLOSED);
 		}
 		if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGD,TAG, "Port "+(isOpen ?"":"not")+" open on "+requestor.protocolHostPort() );
 		return this.isOpen;
+	}
+
+
+	/**
+	 * We can only increase our achievement level
+	 * @param thisAchievement
+	 */
+	private void setAchievement(int thisAchievement) {
+		if ( thisAchievement > achievement ) achievement = thisAchievement;
 	}
 
 
@@ -120,7 +139,7 @@ public class TestPort {
 	boolean reProbe() {
 		connectTimeOut += 1000;
 		connectTimeOut *= 2;
-		isOpen = null;
+		if ( isOpen != null && !isOpen ) isOpen = null;
 		return isOpen();
 	}
 
@@ -171,7 +190,11 @@ public class TestPort {
 
 			checkCalendarAccess(requestor.getResponseHeaders());
 
-			if ( status == 207 ) {
+			if ( status == 401 ) {
+				authOK = false;
+				setAchievement(AUTH_FAILED);
+			}
+			else if ( status == 207 ) {
 				if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGD,TAG, "Checking for principal path in response...");
 				List<DavNode> unAuthenticated = root.getNodesFromPath("multistatus/response/propstat/prop/current-user-principal/unauthenticated");
 				if ( ! unAuthenticated.isEmpty() ) {
@@ -189,6 +212,9 @@ public class TestPort {
 					return doPropfindPrincipal(requestPath);
 				}
 				
+				authOK = true;
+				setAchievement(AUTH_SUCCEEDED);
+
 				String principalCollectionHref = null;
 				for ( DavNode response : root.getNodesFromPath("multistatus/response") ) {
 					String responseHref = response.getFirstNodeText("href"); 
@@ -236,7 +262,6 @@ public class TestPort {
 					
 				}
 			}
-			if ( status < 300 ) authOK = true;
 		}
 		catch (Exception e) {
 			Log.e(TAG, "PROPFIND Error: " + e.getMessage());
@@ -268,6 +293,7 @@ public class TestPort {
 			if ( doPropfindPrincipal(this.path) ) 								hasDAV = true;
 			else if ( !hasDAV && doPropfindPrincipal("/.well-known/caldav") )	hasDAV = true;
 			else if ( !hasDAV && doPropfindPrincipal("/") )						hasDAV = true;
+			setAchievement( this.hasDAV ? NO_DAV_RESPONSE : SERVER_SUPPORTS_DAV);
 		}
 		if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGD,TAG, "DAV "+(hasDAV?"":"not")+" found on "+requestor.fullUrl());
 		return hasDAV;
@@ -308,6 +334,7 @@ public class TestPort {
 				if ( Constants.debugCheckServerDialog )
 					Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
 			}
+			if ( this.hasCalDAV ) setAchievement(HAS_CALDAV);
 		}
 		if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGI,TAG,
 				"CalDAV "+(hasCalDAV?"":"not")+" found on "+requestor.fullUrl());
@@ -344,22 +371,32 @@ public class TestPort {
 		testPortSet.add( new TestPort(requestor,80,false) );
 		testPortSet.add( new TestPort(requestor,8008,false) );
 		testPortSet.add( new TestPort(requestor,8843,true) );
-		testPortSet.add( new TestPort(requestor,4443,true) );
+//		testPortSet.add( new TestPort(requestor,4443,true) );
 		testPortSet.add( new TestPort(requestor,8043,true) );
-		testPortSet.add( new TestPort(requestor,8800,false) );
-		testPortSet.add( new TestPort(requestor,8888,false) );
-		testPortSet.add( new TestPort(requestor,7777,false) );
+//		testPortSet.add( new TestPort(requestor,8800,false) );
+//		testPortSet.add( new TestPort(requestor,8888,false) );
+//		testPortSet.add( new TestPort(requestor,7777,false) );
 
 		return testPortSet.iterator();
 	}
 
+	public static Iterator<TestPort> reIterate() {
+		if ( testPortSet == null ) return null;
+		return testPortSet.iterator();
+	}
 
+	
 	/**
 	 * Return a URL Prefix like 'https://'
 	 * @return
 	 */
 	public String getProtocolUrlPrefix() {
 		return "http" + (useSSL?"s":"") + "://";
+	}
+
+
+	public int getAchievement() {
+		return achievement;
 	}
 	
 }

@@ -677,6 +677,7 @@ public class AcalRequestor {
 				Log.d(TAG, "Response: "+statusCode+", Sent: "+up+", Received: "+down+", Took: "+timeTaken+" seconds");
 			
 			if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication ) {
+				Log.println(Constants.LOGV,TAG, "RESPONSE: "+response.getStatusLine().getProtocolVersion()+" "+response.getStatusLine().getStatusCode()+" "+response.getStatusLine().getReasonPhrase() );
 				for (Header h : responseHeaders) {
 					Log.println(Constants.LOGV,TAG,"H<  "+h.getName()+": "+h.getValue() );
 				}
@@ -868,7 +869,7 @@ public class AcalRequestor {
 					}
 				}
 			}
-			if ( statusCode == 404 ) {
+			if ( statusCode == 404 || statusCode == 401 ) {
 				responseStream.close();
 				return root;
 			}
