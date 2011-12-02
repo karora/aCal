@@ -711,7 +711,7 @@ public class SyncCollectionContents extends ServiceJob {
 			List<ResourceModification> changeList = new ArrayList<ResourceModification>(hrefList.length());
 
 			for (DavNode response : responses) {
-				try { Thread.sleep(2); } catch ( InterruptedException e ) { }  // Give the UI thread more of a chance to do stuff.
+				try { Thread.sleep(3); } catch ( InterruptedException e ) { }  // Give the UI thread more of a chance to do stuff.
 				String name = response.segmentFromFirstHref("href");
 				if ( toBeRemoved.contains(name) ) {
 					if (Constants.LOG_VERBOSE && Constants.debugSyncCollectionContents )
@@ -737,6 +737,8 @@ public class SyncCollectionContents extends ServiceJob {
 			}
 
 			ResourceModification.commitChangeList(context, changeList);
+
+			try { Thread.sleep(50); } catch ( InterruptedException e ) { }  // Give the UI thread more of a chance to do stuff.
 			
 		}
 
