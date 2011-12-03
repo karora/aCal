@@ -32,4 +32,6 @@ Timezones are now fully supported.
 Event editing is redesigned.
 Events now support custom alarms.
 Memory footprint is improved.
+New desktop widget showing upcoming events.
+Upgrade notes now available from Settings menu.
 ... and many bug fixes.
