@@ -4,6 +4,7 @@
 <string name="theDayEachWeekStartsWith">Tydzień zaczyna się</string>
 <string name="firstDayOfWeek">Pierwszy dzień tygodnia</string>
 <string name="cancel">Anuluj</string>
+<string name="setButtonLabel">Ustaw</string>
 <string name="appDescription">Kalendarz dla systemu Android, który synchronizuje zdarzenia, zadania, notatki i kontakty z serwerem CalDAV / CardDAV, np. DAViCal (www.davical.org)</string>
 <string name="appDescriptionTasks">Lista zadań dla systemu Android, która będzie przechowywać swoje zadania na zdalnym CalDAV / CardDAV serwerze, takim jak DAViCal (patrz: www.davical.org)</string>
 <string name="Active">Aktywny</string>
@@ -11,7 +12,6 @@
 <string name="A_name_for_this_server_configuration">Nazwa konfiguracji serwera</string>
 <string name="Authentication_Type">Metoda uwierzystalnienia</string>
 <string name="Simple_Path">Prosta ścieżka</string>
-<string name="Simple_Domain">Prosta domena</string>
 <string name="Enter_a_brief_summary_of_the_event">Wpisz krótki opis zdarzenia</string>
 <string name="Name">Nazwa</string>
 <string name="Force_full_resync">Wymuś synchronizację</string>
@@ -32,7 +32,6 @@
 <string name="The_authentication_type_used">Metoda autentykacji użyta przez serwer</string>
 <string name="The_password_to_use">Hasło użyte do autentykacji na serwerze</string>
 <string name="The_path_on_the_server">Ścieżka na serwerze, np: &quot;/caldav.php/user/&quot;</string>
-<string name="The_domain_for_your_organisation">Domena Twojej organizacji, np: &quot;morphoss.com&quot;</string>
 <string name="The_servers_hostname">Pełna nazwa serwera, np: &quot;calendar.davical.com&quot;</string>
 <string name="The_username_to_use">Nazwa użytkownika użyta do autentykacji na serwerze</string>
 <string name="Username">Nazwa użytkownika</string>
@@ -108,8 +107,9 @@
 <string name="thOct">Paź</string>
 <string name="thNov">Lis</string>
 <string name="thDec">Gru</string>
-<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
 <string name="oneCharMorning">r</string>
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
 <string name="YearViewSize_PrefTitle">Liczba miesięcy w widoku rocznym</string>
 <string name="YearViewSize_PrefSummary">Liczba miesięcy, która jest widoczna w widoku rocznym</string>
 <string name="Snooze_PrefTitle">Drzemka</string>
@@ -118,6 +118,10 @@
 <string name="DefaultCollection_PrefSummary">Domyślna kolekcja używana dla nowych zdarzeń</string>
 <string name="DefaultAlarmTone_PrefTitle">Domyślny dźwięk dzwonka</string>
 <string name="DefaultAlarmTone_PrefSummary">Domyślny dźwięk używany do alarmów</string>
+<string name="AlarmVolumeType_PrefTitle">Ustawienia głośności alarmu</string>
+<string name="AlarmVolumeType_PrefSummary">Ustawienie wykorzystywane do głośności dźwięku alarmu</string>
+<string name="AlarmBellVolume">Głośności dzwonka alarmu</string>
+<string name="MediaPlayerVolume">Głośność mediów</string>
 <string name="prefWorkdayStart_Title">Początek dni roboczych</string>
 <string name="prefWorkdayStart_Summary">Czas rozpoczęcia dnia pracy.</string>
 <string name="prefWorkdayFinish_Title">Koniec dni roboczych</string>
@@ -142,9 +146,13 @@
 <string name="RepeatsPrompt">Powtórzenia:</string>
 <string name="AllDayPrompt">Cały dzień:</string>
 <string name="FromPrompt">Od:</string>
+<string name="TodoFromPrompt">Zaczyna się o:</string>
 <string name="UntilPrompt">Do:</string>
 <string name="DuePrompt">Niezakończone</string>
 <string name="CompletedPrompt">Zakończone:</string>
+<string name="DaysPrompt">Dni:</string>
+<string name="CompletePrompt">Zakończone:</string>
+<string name="CollectionPrompt">Kalendarz:</string>
 <string name="defaultCalendar">Domyślny kalendarz</string>
 <string name="theCalendarForNewEvents">Kalendarz, który będzie używany do zapisywania nowych zdarzeń</string>
 <string name="TwelveTwentyfour_PrefTitle">Użyj formaty 24-godzinnego</string>
@@ -191,6 +199,7 @@
 <string name="ForTheWholeDay">Cały dzień</string>
 <string name="alarmAtEventTime">Na czas zdarzenia</string>
 <string name="alarm10MinutesPrior">10 minut przed</string>
+<string name="alarm15MinutesPrior">15 minut przed</string>
 <string name="alarm30MinutesPrior">30 minut przed</string>
 <string name="alarm1HourPrior">Jedną godzinę przed</string>
 <string name="alarm2HoursPrior">Dwie godziny przed</string>
@@ -213,6 +222,7 @@
 <string name="checkServer">Sprawdzanie serwera</string>
 <string name="checkServer_Connecting">Łączę z serwerem, proszę czekaj...</string>
 <string name="checkServer_Internet">Sprawdź łącze z internetem</string>
+<string name="checkServer_SearchingForServer">Szukam serwera CalDAV na &quot;%s&quot;</string>
 <string name="serverRecordAlreadyExists">Serwer już istnieje dlatego protokółu, port, hosta, ścieżki &amp; nazwy użytkownika</string>
 <string name="newEventFromThis">Kopiuj do nowego zdarzenia</string>
 <string name="Delete">Usuń</string>
@@ -240,4 +250,21 @@
 <string name="dueTasksTitle">Zadania w ciągu tygodnia</string>
 <string name="incompleteTasksTitle">Niezakończone zadania</string>
 <string name="allTasksTitle">Wszystkie zadania</string>
+<string name="NewTaskTitle">Nowe zadanie</string>
+<string name="TaskSaved">Zadanie zapisane.</string>
+<string name="TaskModifiedAll">Zmieniono wszystkie wystąpienia tego zadania.</string>
+<string name="TaskModifiedOne">Zmieniono jedno wystąpienie tego zadania.</string>
+<string name="TaskModifiedThisAndFuture">Zmieniono to i przyszłe wystąpienia zadania.</string>
+<string name="TaskErrorSaving">Błąd podczas zapisywania danych zadania - spróbuj ponownie.</string>
+<string name="username">Nazwa użytkownika:</string>
+<string name="password">Hasło:</string>
+<string name="setRepeatRule">Ustaw regułę powtarzania</string>
+<string name="eventName">Nazwa zdarzenia</string>
+<string name="IsADate">Jest datą</string>
+<string name="NotSet">Nie ustawione</string>
+<string name="Exactly">Dokładnie</string>
+<string name="Start">Zaczyna się</string>
+<string name="Finish">Kończy się</string>
+<string name="Before">Przed</string>
+<string name="After">Po</string>
 </resources>

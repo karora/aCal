@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aCal\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-28 00:18+1300\n"
-"PO-Revision-Date: 2011-11-27 11:18+0000\n"
+"POT-Creation-Date: 2011-12-03 23:18+1300\n"
+"PO-Revision-Date: 2011-12-03 10:45+0000\n"
 "Last-Translator: karora <andrew@mcmillan.net.nz>\n"
 "Language-Team: French (http://www.transifex.net/projects/p/acal/team/fr/)\n"
 "MIME-Version: 1.0\n"
@@ -708,6 +708,9 @@ msgstr "Chemin principal du serveur trouvé à &quot;%s&quot;"
 msgid "serverSupportsCalDAV"
 msgstr "Ce serveur prend en charge CalDAV."
 
+msgid "serverHasDAVNoCalDAV"
+msgstr ""
+
 msgid "serverLacksCalDAV"
 msgstr "Ce serveur ne supporte pas CalDAV."
 
@@ -726,6 +729,12 @@ msgstr "Impossible de s'authentifier auprès du serveur."
 msgid "WeekViewPreferences"
 msgstr "Paramêtres de la vue hebdomadaire"
 
+msgid "AlarmPreferences"
+msgstr ""
+
+msgid "GeneralPreferences"
+msgstr ""
+
 msgid "checkServer"
 msgstr "Validation du serveur"
 
@@ -736,6 +745,9 @@ msgid "checkServer_Internet"
 msgstr "Vérification de la connexion internet"
 
 msgid "checkServer_SearchingForServer"
+msgstr ""
+
+msgid "checkServer_DiscoveryCancelled"
 msgstr ""
 
 msgid "serverRecordAlreadyExists"
@@ -816,6 +828,9 @@ msgstr "Tâches prévues dans la semaine"
 
 msgid "incompleteTasksTitle"
 msgstr "Tâches en cours"
+
+msgid "incompleteTasksDue"
+msgstr ""
 
 msgid "allTasksTitle"
 msgstr "Toutes les tâches"
@@ -905,6 +920,21 @@ msgid "aCal_Mailing_Lists"
 msgstr ""
 
 msgid "aCal_is_Free_Software"
+msgstr ""
+
+msgid "TaskMarkedComplete"
+msgstr ""
+
+msgid "TaskDeleted"
+msgstr ""
+
+msgid "endsAt"
+msgstr ""
+
+msgid "days"
+msgstr ""
+
+msgid "noScheduledEvents"
 msgstr ""
 
 # SourceFileEnd:../res/values/strings.xml

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-28 00:18+1300\n"
+"POT-Creation-Date: 2011-12-03 23:18+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -689,6 +689,11 @@ msgstr "Found server principal path at &quot;%s&quot;"
 msgid "serverSupportsCalDAV"
 msgstr "Server supports CalDAV."
 
+msgid "serverHasDAVNoCalDAV"
+msgstr ""
+"The server supports DAV and your username/password worked, but CalDAV "
+"support was not found."
+
 msgid "serverLacksCalDAV"
 msgstr "Server does not support CalDAV."
 
@@ -702,10 +707,16 @@ msgid "serverValidationSuccess"
 msgstr "Server validation was successful."
 
 msgid "authenticationFailed"
-msgstr "Unable to authenticate with server."
+msgstr "Authentication failed: check your username/password are correct."
 
 msgid "WeekViewPreferences"
 msgstr "Week View settings"
+
+msgid "AlarmPreferences"
+msgstr "Alarm settings"
+
+msgid "GeneralPreferences"
+msgstr "General settings"
 
 msgid "checkServer"
 msgstr "Validating server"
@@ -718,6 +729,9 @@ msgstr "Checking internet connectivity"
 
 msgid "checkServer_SearchingForServer"
 msgstr "Searching for CalDAV server at &quot;%s&quot;"
+
+msgid "checkServer_DiscoveryCancelled"
+msgstr "Server discovery was cancelled"
 
 msgid "serverRecordAlreadyExists"
 msgstr ""
@@ -797,6 +811,9 @@ msgstr "Tasks due within a week"
 
 msgid "incompleteTasksTitle"
 msgstr "Incomplete Tasks"
+
+msgid "incompleteTasksDue"
+msgstr "Incomplete tasks due within a week"
 
 msgid "allTasksTitle"
 msgstr "All Tasks"
@@ -880,7 +897,9 @@ msgid "aCal_Website"
 msgstr "The <b>aCal</b> website is %s"
 
 msgid "aCal_IRC_Channel"
-msgstr "You can chat with the aCal authors on IRC in the #acal on irc.oftc.net"
+msgstr ""
+"You can chat with the aCal authors on IRC in the &lt;a href=&quot;irc://irc."
+"oftc.net/#acal&quot;>&quot;#acal on irc.oftc.net&lt;/a>"
 
 msgid "aCal_Mailing_Lists"
 msgstr ""
@@ -894,6 +913,21 @@ msgstr ""
 "freedom&quot;) which is licensed under the General Public License v3 or "
 "later.  You can download &lt;a href=&quot;http://gitorious.org/acal&quot;"
 ">the source code for aCal from Gitorious&lt;/a>"
+
+msgid "TaskMarkedComplete"
+msgstr "Task marked as completed."
+
+msgid "TaskDeleted"
+msgstr "Task was deleted."
+
+msgid "endsAt"
+msgstr "Ends %s"
+
+msgid "days"
+msgstr "Days"
+
+msgid "noScheduledEvents"
+msgstr "No scheduled events"
 
 # SourceFileEnd:../res/values/strings.xml
 # SourceFileStart:../res/values/timezonenames.xml

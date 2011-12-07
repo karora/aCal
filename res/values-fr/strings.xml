@@ -11,7 +11,6 @@
 <string name="A_name_for_this_server_configuration">Nom utilisé pour la configuration de ce serveur</string>
 <string name="Authentication_Type">Type d\'authentification</string>
 <string name="Simple_Path">Chemin simple</string>
-<string name="Simple_Domain">Domaine simple</string>
 <string name="Enter_a_brief_summary_of_the_event">Entrez un bref résumé de l\'événement</string>
 <string name="Name">Nom</string>
 <string name="Force_full_resync">Forcer la re-synchronisation</string>
@@ -32,7 +31,6 @@
 <string name="The_authentication_type_used">Type d\'authentification utilisé par le serveur</string>
 <string name="The_password_to_use">Mot de passe pour l\'autentification au serveur</string>
 <string name="The_path_on_the_server">Chemin sur le serveur, tel que &quot;/caldav.php/user/&quot;</string>
-<string name="The_domain_for_your_organisation">Nom de domaine de votre entreprise, tel que &quot;morphoss.com&quot;</string>
 <string name="The_servers_hostname">Nom d\'hotes complet du serveur, comme &quot;calendar.davical.com&quot;</string>
 <string name="The_username_to_use">Nom d\'utilisateur pour l\'autentification au serveur</string>
 <string name="Username">Nom d\'utilisateur</string>
@@ -104,13 +102,14 @@
 <string name="thJul">Jui</string>
 <string name="thAug">Aou</string>
 <string name="thDec">Déc</string>
-<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
 <string name="YearViewSize_PrefTitle">Nombre de mois dans la vue annuelle</string>
 <string name="YearViewSize_PrefSummary">Nombre de mois visible dans la vue annuelle</string>
 <string name="Snooze_PrefTitle">Délai de répétition</string>
 <string name="Snooze_PrefSummary">Combien de minutes après l\'alarme doit-on répéter lors de l\'appui sur la fonction répéter</string>
 <string name="DefaultCollection_PrefTitle">Collection par défaut</string>
-<string name="DefaultCollection_PrefSummary">Collection par défaut à utiliser pour les nouveaux évenements</string>
+<string name="DefaultCollection_PrefSummary">Collection par défaut à utiliser pour les nouveaux événements</string>
 <string name="DefaultAlarmTone_PrefTitle">Sonnerie par défaut</string>
 <string name="DefaultAlarmTone_PrefSummary">Son par défaut utilisé pour les alarmes.</string>
 <string name="prefWorkdayStart_Title">Début de journée</string>
@@ -143,7 +142,7 @@
 <string name="theCalendarForNewEvents">Calendrier à utiliser par défaut pour les nouveaux événements.</string>
 <string name="TwelveTwentyfour_PrefTitle">Utiliser le format 24h</string>
 <string name="TwelveTwentyfour_OffSummary">2:00pm </string>
-<string name="OnlyOnce">venement unique</string>
+<string name="OnlyOnce">Evènement unique</string>
 <string name="EveryWeekday">Tous les jours, en semaine</string>
 <string name="EveryWeekend">Chaque week-end</string>
 <string name="EveryDay">Quotidien</string>
@@ -190,7 +189,7 @@
 <string name="alarm1HourPrior">Une heure avant</string>
 <string name="alarm2HoursPrior">Deux heures avant</string>
 <string name="alarmCustom">Alarme personnelle</string>
-<string name="alarmsDisabledNote">(toutes les alarmes sont desactivées pour ce clendrier)</string>
+<string name="alarmsDisabledNote">(toutes les alarmes sont desactivées pour ce calendrier)</string>
 <string name="changeThisInstance">Uniquement cette occurrence</string>
 <string name="changeAllInstances">Toutes les occurrences</string>
 <string name="changeThisAndFuture">Cette occurrence et toutes les suivantes</string>
@@ -208,7 +207,7 @@
 <string name="checkServer">Validation du serveur</string>
 <string name="checkServer_Connecting">Connexion au serveur. Merci de patienter...</string>
 <string name="checkServer_Internet">Vérification de la connexion internet</string>
-<string name="serverRecordAlreadyExists">Un serveur existe déjà pour ce protocole, port, serveur et utilisateur</string>
+<string name="serverRecordAlreadyExists">Un serveur existe déjà pour ce protocole, port, serveur ou utilisateur</string>
 <string name="newEventFromThis">Copier vers un nouvel événement</string>
 <string name="Delete">Effacer</string>
 <string name="deleteAllInstances">Effacer toutes les occurrences</string>
@@ -228,7 +227,7 @@
 <string name="Todo">À faire</string>
 <string name="Events">Événements</string>
 <string name="Tasks">Tâches</string>
-<string name="Unscheduled">Non planifi</string>
+<string name="Unscheduled">Non planifié</string>
 <string name="ChooseAction">Choisir un action</string>
 <string name="SetCompleted">Marquer comme terminé</string>
 <string name="newTaskFromThis">Copier vers une nouvelle tâche</string>

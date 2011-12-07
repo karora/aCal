@@ -11,7 +11,7 @@
 <string name="A_name_for_this_server_configuration">Name, der für diese Server-Konfiguration verwendet werden soll</string>
 <string name="Authentication_Type">Authentifizierungsmethode</string>
 <string name="Simple_Path">Einfacher Pfad</string>
-<string name="Simple_Domain">Einfache Domain</string>
+<string name="Simple_User_URL">Benutzer URL</string>
 <string name="Enter_a_brief_summary_of_the_event">Geben Sie eine kurze Zusammenfassung des Ereignisses ein</string>
 <string name="Force_full_resync">Resynchronisation erzwingen</string>
 <string name="Password">Passwort</string>
@@ -31,7 +31,7 @@
 <string name="The_authentication_type_used">Die vom Server benutzte Authentifizierungsmethode</string>
 <string name="The_password_to_use">Das Passwort, das zur Authentifizierung am Server verwendet wird</string>
 <string name="The_path_on_the_server">Der Pfad auf dem Server, bspw. &quot;/caldav.php/user/&quot;</string>
-<string name="The_domain_for_your_organisation">Die Domain der Organisation, bspw. &quot;morphoss.com&quot;</string>
+<string name="A_URL_or_domain_name">Eine URL oder Domain für Ihren Kalendarserver</string>
 <string name="The_servers_hostname">Der vollständige Rechnername des Servers, bspw. &quot;calendar.davical.com&quot;</string>
 <string name="The_username_to_use">Der Benutzername, der zur Authentifizierung am Server verwendet wird</string>
 <string name="Username">Benutzername</string>
@@ -93,7 +93,8 @@
 <string name="thMay">Mai</string>
 <string name="thOct">Okt</string>
 <string name="thDec">Dez</string>
-<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
 <string name="YearViewSize_PrefTitle">Anzahl der Monate in der Jahresansicht</string>
 <string name="YearViewSize_PrefSummary">Anzahl der Monate die in der Jahresansicht sichtbar sind</string>
 <string name="Snooze_PrefTitle">Snooze Zeitraum</string>
@@ -102,6 +103,10 @@
 <string name="DefaultCollection_PrefSummary">Die Standardsammlung für neue Elemente</string>
 <string name="DefaultAlarmTone_PrefTitle">Standard Erinnerungsmelodie</string>
 <string name="DefaultAlarmTone_PrefSummary">Standard Erinnerungsmelodie für Benachrichtigungen</string>
+<string name="AlarmVolumeType_PrefTitle">Einstellungen für die Alarmlautstärke</string>
+<string name="AlarmVolumeType_PrefSummary">Diese Einstellung wird für die Lautstärke des Alarms verwendet</string>
+<string name="AlarmBellVolume">Lautstärke des Alarms</string>
+<string name="MediaPlayerVolume">Lautstärke</string>
 <string name="prefWorkdayStart_Title">Beginn des Arbeitstages</string>
 <string name="prefWorkdayStart_Summary">Die Anfangszeit des Arbeitstages</string>
 <string name="prefWorkdayFinish_Title">Ende des Arbeitstages</string>
@@ -126,9 +131,14 @@
 <string name="RepeatsPrompt">Wiederholungen:</string>
 <string name="AllDayPrompt">Ganztägiges Ereignis:</string>
 <string name="FromPrompt">Von:</string>
+<string name="TodoFromPrompt">Anfangen um:</string>
 <string name="UntilPrompt">Bis:</string>
 <string name="DuePrompt">Fällig:</string>
 <string name="CompletedPrompt">Abgeschlossen:</string>
+<string name="DaysPrompt">Tage:</string>
+<string name="StartPrompt">Anfang:</string>
+<string name="CompletePrompt">Fertiggestellt:</string>
+<string name="CollectionPrompt">Kalendar:</string>
 <string name="defaultCalendar">Standardkalender</string>
 <string name="theCalendarForNewEvents">Der Kalender, der standardmäßig für neue Ereignisse verwendet werden soll.</string>
 <string name="TwelveTwentyfour_PrefTitle">24-Stunden-Format benutzen</string>
@@ -175,6 +185,7 @@
 <string name="ForTheWholeDay">Ganzer Tag</string>
 <string name="alarmAtEventTime">Zu Ereignissbeginn</string>
 <string name="alarm10MinutesPrior">10 Minuten vorher</string>
+<string name="alarm15MinutesPrior">15 Minuten vorher</string>
 <string name="alarm30MinutesPrior">30 Minuten vorher</string>
 <string name="alarm1HourPrior">1 Stunde vorher</string>
 <string name="alarm2HoursPrior">2 Stunden vorher</string>
@@ -188,15 +199,20 @@
 <string name="couldNotDiscoverPrincipal">Der \\&quot;Principal\\&quot; Pfad des Servers konnte nicht ermittelt werden - benutze die Vorgaben des Benutzers.</string>
 <string name="foundPrincipalPath">\\&quot;Principal\\&quot; Pfad des Servers unter &quot;%s&quot; gefunden</string>
 <string name="serverSupportsCalDAV">Server unterstützt CalDAV.</string>
+<string name="serverHasDAVNoCalDAV">Der Server unterstützt DAV und Ihr Benutzername und Passwort funktionieren, aber CalDAV-Unterstützung ist nicht vorhanden.</string>
 <string name="serverLacksCalDAV">Server unterstützt CalDAV nicht.</string>
 <string name="serverFailedValidation">Es gab einen Fehler bei der Überprüfung des Servers.</string>
 <string name="saveSettingsAnyway">Möchten Sie diese Einstellungen trotzdem speichern?</string>
 <string name="serverValidationSuccess">Serverüberprüfung war erfolgreich.</string>
 <string name="authenticationFailed">Authentifizierung mit Server fehlgeschlagen</string>
 <string name="WeekViewPreferences">Einstellungen Wochenansicht</string>
+<string name="AlarmPreferences">Alarmeinstellungen</string>
+<string name="GeneralPreferences">Allgemeine Einstellungen</string>
 <string name="checkServer">Verifiziere Server</string>
 <string name="checkServer_Connecting">Verbinde zum Server, bitte warten...</string>
 <string name="checkServer_Internet">Überprüfe Internetverbindung</string>
+<string name="checkServer_SearchingForServer">Suche nach CalDAV-Server unter &quot;%s&quot;</string>
+<string name="checkServer_DiscoveryCancelled">Serversuche wurde abgebrochen</string>
 <string name="serverRecordAlreadyExists">Es liegt schon ein Server mit diesen Einstellungen vor</string>
 <string name="newEventFromThis">Kopiere als neues Event</string>
 <string name="Delete">Löschen</string>
@@ -216,10 +232,43 @@
 <string name="All">Alle</string>
 <string name="Events">Termine</string>
 <string name="Tasks">Aufgaben</string>
+<string name="Unscheduled">Ungeplant</string>
 <string name="ChooseAction">Aktion wählen</string>
 <string name="SetCompleted">Als abgeschlossen markieren</string>
 <string name="newTaskFromThis">Zu neuer Aufgabe kopieren</string>
 <string name="dueTasksTitle">Aufgaben der nächsten Woche</string>
 <string name="incompleteTasksTitle">Nicht erledigte Aufgaben</string>
+<string name="incompleteTasksDue">Unfertige Aufgaben fällig innerhalb einer Woche</string>
 <string name="allTasksTitle">Alle Aufgaben</string>
+<string name="NewTaskTitle">Neue Aufgabe</string>
+<string name="TaskSaved">Aufgabe gespeichert.</string>
+<string name="TaskModifiedAll">Alle Vorkommnisse dieser Aufgabe bearbeitet.</string>
+<string name="TaskModifiedOne">Eine Vorkommnis dieser Aufgabe bearbeitet.</string>
+<string name="TaskModifiedThisAndFuture">Aktuelle und alle zukünftigen Vorkommnisse dieser Aufgabe bearbeitet.</string>
+<string name="TaskErrorSaving">Fehler beim Speichern der Daten -- Bitte versuchen Sie es nochmals.</string>
+<string name="username">Benutzername:</string>
+<string name="password">Passwort:</string>
+<string name="setRepeatRule">Wiederholung festlegen</string>
+<string name="eventName">Ereignisname</string>
+<string name="todoName">Aufgabenname:</string>
+<string name="IsADate">Ist ein Datum</string>
+<string name="NotSet">Nicht gesetzt</string>
+<string name="Exactly">Genau</string>
+<string name="Start">Anfang</string>
+<string name="Finish">Ende</string>
+<string name="Before">Vor</string>
+<string name="After">Nach</string>
+<string name="Custom">Benutzerdefiniert</string>
+<string name="SetCustomAlarm">Benutzerdefinierten Alarm setzen</string>
+<string name="showUpdateInformation">Aktualisierungsinformationen anzeigen</string>
+<string name="General_aCal_Information">Allgemeine aCal Informationen</string>
+<string name="aCal_Website">Die <b>aCal</b> Webseite ist %s</string>
+<string name="aCal_IRC_Channel">Sie können sich mit den aCal-Entwicklern im IRC unter &lt;a href=&quot;irc://irc.oftc.net/#acal&quot;>&quot;#acal auf irc.oftc.net&lt;/a></string>
+<string name="aCal_Mailing_Lists">Die &lt;em>aCal-&lt;/em>Mailinglisten sind öffentlich und Sie können sich unter &lt;a href=&quot;http://lists.acal.me/&quot;>lists.acal.me&lt;/a> anmelden. Dort findet sich auch das Nachrichtenarchiv.</string>
+<string name="aCal_is_Free_Software">aCal ist &quot;Freie Software&quot; (&quot;frei&quot; im Sinne von &quot;Freiheit&quot;) lizenziert unter der General Public License Version 3 order später. Sie können sich den &lt;a href=&quot;http://gitorious.org/acal&quot;>Quelltext&lt;/a> von aCal herunterladen.</string>
+<string name="TaskMarkedComplete">Aufgabe als abgeschlossen markiert.</string>
+<string name="TaskDeleted">Aufgabe wurde gelöscht.</string>
+<string name="endsAt">Endet %s</string>
+<string name="days">Tage</string>
+<string name="noScheduledEvents">Keine geplanten Ereignisse.</string>
 </resources>
