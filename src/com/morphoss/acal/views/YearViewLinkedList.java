@@ -30,6 +30,7 @@ public class YearViewLinkedList {
 	public YearViewLinkedList() {
 		
 	}
+
 	public AcalDateTime getClickedMonth(int x, int y, int offset, int numRowsAbove, int cols) {
 		if (root == null) return null;
 		YearViewNode cur = root;
@@ -120,19 +121,20 @@ public class YearViewLinkedList {
 		//ensure last child is not a yearheader
 		if (getLastChild() instanceof YearHeader) { removeLastChild();}
 	}
-	public void createInitialRow(int initialMonth,int initialYear, int cols, Context c, int x, MonthImageGenerator ig, int compWidth) {
-		root = new MonthImage(c,initialYear,initialMonth,1,x,ig);
+
+	public void createInitialRow(int initialMonth, int initialYear, int cols, Context c, int x, MonthImageGenerator ig, int compWidth) {
+		root = new MonthImage( c, initialYear, initialMonth++, 1, x, ig); 
+
 		YearViewNode cur = root;
-		int month = initialMonth+1;
-		for (int i = 1; i < cols; i++) {
-			cur.setNext(new MonthImage(c,initialYear,month,1,(x+(i*compWidth)),ig));
+		for (int i = 1; i < cols && initialMonth <= AcalDateTime.DECEMBER; i++) {
+			cur.setNext(new MonthImage(c,initialYear,initialMonth++,1,(x+(i*compWidth)),ig));
 			cur=cur.getNext();
-			month++;
 		}
 	}
+
 	public int insertNewRow(int cols, Context c, int x, MonthImageGenerator ig, int compWidth) {
 		if (root == null) return 0;
-		MonthImage first = (MonthImage)root;
+		MonthImage first = root.getMonthImage();
 		int month = first.getMonth();
 		int year = first.getYear();
 		int ret = 0;
@@ -147,7 +149,7 @@ public class YearViewLinkedList {
 		if (month < AcalDateTime.JANUARY) { month+=12; year--;}
 		YearViewNode start = new MonthImage(c,year,month++,1,x,ig);
 		YearViewNode cur = start;
-		for (int i = 1; i<cols;i++) {
+		for (int i = 1; i < cols && month <= AcalDateTime.DECEMBER; i++) {
 			cur.setNext(new MonthImage(c,year,month++,1,x+(i*compWidth),ig));
 			cur = cur.getNext();
 		}
@@ -156,6 +158,7 @@ public class YearViewLinkedList {
 		return ret+root.getHeight();
 	}
 
+	
 	public void addRowToEnd(int cols, Context c, int x, MonthImageGenerator ig, int compWidth) {
 		//Some invariants to note:
 		//It is assumed that DECEMBER can only ever be the last value in a row
@@ -164,35 +167,26 @@ public class YearViewLinkedList {
 		YearViewNode cur = root;
 		while (cur.getNext() != null) cur = cur.getNext();
 		
-		//The current last node should always be a month
-		MonthImage curMonth = (MonthImage)cur;
+		MonthImage curMonth = cur.getMonthImage();
 		int curYear = curMonth.getYear();
 		int month = curMonth.getMonth();
 
-		while ( month > AcalDateTime.DECEMBER ) {
-			curYear++;
-			month-=12;
-		}
-		while ( month < AcalDateTime.JANUARY ) {
-			curYear--;
-			month+=12;
-		}
-		
 		//if the last node was December, add the year header and make month january next year
 		if (month == AcalDateTime.DECEMBER) {
 			cur.setNext(new YearHeader(c,curYear+1,x,ig));
 			cur = cur.getNext();
 		}
-		month++;
-		//if the current last month is larger than december, increment year etc
-		if (month > AcalDateTime.DECEMBER) {
-			curYear++;
-			month-=12;
-		}
+
+		
 		for (int i = 0; i < cols; i++) {
+			month++;
+			//if the current last month is larger than december, increment year etc
+			if (month > AcalDateTime.DECEMBER) {
+				curYear++;
+				month-=12;
+			}
 			cur.setNext(new MonthImage(c,curYear,month,1,(x+(i*compWidth)),ig));
 			cur=cur.getNext();
-			month++;
 		}
 	}
 	

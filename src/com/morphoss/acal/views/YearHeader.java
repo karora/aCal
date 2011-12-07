@@ -31,8 +31,6 @@ public class YearHeader extends YearViewNode {
 	public YearHeader(Context context, int year, int x, MonthImageGenerator ig) {
 		this.x = x;
 		myBMP = ig.getYearHeader(year);
-		
-		
 	}
 	
 	@Override
@@ -54,5 +52,11 @@ public class YearHeader extends YearViewNode {
 	@Override
 	public boolean isUnder(int x) {
 		return false;
+	}
+
+	@Override
+	public MonthImage getMonthImage() {
+		if ( this.getNext() != null ) return (MonthImage) this.getNext();
+		return null;
 	}
 }

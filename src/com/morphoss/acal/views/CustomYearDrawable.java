@@ -24,13 +24,16 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.ImageView;
 
+import com.morphoss.acal.Constants;
 import com.morphoss.acal.R;
 import com.morphoss.acal.acaltime.AcalDateTime;
 
 public class CustomYearDrawable extends ImageView  {
 
+	private static final String	TAG	= "aCal CustomYearDrawable";
 	private float y;
 	private AcalDateTime currentDate;
 	private Context context;
@@ -55,7 +58,7 @@ public class CustomYearDrawable extends ImageView  {
 
 	//These should always be at least 2 to prevent blank space from appearing
 	private int NUM_ROWS_ABOVE = 2;
-	private int NUM_ROWS_BELOW = 10;
+	private int NUM_ROWS_BELOW = 4;
 	
 	//Dont touch this!
 	private int NUM_ROWS_TOTAL;
@@ -76,9 +79,7 @@ public class CustomYearDrawable extends ImageView  {
 	}
 	
 	public void initialise(AcalDateTime currentDate, int layout) {
-		this.currentDate = currentDate;
 		this.y = 0;
-		this.startYear = currentDate.getYear();
 		
 		int num_cols = 2;
 		int num_rows = 3;
@@ -86,18 +87,16 @@ public class CustomYearDrawable extends ImageView  {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		int num_months = Integer.parseInt(prefs.getString(context.getString(R.string.YearViewSize_PrefKey), "6"));
 		switch (num_months) {
-		case 1:		num_cols=1;num_rows=1;break;
-		case 2:		num_cols=1;num_rows=2;break;
-		case 3:		num_cols=1;num_rows=3;break;
-		case 4:		num_cols=2;num_rows=2;break;
-		case 6:		num_cols=2;num_rows=3;break;
-		case 8:		num_cols=2;num_rows=4;break;
-		case 9:		num_cols=3;num_rows=3;break;
-		case 12:	num_cols=3;num_rows=4;break;
-		
+			case 1:		num_cols=1;num_rows=1;break;
+			case 2:		num_cols=1;num_rows=2;break;
+			case 3:		num_cols=1;num_rows=3;break;
+			case 4:		num_cols=2;num_rows=2;break;
+			case 6:		num_cols=2;num_rows=3;break;
+			case 8:		num_cols=2;num_rows=4;break;
+			case 9:		num_cols=3;num_rows=3;break;
+			case 12:	num_cols=3;num_rows=4;break;
 		}
-		
-		
+
 		if (layout == LANDSCAPE) {
 			NUM_COLS = num_rows;
 			NUM_ROWS_VISIBLE = num_cols;
@@ -106,37 +105,34 @@ public class CustomYearDrawable extends ImageView  {
 			NUM_ROWS_VISIBLE = num_rows;
 		}
 		 
-		NUM_ROWS_TOTAL = NUM_ROWS_VISIBLE+NUM_ROWS_ABOVE+NUM_ROWS_BELOW;
-		
-		this.startMonth = this.currentDate.getMonth();
-		this.startMonth--;
-		this.startMonth = (this.startMonth/NUM_COLS) - (NUM_COLS*NUM_ROWS_ABOVE);
-		this.startMonth++;
-		if (this.startMonth < AcalDateTime.JANUARY) {
-			this.startMonth+=12;
-			this.startYear--;
-		}
+		NUM_ROWS_TOTAL = NUM_ROWS_VISIBLE + NUM_ROWS_ABOVE + NUM_ROWS_BELOW;
 		
 		//Invariant checker
 		if (NUM_COLS <0 || NUM_COLS == 5 || NUM_COLS > 6) throw new IllegalStateException("Year View NUM_COLS is invalid");
-		populateMonths();
+		
+		setSelectedDate(new AcalDateTime());
 
 	}
 	
 	public void setSelectedDate(AcalDateTime date) {
-		this.currentDate = date;
+		this.currentDate = date.clone();
 		this.startYear = currentDate.getYear();
 		this.startMonth = this.currentDate.getMonth();
 		this.startMonth--;
-		this.startMonth = (this.startMonth/NUM_COLS) - (NUM_COLS*NUM_ROWS_ABOVE);
+		this.startMonth -= ((NUM_COLS * NUM_ROWS_ABOVE) + (this.startMonth % NUM_COLS));
 		this.startMonth++;
 		if (this.startMonth < AcalDateTime.JANUARY) {
 			this.startMonth+=12;
 			this.startYear--;
 		}
+		if (this.startMonth > AcalDateTime.DECEMBER) {
+			this.startMonth-=12;
+			this.startYear++;
+		}
 		this.y = 0;
 		this.lastheight=0;
 		this.lastWidth=0;
+		Log.println(Constants.LOGD, TAG, "Setting display to start at "+startYear+"-"+startMonth);
 		this.populateMonths();
 		this.refreshDrawableState();
 	}
@@ -153,7 +149,7 @@ public class CustomYearDrawable extends ImageView  {
 		if (this.getHeight() != this.lastheight || this.getWidth() != this.lastWidth) {
 			populateMonths();
 		}
-		MonthImage first = (MonthImage)childViews.getFirst();
+		MonthImage first = childViews.getFirst().getMonthImage();
 		int drawY =(int)( y-(NUM_ROWS_ABOVE*first.getHeight()));
 		int f = first.getMonth();
 		int s = f+(NUM_COLS*NUM_ROWS_ABOVE);
@@ -181,7 +177,7 @@ public class CustomYearDrawable extends ImageView  {
 		for (int i = 1; i<NUM_ROWS_TOTAL; i++) {
 			childViews.addRowToEnd(NUM_COLS, this.context, 0, this.imageGenerator, compWidth);
 		}
-		this.compHeight = ((MonthImage)childViews.getFirst()).getHeight();
+		this.compHeight = childViews.getFirst().getMonthImage().getHeight();
 	}
 	
 	public void moveY(float amnt) {

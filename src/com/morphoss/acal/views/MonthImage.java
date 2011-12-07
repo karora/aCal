@@ -22,26 +22,32 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.util.Log;
 
+import com.morphoss.acal.Constants;
 import com.morphoss.acal.acaltime.AcalDateTime;
 
 public class MonthImage extends YearViewNode {
 
 	public static final String TAG = "aCal MonthImage";
 	
-	private AcalDateTime myDate;
 	private int x;
 	private Bitmap headerBMP;
 	private Bitmap dayHeadsBMP;
 	private Bitmap daySectionBMP;
+
+	final private int myYear;
+	final private int myMonth;
 	
 	public MonthImage(Context context, int year, int month, int selectedDay, int x, MonthImageGenerator ig) {
 		super();
 		this.x=x;
-		this.myDate = new AcalDateTime(year,month,1,0,0,0,null);
-		this.headerBMP = ig.getMonthHeader(myDate);
+		this.myYear = year;
+		this.myMonth = month;
+		this.headerBMP = ig.getMonthHeader(month);
 		this.dayHeadsBMP = ig.getDayHeaders();
-		this.daySectionBMP = ig.getDaySection(myDate);
+		this.daySectionBMP = ig.getDaySection(year, month);
+		Log.println(Constants.LOGD, TAG, "Created month image for "+year+"-"+month);
 	}
 	
 	@Override
@@ -53,17 +59,24 @@ public class MonthImage extends YearViewNode {
 		canvas.drawBitmap(daySectionBMP, x, y+headerBMP.getHeight()+dayHeadsBMP.getHeight(), paint);
 	}
 
-	public int getHeight() { return headerBMP.getHeight()+dayHeadsBMP.getHeight()+daySectionBMP.getHeight(); }
+	public int getHeight() { return headerBMP.getHeight()
+			+dayHeadsBMP.getHeight()
+			+daySectionBMP.getHeight(); }
 
-	public int getMonth() { return this.myDate.getMonth(); }
-	public int getYear() { return this.myDate.getYear(); }
+	public int getMonth() { return this.myMonth; }
+	public int getYear() { return this.myYear; }
 	public AcalDateTime getDate() {
-		return myDate.clone();
+		return new AcalDateTime(myYear,myMonth,1,0,0,0,null);
 	}
 
 	@Override
 	public boolean isUnder(int x) {
 		return(x>= this.x  && x <= this.x+this.headerBMP.getWidth() );
+	}
+
+	@Override
+	public MonthImage getMonthImage() {
+		return this;
 	}
 	
 }

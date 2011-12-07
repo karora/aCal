@@ -68,4 +68,6 @@ public abstract class YearViewNode {
 	
 	public abstract int getMonth();
 	public abstract boolean isUnder(int x);
+
+	public abstract MonthImage getMonthImage();
 }

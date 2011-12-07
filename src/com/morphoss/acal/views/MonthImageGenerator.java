@@ -70,9 +70,9 @@ public class MonthImageGenerator {
 		return yearHeaders.get(year);
 	}
 	
-	public Bitmap getMonthHeader(AcalDateTime month) {
-		if (monthHeaders[month.getMonth()] == null) generateMonthHeader(month);
-		return monthHeaders[month.getMonth()];
+	public Bitmap getMonthHeader(int month) {
+		if (monthHeaders[month] == null) generateMonthHeader(month);
+		return monthHeaders[month];
 	}
 		
 	public Bitmap getDayHeaders() {
@@ -80,13 +80,14 @@ public class MonthImageGenerator {
 		return dayHeaders;
 	}
 	
-	public Bitmap getDaySection(AcalDateTime month) {
-		int numDaysInMonth = month.getActualMaximum(AcalDateTime.DAY_OF_MONTH);
-		month.setMonthDay(1);
-		int dayOfFirst = (month.getWeekDay()+this.firstCol)%7;
-		int hash = dayOfFirst+(numDaysInMonth*10);
+	public Bitmap getDaySection(int year, int month) {
+		int numDaysInMonth = AcalDateTime.monthDays(year, month);
+		int numDaysInPrevious = (month == 1 ? 31 : AcalDateTime.monthDays(year, month - 1));
+		AcalDateTime firstOfMonth = new AcalDateTime(year, month, 1, 0 , 0, 0, null);
+		int dayOfFirst = (firstOfMonth.getWeekDay()+this.firstCol)%7;
+		int hash = dayOfFirst+(numDaysInMonth*10) + (numDaysInPrevious * 1000);
 		if (daySection.containsKey(hash)) return daySection.get(hash);
-		generateDaySectionBitmap(month);
+		generateDaySectionBitmap(year, month, dayOfFirst, numDaysInMonth, numDaysInPrevious, hash);
 		return daySection.get(hash);
 	}
 
@@ -103,18 +104,18 @@ public class MonthImageGenerator {
 		this.yearHeaders.put(year, returnedBitmap);
 	}
 	
-	private void generateMonthHeader(AcalDateTime month) {
+	private void generateMonthHeader(int month) {
 		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		View v = (View) inflater.inflate(R.layout.year_view_assets, null);
 		TextView title = ((TextView) v.findViewById(R.id.YVmonth_title));
-		title.setText(month.getMonthName());
+		title.setText(AcalDateTime.getMonthName(month));
 		title.measure(MeasureSpec.makeMeasureSpec(this.width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(this.height, MeasureSpec.UNSPECIFIED));
 		title.layout(0, 0, width, title.getMeasuredHeight());
 		Bitmap returnedBitmap = Bitmap.createScaledBitmap(titleBg, width, title.getMeasuredHeight(), false);
 		Canvas tempCanvas = new Canvas(returnedBitmap);
 		title.draw(tempCanvas);
 		this.headerHeight = title.getMeasuredHeight();
-		this.monthHeaders[month.getMonth()] = returnedBitmap;
+		this.monthHeaders[month] = returnedBitmap;
 	}
 	
 	private void generateDayHeaders() {
@@ -155,34 +156,37 @@ public class MonthImageGenerator {
 			canvas.drawBitmap(headerBMP[i], ((this.width/7)*i), 0, new Paint());
 		
 	}
-	private void generateDaySectionBitmap(AcalDateTime month) {
+
+	/**
+	 * Generate a bitmap of the days in this month.
+	 * 
+	 * @param year The year for this month.
+	 * @param month The month for this month (1 to 12)
+	 * @param dowOfFirst The day of week of the first day of the month.
+	 * @param daysInMonth The number of days in the month.
+	 * @param daysInPrevious The number of days in the previous month.
+	 */
+	private void generateDaySectionBitmap(int year, int month, int dowOfFirst, int daysInMonth, int daysInPrevious, int hash) {
 		int myHeight = 6*((this.height - this.headerHeight -this.dayHeaderHeight)/6);
 		Bitmap myBitmap = Bitmap.createBitmap(width, myHeight,Bitmap.Config.ARGB_8888);
 		Canvas c = new Canvas(myBitmap);
 		Paint p = new Paint();
 		
-		int ndim = month.getActualMaximum(AcalDateTime.DAY_OF_MONTH);
-		int dof = (month.getWeekDay()+this.firstCol)%7;
-		int lastMonthNum = month.getMonth()-1;
-		int lastYearNum = month.getYear();
-		if (lastMonthNum < AcalDateTime.JANUARY) { lastMonthNum+=12; lastYearNum--; }
-		int ndilm = AcalDateTime.monthDays(lastYearNum, lastMonthNum);
-		
 		boolean shadow = true;
 		boolean before = true;
-		int currentDay = (ndilm-dof)+1;
+		int currentDay = (daysInPrevious - dowOfFirst)+1;
 		for (int i = 0; i<6; i++) {
 			for (int j=0; j<7;j++) {
-				if (before && currentDay > ndilm) { currentDay = 1; shadow = false; before = false; } //now in cur month
-				else if (!before && currentDay > ndim) { shadow = true; currentDay = 1; }
+				if (before && currentDay > daysInPrevious) { currentDay = 1; shadow = false; before = false; } //now in cur month
+				else if (!before && currentDay > daysInMonth) { shadow = true; currentDay = 1; }
 				Bitmap dayBMP = getDayBitmap(shadow,currentDay);
 				c.drawBitmap(dayBMP, j*dayBMP.getWidth(), i*dayBMP.getHeight(), p);
 				currentDay++;
 			}
 		}
-		int hash = dof+(ndim*10);
 		daySection.put(hash,myBitmap);
 	}
+
 	
 	private Bitmap getDayBitmap(boolean shadow, int day) { 
 		if (shadow) {
