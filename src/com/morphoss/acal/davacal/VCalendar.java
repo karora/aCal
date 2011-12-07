@@ -366,36 +366,46 @@ public class VCalendar extends VComponent {
 		return this.getMasterChild();
 	}
 
+
+	private static String checkKnownAliases( String tzId ) {
+		if ( tzId.equals("UTC") ) return tzId;
+		if ( tzId.equals("Etc/UTC") ) return "UTC";
+		if ( tzId.equals("Etc/GMT") ) return "UTC";
+		if ( tzId.equals("Eastern Standard Time") || tzId.equals("Eastern Daylight Time")
+				|| tzId.equals("Eastern Time (US & Canada)") ) return "America/New_York";
+		if ( tzId.equals("Pacific Standard Time") || tzId.equals("Pacific Daylight Time") ) return "America/Los_Angeles";
+		if ( tzId.equals("Central Standard Time") || tzId.equals("Central Daylight Time") ) return "America/Chicago";
+		if ( tzId.equals("Mountain Standard Time") || tzId.equals("Mountain Daylight Time") ) return "America/Denver";
+		if ( tzId.equals("New Zealand Standard Time") || tzId.equals("New Zealand Daylight Time") ) return "Pacific/Auckland";
+		if ( tzId.equals("Chennai") ) return "Asia/Mumbai";
+		return null;
+	}
 	
-	
-	public static String staticGetOlsonName( String tzIdParam ) {
-		Matcher m = VCalendar.tzOlsonExtractor.matcher(tzIdParam);
+	public static String staticGetOlsonName( String tzId ) {
+		Matcher m = VCalendar.tzOlsonExtractor.matcher(tzId);
 		if ( m.matches() ) {
 			return m.group(1);
 		}
-		if ( tzIdParam.equals("UTC") ) return tzIdParam;
-		if ( tzIdParam.equals("Etc/UTC") ) return "UTC";
-		if ( tzIdParam.equals("Etc/GMT") ) return "UTC";
-		if ( tzIdParam.equals("Eastern Standard Time") || tzIdParam.equals("Eastern Daylight Time") ) return "America/Los_Angeles";
-		Log.w(TAG,"Could not get Olson name from "+tzIdParam, new Exception("Unrecognized Time Zone"));
-		return tzIdParam;
+		String aliasResult = checkKnownAliases(tzId);
+		if ( aliasResult != null ) return aliasResult;
+		Log.w(TAG,"Could not get Olson name from "+tzId, new Exception("Unrecognized Time Zone"));
+		return tzId;
 	}
 
 	
-	public String getOlsonName( String TzID ) {
-		Matcher m = VCalendar.tzOlsonExtractor.matcher(TzID);
+	public String getOlsonName( String tzId ) {
+		Matcher m = VCalendar.tzOlsonExtractor.matcher(tzId);
 		if ( m.matches() ) {
 			return m.group(1);
 		}
 
-		if ( TzID.equals("UTC") ) return TzID;
-		if ( TzID.equals("Etc/UTC") ) return "UTC";
-		if ( TzID.equals("Etc/GMT") ) return "UTC";
+		String aliasResult = checkKnownAliases(tzId);
+		if ( aliasResult != null ) return aliasResult;
 
 		if (childrenSet) {
 			for (VComponent vc : this.getChildren()) {
 				if ( vc instanceof VTimezone ) {
-					if ( vc.getProperty("TZID").getValue() == TzID ) {
+					if ( vc.getProperty("TZID").getValue() == tzId ) {
 						AcalProperty idProperty = vc.getProperty("X-MICROSOFT-CDO-TZID");
 						if ( idProperty != null && idProperty.getValue() != null ) {
 							switch( Integer.parseInt(idProperty.getValue()) ) {
@@ -485,7 +495,7 @@ public class VCalendar extends VComponent {
 			}
 		}
 
-		Log.w(TAG,"Could not get Olson name from "+TzID, new Exception("Unrecognized Time Zone"));
+		Log.w(TAG,"Could not get Olson name from "+tzId, new Exception("Unrecognized Time Zone"));
 
 		/**
 		 * @todo: We should 
