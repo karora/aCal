@@ -12,10 +12,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.morphoss.acal.activity.serverconfig.AddServerList;
-import com.morphoss.acal.providers.DavCollections;
-import com.morphoss.acal.providers.DavResources;
-import com.morphoss.acal.providers.Servers;
+import com.morphoss.acal.Constants;
+import com.morphoss.acal.activity.CollectionConfigList;
 
 /**
  * Authenticator service that returns a subclass of AbstractAccountAuthenticator in onBind()
@@ -31,20 +29,20 @@ public class AcalAuthenticator extends Service {
 	
 	public AcalAuthenticator() {
 		super();
-		Log.d(TAG,"AcalAuthenticator was created");
+		Log.println(Constants.LOGD,TAG,"AcalAuthenticator was created");
 	}
 
 	public IBinder onBind(Intent intent) {
 		IBinder ret = null;
 		if (intent.getAction().equals(android.accounts.AccountManager.ACTION_AUTHENTICATOR_INTENT))
 			ret = getAuthenticator().getIBinder();
-		Log.d(TAG,"onBind was called");
+		Log.println(Constants.LOGD,TAG,"onBind was called");
 		return ret;
 	}
 
 	private StaticAuthenticatorImplementation getAuthenticator() {
 		if (realAuthenticator == null) realAuthenticator = new StaticAuthenticatorImplementation(this);
-		Log.d(TAG,"StaticAuthenticatorImplementation was created");
+		Log.println(Constants.LOGD,TAG,"StaticAuthenticatorImplementation was created");
 		return realAuthenticator;
 	}
 
@@ -54,7 +52,7 @@ public class AcalAuthenticator extends Service {
 		public StaticAuthenticatorImplementation(Context context) {
 			super(context);
 			this.context = context;
-			Log.d(TAG,"addAccount was called");
+			Log.println(Constants.LOGD,TAG,"addAccount was called");
 		}
 
 		/*
@@ -65,12 +63,12 @@ public class AcalAuthenticator extends Service {
 		@Override
 		public Bundle addAccount(AccountAuthenticatorResponse response, String accountType, String authTokenType,
 					String[] requiredFeatures, Bundle options) throws NetworkErrorException {
-			Bundle reply = new Bundle();
 
-			Log.d(TAG,"addAccount was called");
-			Intent i = new Intent(context, AddServerList.class);
-			i.setAction("com.morphoss.acal.activity.serverconfig.AddServerList.ACTION_CREATE");
+			Log.println(Constants.LOGD,TAG,"addAccount was called");
+			final Intent i = new Intent(context, CollectionConfigList.class);
+			i.setAction(com.morphoss.acal.activity.CollectionConfigList.ACTION_CHOOSE);
 			i.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
+			final Bundle reply = new Bundle();
 			reply.putParcelable(AccountManager.KEY_INTENT, i);
 
 			return reply;
@@ -78,40 +76,40 @@ public class AcalAuthenticator extends Service {
 
 		@Override
 		public Bundle confirmCredentials(AccountAuthenticatorResponse response, Account account, Bundle options) {
-			Log.d(TAG,"confirmCredentials was called");
+			Log.println(Constants.LOGD,TAG,"confirmCredentials was called");
 			return null;
 		}
 
 		@Override
 		public Bundle editProperties(AccountAuthenticatorResponse response, String accountType) {
-			Log.d(TAG,"editProperties was called");
+			Log.println(Constants.LOGD,TAG,"editProperties was called");
 			return null;
 		}
 
 		@Override
 		public Bundle getAuthToken(AccountAuthenticatorResponse response, Account account, String authTokenType,
 					Bundle options) throws NetworkErrorException {
-			Log.d(TAG,"getAuthToken was called");
+			Log.println(Constants.LOGD,TAG,"getAuthToken was called");
 			return null;
 		}
 
 		@Override
 		public String getAuthTokenLabel(String authTokenType) {
-			Log.d(TAG,"getAuthTokenLabel was called");
+			Log.println(Constants.LOGD,TAG,"getAuthTokenLabel was called");
 			return null;
 		}
 
 		@Override
 		public Bundle hasFeatures(AccountAuthenticatorResponse response, Account account, String[] features)
 					throws NetworkErrorException {
-			Log.d(TAG,"hasFeatures was called");
+			Log.println(Constants.LOGD,TAG,"hasFeatures was called");
 			return null;
 		}
 
 		@Override
 		public Bundle updateCredentials(AccountAuthenticatorResponse response, Account account, String authTokenType,
 					Bundle options) {
-			Log.d(TAG,"updateCredentials was called");
+			Log.println(Constants.LOGD,TAG,"updateCredentials was called");
 			return null;
 		}
 	}

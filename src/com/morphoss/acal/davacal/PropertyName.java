@@ -3,7 +3,7 @@ package com.morphoss.acal.davacal;
 public enum PropertyName {
 	UID, DTSTAMP, CREATED, LAST_MODIFIED, DTSTART, DTEND, DUE, DURATION, LOCATION, SUMMARY,
 	DESCRIPTION, RRULE, RDATE, EXDATE, PERCENT_COMPLETE, COMPLETED, STATUS, TRIGGER, ACTION,
-	RECURRENCE_ID, INVALID;
+	RECURRENCE_ID, VERSION, SEQUENCE, N, FN, ARBITRARY, INVALID;
 
 	private String arbitraryName = null;
 	
@@ -13,8 +13,8 @@ public enum PropertyName {
 	}
 
 	public static PropertyName arbitrary( String name ) {
-		PropertyName p = INVALID;
-		INVALID.arbitraryName = name;
+		PropertyName p = ARBITRARY;
+		ARBITRARY.arbitraryName = name;
 		return p;
 	}
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="com.morphoss.acal"
-	android:versionCode="32"
-	android:versionName="1.3)" >
+	android:versionCode="33"
+	android:versionName="1.31" >
 	<uses-sdk
 		android:minSdkVersion="4"
 		android:targetSdkVersion="7" />
@@ -219,20 +219,36 @@
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
+		<service
+			android:exported="true"
+			android:name=".service.ContactsSyncAdapterService"
+			android:process=":contacts" >
+			<intent-filter >
+				<action android:name="android.content.SyncAdapter" />
+			</intent-filter>
+			<meta-data
+				android:name="android.content.SyncAdapter"
+				android:resource="@xml/sync_contacts" />
+		</service>
 		<provider
 			android:authorities="servers"
+			android:exported="false"
 			android:name="com.morphoss.acal.providers.Servers" />
 		<provider
 			android:authorities="pathsets"
+			android:exported="false"
 			android:name="com.morphoss.acal.providers.PathSets" />
 		<provider
 			android:authorities="collections"
+			android:exported="false"
 			android:name="com.morphoss.acal.providers.DavCollections" />
 		<provider
 			android:authorities="resources"
+			android:exported="false"
 			android:name="com.morphoss.acal.providers.DavResources" />
 		<provider
 			android:authorities="pendingchanges"
+			android:exported="false"
 			android:name="com.morphoss.acal.providers.PendingChanges" />
 		<service android:name="com.morphoss.acal.service.aCalService" >
 			<intent-filter >
@@ -244,17 +260,19 @@
 				<action android:name="com.morphoss.acal.dataservice.CalendarDataService" />
 			</intent-filter>
 		</service>
-	    <service android:name="com.morphoss.acal.service.AcalAuthenticator"
-	     		 android:exported="true" android:process=":auth">
-	     <intent-filter>
-	      	<action android:name="android.accounts.AccountAuthenticator" />
-	     </intent-filter>
-	     <meta-data android:name="android.accounts.AccountAuthenticator"
-	      			android:resource="@xml/authenticator" />
-	    </service>
-		
-		<receiver android:name="com.morphoss.acal.receivers.StartUpIntentReceiver">
-			<intent-filter>
+		<service
+			android:exported="true"
+			android:name="com.morphoss.acal.service.AcalAuthenticator"
+			android:process=":auth" >
+			<intent-filter >
+				<action android:name="android.accounts.AccountAuthenticator" />
+			</intent-filter>
+			<meta-data
+				android:name="android.accounts.AccountAuthenticator"
+				android:resource="@xml/authenticator" />
+		</service>
+		<receiver android:name="com.morphoss.acal.receivers.StartUpIntentReceiver" >
+			<intent-filter >
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
 				<category android:name="android.intent.category.HOME" />
 			</intent-filter>
@@ -268,31 +286,25 @@
 				android:resource="@xml/show_upcoming_widget_info" />
 		</receiver>
 	</application>
-	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" >
-	</uses-permission>
-	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" >
-	</uses-permission>
-	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" >
-	</uses-permission>
+	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.PERSISTENT_ACTIVITY" >
-	</uses-permission>
-	<uses-permission android:name="android.permission.READ_CALENDAR" >
-	</uses-permission>
-	<uses-permission android:name="android.permission.READ_CONTACTS" >
-	</uses-permission>
-	<uses-permission android:name="android.permission.READ_PHONE_STATE" >
-	</uses-permission>
-	<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" >
-	</uses-permission>
+	<uses-permission android:name="android.permission.PERSISTENT_ACTIVITY" />
+	<uses-permission android:name="android.permission.READ_CALENDAR" />
+	<uses-permission android:name="android.permission.READ_CONTACTS" />
+	<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+	<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 	<uses-permission android:name="android.permission.VIBRATE" />
-	<uses-permission android:name="android.permission.WRITE_CALENDAR" >
-	</uses-permission>
-	<uses-permission android:name="android.permission.WRITE_CONTACTS" >
-	</uses-permission>
-	<uses-permission android:name="android.permission.WAKE_LOCK" >
-	</uses-permission>
+	<uses-permission android:name="android.permission.WRITE_CALENDAR" />
+	<uses-permission android:name="android.permission.WRITE_CONTACTS" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.GET_ACCOUNTS" />
+	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+	<uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+	<uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
 	<uses-feature
 		android:name="android.hardware.wifi"
 		android:required="false" />
