@@ -77,7 +77,7 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 	public static final int CONTEXT_CANCEL = 2;
 	public static final int CONTEXT_EXPORT = 3;
 	public static final int CONTEXT_DISCOVER = 4;
-	
+
 	private Cursor mCursor;
 
 	private ServiceManager serviceManager;
@@ -91,6 +91,7 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 		setContentView(R.layout.servers_list);
 		updateListView();
 		getListView().setOnItemClickListener(new ServerListClickListener());
@@ -121,35 +122,22 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 		mCursor.close();
 		cqm.close();
 		
-		
-
 		// Store data in useful structures
 		this.serverNames = new String[this.serverData.size()];
 		this.serverData.keySet().toArray(this.serverNames);
-
-/*		
-		// Add the 'Add Server' Option
-		this.serverNames[this.serverData.size()] = this.addServerText;
-		this.addServerPosition = this.serverData.size();
-		ContentValues cv = new ContentValues();
-		cv.put(ServerConfiguration.MODEKEY, ServerConfiguration.MODE_CREATE);
-		this.serverData.put(this.addServerText, cv);
-*/
 		
 		// Create ListAdapter for storing the list of server names to be
 		// displayed
-		ArrayAdapter<String> mAdapter = new ArrayAdapter<String>(this, // Context.
-				android.R.layout.simple_list_item_1, serverNames);
+		ArrayAdapter<String> mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, serverNames);
 
 		// Bind to our new adapter.
 		setListAdapter(mAdapter);
 
 		// Set the context menu
-		this.getListView().setOnCreateContextMenuListener(
-				new ServerListCreateContextListener());
+		getListView().setOnCreateContextMenuListener( new ServerListCreateContextListener());
 
 		// make sure the display is refreshed
-		this.getListView().refreshDrawableState();
+		getListView().refreshDrawableState();
 	}
 
 	/**
@@ -202,6 +190,7 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 		}
 	}
 	
+
 	/**
 	 * <P>
 	 * Handles context menu clicks
@@ -265,17 +254,15 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 		 * @see android.widget.AdapterView.OnItemClickListener#onItemClick(android.widget.AdapterView,
 		 *      android.view.View, int, long)
 		 */
-		public void onItemClick(AdapterView<?> parent, View view, int position,
-				long id) {
+		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			
 			// Create Intent to start new Activity
 			Intent serverConfigIntent = new Intent();
 
 			// Get the server data for the selected server, and add mode key so
 			// configuration activity knows what to do.
-			ContentValues toPass = ServerConfigList.this.serverData
-					.get(ServerConfigList.this.serverNames[position]);
+			ContentValues toPass = ServerConfigList.this.serverData.get(ServerConfigList.this.serverNames[position]);
 			
-		
 			if (!toPass.containsKey(ServerConfiguration.MODEKEY))
 				toPass.put(ServerConfiguration.MODEKEY, ServerConfiguration.MODE_EDIT);
 

@@ -771,7 +771,9 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 			ae.setAction(action);
 			dataRequest.eventChanged(ae);
 		} catch (RemoteException e) {
-			Log.e(TAG,"Error deleting event: "+e);
+			Log.e(TAG,"RemoteException while deleting event: ",e);
+		} catch (Exception e) {
+			Log.e(TAG,"Exception while deleting event: ",e);
 		}
 		this.changeSelectedDate(this.selectedDate);
 	}

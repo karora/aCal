@@ -21,6 +21,9 @@ package com.morphoss.acal.activity;
 import java.util.Map;
 import java.util.TreeMap;
 
+import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
+import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -48,6 +51,7 @@ import com.morphoss.acal.ServiceManager;
 import com.morphoss.acal.ServiceManagerCallBack;
 import com.morphoss.acal.providers.DavCollections;
 import com.morphoss.acal.providers.Servers;
+import com.morphoss.acal.service.AcalAuthenticator;
 import com.morphoss.acal.service.ServiceRequest;
 
 /**
@@ -95,7 +99,9 @@ public class CollectionConfigList extends PreferenceActivity
 
 	private int[]	preferenceListIds;
 
-
+	// Needed for AcalAuthenticator
+	public static final String ACTION_CHOOSE = "com.morphoss.acal.activity.CollectionConfigList.ACTION_CHOOSE";
+	
 	/**
 	 * Get the list of collections and create the list view.
 	 * 
@@ -266,6 +272,40 @@ public class CollectionConfigList extends PreferenceActivity
 		return DavCollections.collectionEnabled(false, collectionId, getContentResolver());
 	}
 
+	public void createAuthenticatedAccount(int collectionId) {
+		ContentValues collectionValues = collectionData.get(collectionId);
+		int serverId = collectionValues.getAsInteger(DavCollections.SERVER_ID);
+		ContentValues serverValues = Servers.getRow(serverId, getContentResolver());
+		String collectionName = collectionValues.getAsString(DavCollections.DISPLAYNAME);
+		String serverName = serverValues.getAsString(Servers.FRIENDLY_NAME);
+		Account account = new Account(serverName + " - " + collectionName, getString(R.string.AcalAccountType));
+		Bundle userData = new Bundle();
+		userData.putString(AcalAuthenticator.SERVER_ID, serverValues.getAsString(Servers._ID));
+		userData.putString(AcalAuthenticator.COLLECTION_ID, collectionValues.getAsString(DavCollections._ID));
+		userData.putString(AcalAuthenticator.USERNAME, serverValues.getAsString(Servers.USERNAME));
+		AccountManager am = AccountManager.get(this);
+		boolean accountCreated = false;
+		try {
+		  accountCreated = am.addAccountExplicitly(account, "", userData);
+		} catch( Exception e) {
+			Log.println(Constants.LOGD, TAG, Log.getStackTraceString(e));
+		}
+		
+		if ( accountCreated ) {
+		}
+		
+		Intent creator = getIntent();
+		Bundle extras = creator.getExtras();
+		if (accountCreated && extras != null) {
+			AccountAuthenticatorResponse response = extras.getParcelable(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);
+			Bundle result = new Bundle();
+			result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
+			result.putString(AccountManager.KEY_ACCOUNT_TYPE, getString(R.string.AcalAccountType));
+			response.onResult(result);
+		}
+		finish();
+	}
+
 	/**
 	 * <P>
 	 * Handles context menu clicks
@@ -302,21 +342,26 @@ public class CollectionConfigList extends PreferenceActivity
 	 * 
 	 * <P>
 	 * Called when a collection is selected from the list.
-		 * <p>
-		 * Gets the appropriate String from this.collectionNames and uses it as a key to get the data from
-		 * this.collectionData. Will start the Collection Configuration activity with this data. if 'Add Collection' was
-		 * selected, Collection Configuration is sent a blank data set with MODEKEY=MODE_CREATE
-		 * </p>
-		 * 
-		 * @see android.widget.AdapterView.OnItemClickListener#onItemClick(android.widget.AdapterView,
-		 *      android.view.View, int, long)
-		 * @author Morphoss Ltd
-		 */
-		public boolean onPreferenceClick(Preference id) {
+	 * <p>
+	 * Gets the appropriate String from this.collectionNames and uses it as a key to get the data from
+	 * this.collectionData. Will start the Collection Configuration activity with this data. if 'Add Collection' was
+	 * selected, Collection Configuration is sent a blank data set with MODEKEY=MODE_CREATE
+	 * </p>
+	 * 
+	 * @see android.widget.AdapterView.OnItemClickListener#onItemClick(android.widget.AdapterView,
+	 *      android.view.View, int, long)
+	 * @author Morphoss Ltd
+	 */
+	public boolean onPreferenceClick(Preference id) {
+		int collectionId = Integer.parseInt(id.getKey());
+		Intent i = this.getIntent();
+		if ( android.os.Build.VERSION.SDK_INT >= 8 && i != null && ACTION_CHOOSE.equals(i.getAction()) ) {
+			createAuthenticatedAccount(collectionId);
+		}
+		else {
 			// Create Intent to start new Activity
 			Intent collectionConfigIntent = new Intent();
 			
-			int collectionId = Integer.parseInt(id.getKey());
 
 			// Get the collection data for the selected collection
 			ContentValues toPass = collectionData.get(collectionId);
@@ -325,8 +370,9 @@ public class CollectionConfigList extends PreferenceActivity
 			collectionConfigIntent.setClassName("com.morphoss.acal", "com.morphoss.acal.activity.CollectionConfiguration");
 			collectionConfigIntent.putExtra("CollectionData", toPass);
 			CollectionConfigList.this.startActivityForResult(collectionConfigIntent, UPDATE_COLLECTION_CONFIG);
-			return true;
 		}
+		return true;
+	}
 
 	/**
 	 * Creates the context menus for each item in the list.
