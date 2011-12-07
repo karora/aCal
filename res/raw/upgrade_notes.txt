@@ -35,3 +35,8 @@ Memory footprint is improved.
 New desktop widget showing upcoming events.
 Upgrade notes now available from Settings menu.
 ... and many bug fixes.
+v33=1.31
+Fix possible force-close deleting event.
+Fix force-close on "Today" in Year View.
+Fix interpretation of "Eastern Time" timezone alias.
+Basic one-way CardDAV sync to contacts (under development). 
