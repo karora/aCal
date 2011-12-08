@@ -20,7 +20,6 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.RemoteException;
-import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.RawContacts;
@@ -36,6 +35,7 @@ import com.morphoss.acal.davacal.VComponent;
 import com.morphoss.acal.davacal.VComponentCreationException;
 import com.morphoss.acal.davacal.YouMustSurroundThisMethodInTryCatchOrIllEatYouException;
 import com.morphoss.acal.providers.DavResources;
+import com.morphoss.acal.service.connector.Base64Coder;
 
 public class VCardContact {
 	
@@ -79,6 +79,7 @@ public class VCardContact {
 			uid = new AcalProperty("UID", vCardRow.getAsString(DavResources._ID));
 		}
 		buildTypeMap();
+		
 	}
 
 	
@@ -128,33 +129,35 @@ public class VCardContact {
 		return uid.getValue();
 	}
 
+	public String getFullName() {
+		if ( sourceCard == null ) return null;
+		AcalProperty fnProp = sourceCard.getProperty(PropertyName.FN);
+		if ( fnProp == null ) return null;
+		return fnProp.getValue();
+	}
+
 	public int getSequence() {
 		Integer result =  Integer.parseInt(sequence.getValue());
 		if ( result == null ) result = 1;
 		return result;
 	}
 
-	public AcalProperty getProperty(String pName) {
-		return sourceCard.getProperty(pName);
-	}
-
 	
-	public void writeToContact(Context context, Account account, Long androidContactId) {
+	public void writeToContact(Context context, Account account, Integer androidContactId) {
 		ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
 		if ( androidContactId < 0 ) {
-			Log.println(Constants.LOGD,TAG,"Inserting data for '"+this.getProperty("FN").getValue()+"'");
+			Log.println(Constants.LOGD,TAG,"Inserting data for '"+sourceCard.getProperty(PropertyName.FN).getValue()+"'");
 			ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI)
 						.withValue(RawContacts.ACCOUNT_TYPE, account.type)
 						.withValue(RawContacts.ACCOUNT_NAME, account.name)
 						.withValue(RawContacts.SYNC1, this.getUid())
 						.build());
 
-			int rawContactInsertIndex = ops.size();
-			this.writeContactDetails(context, ops, true, rawContactInsertIndex);
+			this.writeContactDetails(ops, true, 0);
 		}
 		else {
 			Uri rawContactUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI, androidContactId);
-			Log.println(Constants.LOGD,TAG,"Updating data for '"+this.getProperty("FN").getValue()+"'");
+			Log.println(Constants.LOGD,TAG,"Updating data for '"+sourceCard.getProperty(PropertyName.FN).getValue()+"'");
 			ops.add(ContentProviderOperation.newUpdate(rawContactUri)
 						.withValue(RawContacts.ACCOUNT_TYPE, account.type)
 						.withValue(RawContacts.ACCOUNT_NAME, account.name)
@@ -162,10 +165,11 @@ public class VCardContact {
 						.withValue(RawContacts.VERSION,this.getSequence())
 						.build());
 
-			this.writeContactDetails(context, ops, false, androidContactId);
+			this.writeContactDetails(ops, false, androidContactId);
 		}
 		
 		try {
+			Log.println(Constants.LOGD,TAG,"Applying update batch: "+ops.toString());
 			context.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
 		}
 		catch (RemoteException e) {
@@ -177,53 +181,90 @@ public class VCardContact {
 			Log.e(TAG,Log.getStackTraceString(e));
 		}
 	}
+
 	
-	private void writeContactDetails(Context context, ArrayList<ContentProviderOperation> ops, boolean isInsert, long rawContactId) {
+	private void writeContactDetails(ArrayList<ContentProviderOperation> ops, boolean isInsert, int rawContactId) {
 		String propertyName;
 		AcalProperty[] vCardProperties = sourceCard.getAllProperties();
-		Uri rawContactUri = (isInsert ?
-				ContactsContract.Data.CONTENT_URI : ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, rawContactId));
 		for (AcalProperty prop : vCardProperties) {
 			Builder op;
 			if ( isInsert ) {
-				op = ContentProviderOperation.newInsert(rawContactUri);
-				op.withValueBackReference(Data.RAW_CONTACT_ID, (int) rawContactId);
+				op = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI);
+				op.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0);
 			}
 			else {
-				op = ContentProviderOperation.newUpdate(rawContactUri);
+				op = ContentProviderOperation.newUpdate(ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, rawContactId));
 			}
 			propertyName = prop.getName();
-			if ( propertyName.equals("FN") ) 		doStructuredName(context, op, prop, sourceCard.getProperty("N"));
-			else if ( propertyName.equals("TEL") )	doPhone(context, op, prop);
-			else if ( propertyName.equals("ADR") )	doStructuredAddress(context, op, prop);
-			else if ( propertyName.equals("EMAIL")) doEmail(context, op, prop);
+			String nameSplit[] = simpleSplit.split(prop.getName().toUpperCase(Locale.US),2);
+			propertyName = (nameSplit.length == 2 ? nameSplit[1] : nameSplit[0]);
+
+			if ( propertyName.equals("FN") ) 		doStructuredName(op, prop, sourceCard.getProperty("N"));
+			else if ( propertyName.equals("TEL") )	doPhone(op, prop);
+			else if ( propertyName.equals("ADR") )	doStructuredAddress(op, prop);
+			else if ( propertyName.equals("EMAIL")) doEmail(op, prop);
+			else if ( propertyName.equals("PHOTO")) doPhoto(op, prop);
 			else
 				continue;
 
+			
+			Log.println(Constants.LOGD,TAG,"Applying "+propertyName+" change for:"+op.build().toString());
 			ops.add(op.build());
 		}
 	}
 
 	
-	private void doEmail(Context context, Builder op, AcalProperty emailProp) {
-		op.withValue(Data.MIMETYPE, CommonDataKinds.Email.CONTENT_ITEM_TYPE);
-		op.withValue(CommonDataKinds.Email.DATA,emailProp.getValue());
-		String emailType = emailProp.getParam("TYPE").toUpperCase(); 
-		if ( emailType.contains("HOME") ) {
-			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_HOME);
+	private void doStructuredName(Builder op, AcalProperty fnProp, AcalProperty nProp) {
+		Log.v(TAG,"Processing field FN:"+fnProp.getValue());
+	
+		op.withValue(Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE);
+		if ( nProp != null ) {
+			Matcher m = structuredNameMatcher.matcher(nProp.getValue());
+			if ( m.matches() ) {
+				/**
+				 * The structured property value corresponds, in
+				 * sequence, to the Surname (also known as family name), Given Names,
+				 * Honorific Prefixes, and Honorific Suffixes.
+				 */
+				op.withValue(CommonDataKinds.StructuredName.FAMILY_NAME, m.group(1));
+				op.withValue(CommonDataKinds.StructuredName.GIVEN_NAME, m.group(2));
+				op.withValue(CommonDataKinds.StructuredName.PREFIX, m.group(3));
+				op.withValue(CommonDataKinds.StructuredName.SUFFIX, m.group(4));
+				Log.v(TAG,"Processing 'N' field: '"+nProp.getValue()+"' prefix>"
+							+ m.group(3) + "< firstname> " + m.group(2) + "< lastname>" + m.group(1) + "< suffix>" + m.group(4));
+			}
 		}
-		else if ( emailType.contains("WORK") ) {
-			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK);
-		}
-		else {
-			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_OTHER);
-		}
-		Log.v(TAG,"Processing field EMAIL:"+emailType+":"+emailProp.getValue());
-		
+	
+		op.withValue(CommonDataKinds.StructuredName.DISPLAY_NAME, fnProp.getValue());
 	}
 
 
-	private void doStructuredAddress(Context context, Builder op, AcalProperty adrProp) {
+	private void doPhone(Builder op, AcalProperty telProp ) {
+		op.withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
+		op.withValue(CommonDataKinds.Phone.NUMBER,telProp.getValue());
+		String phoneType = telProp.getParam("TYPE");
+		if ( phoneType == null )
+			phoneType = "OTHER";
+		else
+			phoneType = phoneType.toUpperCase(); 
+		
+		if ( phoneType.contains("HOME") ) {
+			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_HOME);
+		}
+		else if ( phoneType.contains("WORK") ) {
+			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK);
+		}
+		else if ( phoneType.contains("CELL") ) {
+			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_MOBILE);
+		}
+		else {
+			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_OTHER);
+		}
+		Log.v(TAG,"Processing field TEL:"+phoneType+":"+telProp.getValue());
+	}
+
+
+	private void doStructuredAddress(Builder op, AcalProperty adrProp) {
 		op.withValue(Data.MIMETYPE, CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE);
 		String addressType = adrProp.getParam("TYPE").toUpperCase();
 		
@@ -232,9 +273,9 @@ public class VCardContact {
 		else if ( addressType.contains("WORK") ) opTYpe = CommonDataKinds.StructuredPostal.TYPE_WORK;
 		else opTYpe =  CommonDataKinds.StructuredPostal.TYPE_OTHER;
 		op.withValue(CommonDataKinds.StructuredPostal.TYPE, opTYpe);
-
+	
 		Log.v(TAG,"Processing field ADR:"+addressType+":"+adrProp.getValue());
-
+	
 		Matcher m = structuredAddressMatcher.matcher(adrProp.getValue());
 		if ( m.matches() ) {
 			/**
@@ -258,63 +299,48 @@ public class VCardContact {
 	}
 
 
-	private void doPhone(Context context, Builder op, AcalProperty telProp ) {
-		op.withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
-		op.withValue(CommonDataKinds.Phone.NUMBER,telProp.getValue());
-		String phoneType = telProp.getParam("TYPE").toUpperCase(); 
-		if ( phoneType.contains("HOME") ) {
-			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_HOME);
-//			op.withValue(CommonDataKinds.Phone.LABEL, context.getString(R.string.HomePhone_label));
+	private void doEmail(Builder op, AcalProperty emailProp) {
+		op.withValue(Data.MIMETYPE, CommonDataKinds.Email.CONTENT_ITEM_TYPE);
+		op.withValue(CommonDataKinds.Email.DATA,emailProp.getValue());
+		String emailType = emailProp.getParam("TYPE").toUpperCase(); 
+		if ( emailType.contains("HOME") ) {
+			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_HOME);
 		}
-		else if ( phoneType.contains("WORK") ) {
-			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK);
-//			op.withValue(CommonDataKinds.Phone.LABEL, context.getString(R.string.WorkPhone_label));
-		}
-		else if ( phoneType.contains("CELL") ) {
-			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_MOBILE);
-//			op.withValue(CommonDataKinds.Phone.LABEL, context.getString(R.string.CellPhone_label));
+		else if ( emailType.contains("WORK") ) {
+			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK);
 		}
 		else {
-			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_OTHER);
-//			op.withValue(CommonDataKinds.Phone.LABEL, context.getString(R.string.OtherPhone_label));
+			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_OTHER);
 		}
-		Log.v(TAG,"Processing field TEL:"+phoneType+":"+telProp.getValue());
+		Log.v(TAG,"Processing field EMAIL:"+emailType+":"+emailProp.getValue());
+		
 	}
 
 
-	private void doStructuredName(Context context, Builder op, AcalProperty fnProp, AcalProperty nProp) {
-		Log.v(TAG,"Processing field FN:"+fnProp.getValue());
+	private void doPhoto(Builder op, AcalProperty prop) {
+		byte[] decodedString = Base64Coder.decode(prop.getValue().replaceAll(" ",""));
+		op.withValue(Data.MIMETYPE, CommonDataKinds.Photo.CONTENT_ITEM_TYPE);
+		op.withValue(ContactsContract.CommonDataKinds.Photo.PHOTO,decodedString);
+		Log.v(TAG,"Processing field PHOTO:"+prop.getValue());
+	}
 
-		op.withValue(Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE);
-		if ( nProp != null ) {
-			Matcher m = structuredNameMatcher.matcher(nProp.getValue());
-			if ( m.matches() ) {
-				/**
-				 * The structured property value corresponds, in
-				 * sequence, to the Surname (also known as family name), Given Names,
-				 * Honorific Prefixes, and Honorific Suffixes.
-				 */
-				op.withValue(CommonDataKinds.StructuredName.FAMILY_NAME, m.group(1));
-				op.withValue(CommonDataKinds.StructuredName.GIVEN_NAME, m.group(2));
-				op.withValue(CommonDataKinds.StructuredName.PREFIX, m.group(3));
-				op.withValue(CommonDataKinds.StructuredName.SUFFIX, m.group(4));
-				Log.v(TAG,"Processing 'N' field: '"+nProp.getValue()+"' prefix>"
-							+ m.group(3) + "< firstname> " + m.group(2) + "< lastname>" + m.group(1) + "< suffix>" + m.group(4));
+
+	public static ContentValues getAndroidContact(Context context, Integer rawContactId) {
+		Uri contactDataUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI, rawContactId);
+		Cursor cur = context.getContentResolver().query(contactDataUri, null, null, null, null);
+		try {
+			if ( cur.moveToFirst() ) {
+				ContentValues result = new ContentValues();
+				DatabaseUtils.cursorRowToContentValues(cur, result);
+				cur.close();
+				return result;
 			}
 		}
-
-		op.withValue(CommonDataKinds.StructuredName.DISPLAY_NAME, fnProp.getValue());
-	}
-
-
-	public static ContentValues getAndroidContact(Context context, Long rawContactId) {
-		Uri contactDataUri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, rawContactId);
-		Cursor cur = context.getContentResolver().query(contactDataUri, null,
-				BaseColumns._ID+"=?", new String[] { ""+rawContactId }, null);
-		if ( cur.moveToFirst() ) {
-			ContentValues result = new ContentValues();
-			DatabaseUtils.cursorRowToContentValues(cur, result);
-			return result;
+		catch( Exception e ) {
+			Log.w(TAG,"Could not retrieve Android contact",e);
+		}
+		finally {
+			if ( cur != null ) cur.close();
 		}
 		return null;
 	}

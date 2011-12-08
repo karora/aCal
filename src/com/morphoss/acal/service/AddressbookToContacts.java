@@ -25,7 +25,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
-import android.provider.ContactsContract;
+import android.provider.BaseColumns;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.RawContacts;
 import android.util.Log;
@@ -106,27 +106,36 @@ public class AddressbookToContacts extends ServiceJob {
 			try {
 				VCardContact vCard = new VCardContact(vCardRow, addressBookCollection);
 
-				Cursor cur = cr.query(ContactsContract.RawContacts.CONTENT_URI, null,
-			                RawContacts.ACCOUNT_TYPE+"=? AND " + RawContacts.SYNC1+"=?",
-			                new String[] { acalAccountType, vCard.getUid() },
-							null);
+				Uri rawContactUri = RawContacts.CONTENT_URI.buildUpon()
+						.appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
+						.appendQueryParameter(RawContacts.ACCOUNT_TYPE, account.type)
+						.build();
+				Cursor cur = cr.query( rawContactUri, new String[] { BaseColumns._ID, Contacts.DISPLAY_NAME },
+						RawContacts.SYNC1+"=?", new String[] { vCard.getUid() }, null);
 
-				if ( cur == null ) {
-					throw new NullPointerException("Unable to query database");
-				}
-				else if ( cur.getCount() > 1 ) {
+				if ( cur != null && cur.getCount() > 1 ) {
+					cur.close();
 					throw new IllegalStateException("Found "+cur.getCount()+" RawContact rows for "+vCard.getUid());
 				}
-				else if ( cur.getCount() < 1 ) {
-					vCard.writeToContact(context, account, -1L );
+				try {
+					if ( cur.getCount() < 1 ) {
+						vCard.writeToContact(context, account, -1 );
+					}
+					else {
+					    while (cur.moveToNext()) {
+					        String id = cur.getString( cur.getColumnIndex(Contacts._ID));
+					        String name = cur.getString( cur.getColumnIndex(Contacts.DISPLAY_NAME));
+					        if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,
+					        		"Found existing contact row for '"+name+"' ("+id+")");
+				        }
+				 	}
 				}
-				else {
-				    while (cur.moveToNext()) {
-				        String id = cur.getString( cur.getColumnIndex(Contacts._ID));
-				        String name = cur.getString( cur.getColumnIndex(Contacts.DISPLAY_NAME));
-				        Log.println(Constants.LOGD,TAG,"Found existing contact row for '"+name+"' ("+id+")");
-			        }
-			 	}
+				catch (Exception e) {
+					Log.e(TAG,"Exception fetching Android contacts.", e);
+				}
+				finally {
+					if (cur != null) cur.close();
+				}
 
 			}
 			catch (VComponentCreationException e) {

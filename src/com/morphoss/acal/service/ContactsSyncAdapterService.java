@@ -70,7 +70,7 @@ public class ContactsSyncAdapterService extends Service {
 
 	private static void performSync(Context context, Account account, Bundle extras, String authority,
 			ContentProviderClient provider, SyncResult syncResult) throws OperationCanceledException {
-		HashMap<String, Long> androidContacts = new HashMap<String, Long>();
+		HashMap<String, Integer> androidContacts = new HashMap<String, Integer>();
 		mContentResolver = context.getContentResolver();
 		Log.i(TAG, "performSync: " + account.toString());
 		
@@ -79,9 +79,18 @@ public class ContactsSyncAdapterService extends Service {
 				.appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
 				.appendQueryParameter(RawContacts.ACCOUNT_TYPE, account.type).build();
 		Cursor c1 = mContentResolver.query(rawContactUri, new String[] { BaseColumns._ID, RawContacts.SYNC1 }, null, null, null);
-		while ( c1.moveToNext() ) {
-			androidContacts.put(c1.getString(1), c1.getLong(0));
+		try {
+			while ( c1.moveToNext() ) {
+				androidContacts.put(c1.getString(1), c1.getInt(0));
+			}
 		}
+		catch (Exception e) {
+			Log.e(TAG,"Exception fetching Android contacts.", e);
+		}
+		finally {
+			if (c1 != null) c1.close();
+		}
+		
 
 		long collectionId = Long.parseLong(AccountManager.get(context).getUserData(account, AcalAuthenticator.COLLECTION_ID));
 		AcalCollection collection = AcalCollection.fromDatabase(context, collectionId);
@@ -99,9 +108,9 @@ public class ContactsSyncAdapterService extends Service {
 				Log.println(Constants.LOGV, TAG, cardRow.getAsString(DavResources.RESOURCE_DATA));
 				continue;
 			}
-			Long androidContactId = androidContacts.get(vc.getUid());
+			Integer androidContactId = androidContacts.get(vc.getUid());
 			if ( androidContactId == null ) {
-				vc.writeToContact(context, account, -1L);
+				vc.writeToContact(context, account, -1);
 			}
 			else {
 				Integer aCalSequence = vc.getSequence();
