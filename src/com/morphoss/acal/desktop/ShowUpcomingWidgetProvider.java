@@ -104,7 +104,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 						//set up on click intent
 						Intent viewEvent = new Intent(context, EventView.class);
 						viewEvent.putExtra(EventView.RESOURCE_ID_KEY, rid);
-						viewEvent.putExtra(EventView.DTSTART_KEY,cvs[i].getAsLong(FIELD_DTSTART));
+						viewEvent.putExtra(EventView.DTSTART_KEY,dtstart.getMillis());
 						PendingIntent onClickIntent = PendingIntent.getActivity(context, i, viewEvent, PendingIntent.FLAG_UPDATE_CURRENT);
 						
 						//inflate row
