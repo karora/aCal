@@ -71,18 +71,20 @@ public class AddServerListAdapter extends BaseAdapter {
 				}
 			});
 		
-			for (String filename : acalFiles) {
-				try {
-					List<ServerConfigData> l = ServerConfigData.getServerConfigDataFromFile(new File(publicDir.getAbsolutePath()+"/"+filename));
-					for (ServerConfigData scd : l) {
-						
-						ContentValues cv = scd.getContentValues();
-						cv.put(ServerConfiguration.MODEKEY, ServerConfiguration.MODE_IMPORT);
-						data.add(cv);
-						lastSavedConfig++;;
+			if ( acalFiles != null ) {
+				for (String filename : acalFiles) {
+					try {
+						List<ServerConfigData> l = ServerConfigData.getServerConfigDataFromFile(new File(publicDir.getAbsolutePath()+"/"+filename));
+						for (ServerConfigData scd : l) {
+							
+							ContentValues cv = scd.getContentValues();
+							cv.put(ServerConfiguration.MODEKEY, ServerConfiguration.MODE_IMPORT);
+							data.add(cv);
+							lastSavedConfig++;;
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Error parsing file: "+filename+" - "+e);
 					}
-				} catch (Exception e) {
-					Log.e(TAG, "Error parsing file: "+filename+" - "+e);
 				}
 			}
 		} catch (Exception e) {
