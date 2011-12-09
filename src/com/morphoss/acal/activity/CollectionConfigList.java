@@ -139,38 +139,52 @@ public class CollectionConfigList extends PreferenceActivity
 		// Get Servers Data
 		ContentResolver cr = getContentResolver();
 		mCursor = cr.query(Servers.CONTENT_URI, null, Servers.ACTIVE, null, Servers._ID );
-		this.serverListCount = mCursor.getCount();
-		
-		this.serverData = new TreeMap<Integer,ContentValues>();
-		mCursor.moveToFirst();
-		while( ! mCursor.isAfterLast() ) {
-			ContentValues cv = new ContentValues(); 
-			DatabaseUtils.cursorRowToContentValues(mCursor, cv);
-			int serverId = cv.getAsInteger(Servers._ID);
-			this.serverData.put(serverId, cv);
-			mCursor.moveToNext();
+		try {
+			this.serverListCount = mCursor.getCount();
+			
+			this.serverData = new TreeMap<Integer,ContentValues>();
+			mCursor.moveToFirst();
+			while( ! mCursor.isAfterLast() ) {
+				ContentValues cv = new ContentValues(); 
+				DatabaseUtils.cursorRowToContentValues(mCursor, cv);
+				int serverId = cv.getAsInteger(Servers._ID);
+				this.serverData.put(serverId, cv);
+				mCursor.moveToNext();
+			}
 		}
-		mCursor.close();
+		catch( Exception e ) {
+			Log.w(TAG, "Error getting server list",e);
+		}
+		finally {
+			if ( mCursor != null ) mCursor.close();
+		}
 
 		// Get Collections Data
 		mCursor = cr.query(DavCollections.CONTENT_URI, null, null, null, DavCollections.SERVER_ID+",lower("+DavCollections.DISPLAYNAME+")" );
-		collectionListCount = mCursor.getCount();
-
-		// Store data in useful structures
-		this.collectionListIds = new int[collectionListCount];
-		
-		this.collectionData = new TreeMap<Integer,ContentValues>();
-		mCursor.moveToFirst();
-		int i = 0;
-		while( ! mCursor.isAfterLast() ) {
-			ContentValues cv = new ContentValues(); 
-			DatabaseUtils.cursorRowToContentValues(mCursor, cv);
-			int collectionId = cv.getAsInteger(DavCollections._ID);
-			this.collectionListIds[i++] = collectionId; 
-			this.collectionData.put(collectionId, cv);
-			mCursor.moveToNext();
+		try {
+			collectionListCount = mCursor.getCount();
+	
+			// Store data in useful structures
+			this.collectionListIds = new int[collectionListCount];
+			
+			this.collectionData = new TreeMap<Integer,ContentValues>();
+			mCursor.moveToFirst();
+			int i = 0;
+			while( ! mCursor.isAfterLast() ) {
+				ContentValues cv = new ContentValues(); 
+				DatabaseUtils.cursorRowToContentValues(mCursor, cv);
+				int collectionId = cv.getAsInteger(DavCollections._ID);
+				this.collectionListIds[i++] = collectionId; 
+				this.collectionData.put(collectionId, cv);
+				mCursor.moveToNext();
+			}
 		}
-		mCursor.close();
+		catch( Exception e ) {
+			Log.w(TAG, "Error getting collection list",e);
+		}
+		finally {
+			if ( mCursor != null ) mCursor.close();
+		}
 	}
 
 	/**
@@ -196,6 +210,7 @@ public class CollectionConfigList extends PreferenceActivity
 			if (lastServerId != serverId) {
 				currentCategory = new PreferenceCategory(this);
 				currentCategory.setTitle(serverData.get(serverId).getAsString(Servers.FRIENDLY_NAME));
+				currentCategory.setPersistent(false);
 				preferenceRoot.addPreference(currentCategory);
 				preferenceListIds[prefRowId++] = 0;
 				lastServerId = serverId;
@@ -203,6 +218,7 @@ public class CollectionConfigList extends PreferenceActivity
 			String collectionColour = cv.getAsString(DavCollections.COLOUR);
 			CollectionConfigListItemPreference thisPreference = new CollectionConfigListItemPreference(this);
 			thisPreference.setLayoutResource(R.layout.collections_list_item);
+			currentCategory.addPreference(thisPreference);
 			thisPreference.setTitle(cv.getAsString(DavCollections.DISPLAYNAME));
 			thisPreference.setSummary(cv.getAsString(DavCollections.COLLECTION_PATH));
 			thisPreference.setCollectionColour(collectionColour);
@@ -210,7 +226,8 @@ public class CollectionConfigList extends PreferenceActivity
 			thisPreference.setKey(Integer.toString(collectionId));
 			thisPreference.setOnPreferenceClickListener(this);
 			preferenceListIds[prefRowId++] = collectionId;
-			currentCategory.addPreference(thisPreference);
+			thisPreference.setEnabled(true);
+			Log.println(Constants.LOGD, TAG, "Created preference for "+thisPreference.getTitle());
 	    }
    	}
 

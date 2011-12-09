@@ -4,17 +4,29 @@ import android.content.Context;
 import android.graphics.Color;
 import android.preference.Preference;
 import android.util.AttributeSet;
+import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.View.OnCreateContextMenuListener;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.morphoss.acal.R;
+import com.morphoss.acal.davacal.SimpleAcalEvent;
 
 public class CollectionConfigListItemPreference extends Preference {
 
 	private int collectionColour = 0;
+	private String title = null;
+	private String summary = null;
+	private Context context;
 	
 	public CollectionConfigListItemPreference(Context context) {
 		super(context);
+		this.context = context;
 	}
 
 	public CollectionConfigListItemPreference(Context context, AttributeSet attrs) {
@@ -31,10 +43,27 @@ public class CollectionConfigListItemPreference extends Preference {
 		} catch (IllegalArgumentException iae) { }
 	}
 
+	public void setTitle(String newTitle ) {
+		title = newTitle;
+	}
+
+	public void setSummary(String newSummary ) {
+		summary = newSummary;
+	}
+
 	public View getView(View convertView, ViewGroup parent) {
-		View v = super.getView(convertView, parent);
+		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		View v = (LinearLayout) inflater.inflate(R.layout.collections_list_item, parent, false);
+
 		View colourBar = v.findViewById(R.id.CollectionItemColorBar);
 		colourBar.setBackgroundColor(collectionColour);
+
+		TextView tvTitle = (TextView) v.findViewById(android.R.id.title);
+		if ( title != null ) tvTitle.setText(title);
+
+		TextView tvSummary = (TextView) v.findViewById(android.R.id.summary);
+		if ( summary != null ) tvSummary.setText(summary);
+
 		return v;
 	}
 }
