@@ -360,16 +360,25 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		DateFormat format;
 		if (use24HourFormat) format = new SimpleDateFormat("HH:mm");
 		else format = new SimpleDateFormat("hh:mmaa");
-		if (start.getMillis() <= now.getMillis()) {
-			if (end.getYear() == now.getYear() && end.getYearDay() == now.getYearDay())
+		if ( start.getMillis() <= System.currentTimeMillis() ) {
+			if ( end.getMillis() < System.currentTimeMillis() ) {
+				return context.getString(R.string.Finished);
+			}
+			else if (end.getYear() == now.getYear() && end.getYearDay() == now.getYearDay())
 				time = format.format(end.toJavaDate()).toLowerCase();
-			else 
-				//multiday event
-				time = now.getDurationTo(end).getDays()+" "+context.getString(R.string.days);
+			else { 
+				if ( now.getDurationTo(end).getDays() == 0 ) {
+					return context.getString(R.string.Today);
+				}
+				else {
+					//multiday event
+					time = now.getDurationTo(end).getDays()+" "+context.getString(R.string.days);
+				}
+			}
 		}
 		else time = format.format(start.toJavaDate()).toLowerCase();
 
-		if (start.getMillis() <= now.getMillis() ) {
+		if (start.getMillis() <= System.currentTimeMillis() ) {
 			return context.getString(R.string.endsAt, time); ///Event is occuring now
 		}
 		else if ( start.getEpochDay() == now.getEpochDay() ) {
