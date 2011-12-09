@@ -181,6 +181,26 @@ public class AcalDateTime implements Parcelable, Serializable, Cloneable, Compar
 
 	
 	/**
+	 * <p>
+	 * Return a localised time which will represent the specified milliseconds from Epoch.
+	 * </p> 
+	 * @param millisecondsSinceEpoch
+	 * @return
+	 */
+	public static AcalDateTime localTimeFromMillis(long millisecondsSinceEpoch, boolean fromFloating) {
+		AcalDateTime ret = fromMillis(millisecondsSinceEpoch);
+		if ( fromFloating ) {
+			ret.tz = UTC;
+			ret.tzName = UTC.getID();
+			ret.setTimeZone(TimeZone.getDefault().getID());
+		}
+		else
+			ret.shiftTimeZone(TimeZone.getDefault().getID());
+		return ret;
+	}
+
+	
+	/**
 	 * 
 	 * @param yy Between 1582 and 32767
 	 * @param mm Between 1 and 12
