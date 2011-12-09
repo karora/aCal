@@ -82,6 +82,7 @@ public class Constants {
 	public static final boolean		debugCheckServerDialog			= false && DEBUG_MODE;
 	public static final boolean		debugTheming					= false && DEBUG_MODE;
 	public static final boolean		debugWidget						= false && DEBUG_MODE;
+	public static final boolean		debugSaxParser					= false && DEBUG_MODE;
 	
 	public static final long DEFAULT_MAX_AGE_WIFI = 1000*60*30;		// The default to use when initialising a new collection
 	public static final long DEFAULT_MAX_AGE_3G = 1000*60*60*2;		// The default to use when initialising a new collection

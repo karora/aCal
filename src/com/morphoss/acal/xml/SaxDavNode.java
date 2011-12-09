@@ -29,7 +29,7 @@ public class SaxDavNode extends DavNode {
 		this.attributes = new HashMap<String,String>();
 		this.tagName = "ROOT";
 		this.parent = null;
-		if (Constants.LOG_VERBOSE) {
+		if (Constants.LOG_VERBOSE && Constants.debugSaxParser ) {
 			Log.v(TAG,"Created ROOT Node");
 		}
 	}
@@ -44,7 +44,7 @@ public class SaxDavNode extends DavNode {
 			if (name == null || name.equals("")) name = attributes.getQName(i);
 			this.attributes.put(name, attributes.getValue(i));
 		}
-		if (Constants.LOG_VERBOSE) {
+		if (Constants.LOG_VERBOSE && Constants.debugSaxParser) {
 			Log.v(TAG,"Created Child Node: "+tag);
 		}
 	}
