@@ -47,6 +47,7 @@ public class VCalendar extends VComponent {
 	private Long latestEnd;
 	private boolean isPending = false;
 	public static final Pattern tzOlsonExtractor = Pattern.compile(".*((?:Antarctica|America|Africa|Atlantic|Asia|Australia|Indian|Europe|Pacific|US)/(?:(?:[^/\"]+)/)?[^/\"]+)\"?");
+	private static final String	TZNAME_UTC	= "UTC";
 
 
 	public VCalendar(ComponentParts splitter, Integer resourceId, Long earliestStart, Long latestEnd, AcalCollection collectionObject,VComponent parent) {
@@ -368,11 +369,14 @@ public class VCalendar extends VComponent {
 
 
 	private static String checkKnownAliases( String tzId ) {
-		if ( tzId.equals("UTC") ) return tzId;
-		if ( tzId.equals("Etc/UTC") ) return "UTC";
-		if ( tzId.equals("Etc/GMT") ) return "UTC";
+		if ( tzId.equals(TZNAME_UTC) ) return tzId;
+		if ( tzId.equals("GMT") ) return TZNAME_UTC;
+		if ( tzId.equals("Etc/UTC") ) return TZNAME_UTC;
+		if ( tzId.equals("Etc/GMT") ) return TZNAME_UTC;
 		if ( tzId.equals("Eastern Standard Time") || tzId.equals("Eastern Daylight Time")
-				|| tzId.equals("Eastern Time (US & Canada)") ) return "America/New_York";
+				|| tzId.equals("Eastern Time (US & Canada)")
+				|| tzId.equals("GMT -0500 (Standard) / GMT -0400 (Daylight)")
+				) return "America/New_York";
 		if ( tzId.equals("Pacific Standard Time") || tzId.equals("Pacific Daylight Time") ) return "America/Los_Angeles";
 		if ( tzId.equals("Central Standard Time") || tzId.equals("Central Daylight Time") ) return "America/Chicago";
 		if ( tzId.equals("Mountain Standard Time") || tzId.equals("Mountain Daylight Time") ) return "America/Denver";
