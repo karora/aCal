@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Strings that should not be localised belong in unlocalisable_strings.xml -->
 <resources>
-<string name="theDayEachWeekStartsWith">O dia em que a semana se inicia</string>
+<string name="theDayEachWeekStartsWith">O dia de início da semana exibido no calendário</string>
 <string name="firstDayOfWeek">Primeiro dia da semana</string>
 <string name="cancel">Cancelar</string>
+<string name="setButtonLabel">Configurar</string>
 <string name="appDescription">Uma agenda para Android que armazena seus compromissos, tarefas, anotações e contatos em um servidor CalDAV / CardDAV remoto, como o DAViCal (Veja: http://davical.org)</string>
 <string name="appDescriptionTasks">Uma lista de tarefas para Android que irá utilizar um servidor remoto CalDAV para armazenar seus dados, como o DAViCal (veja http://davical.org)</string>
 <string name="Active">Ativo</string>
@@ -11,7 +12,7 @@
 <string name="A_name_for_this_server_configuration">Um nome para esta configuração de servidor</string>
 <string name="Authentication_Type">Tipo de autenticação</string>
 <string name="Simple_Path">Caminho simples</string>
-<string name="Simple_Domain">Domínio</string>
+<string name="Simple_User_URL">URL do Usuário</string>
 <string name="Enter_a_brief_summary_of_the_event">Entre uma breve descrição do compromisso</string>
 <string name="Name">Nome</string>
 <string name="Force_full_resync">Forçar sincronização completa</string>
@@ -32,7 +33,7 @@
 <string name="The_authentication_type_used">O tipo de autenticação utilizado pelo servidor</string>
 <string name="The_password_to_use">A senha para autenticação no servidor</string>
 <string name="The_path_on_the_server">O caminho no servidor, como &quot;/caldav.php/user/&quot;</string>
-<string name="The_domain_for_your_organisation">O nome do domínio de sua organização, como &quot;morphoss.com&quot;</string>
+<string name="A_URL_or_domain_name">Uma URL ou domínio para o seu servidor de agenda</string>
 <string name="The_servers_hostname">O nome completo do servidor, como &quot;calendar.davical.com&quot;</string>
 <string name="The_username_to_use">O nome de usuário para autenticação no servidor</string>
 <string name="Username">Usuário</string>
@@ -103,15 +104,20 @@
 <string name="thSep">Set</string>
 <string name="thOct">Out</string>
 <string name="thDec">Dez</string>
-<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm -->
-<string name="YearViewSize_PrefTitle">Número de meses na visualização anual</string>
-<string name="YearViewSize_PrefSummary">O número de meses presentes na visualização anual</string>
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
+<string name="YearViewSize_PrefTitle">Número de meses na visualização de compromissos no ano</string>
+<string name="YearViewSize_PrefSummary">O número de meses exibidos na visualização de compromissos no ano</string>
 <string name="Snooze_PrefTitle">Tempo de espera</string>
 <string name="Snooze_PrefSummary">Quantos minutos devem ser aguardados quando utilizada a função espera (soneca)</string>
 <string name="DefaultCollection_PrefTitle">Coleção padrão</string>
 <string name="DefaultCollection_PrefSummary">A coleção padrão para novos compromissos</string>
 <string name="DefaultAlarmTone_PrefTitle">Toque padrão para alarmes</string>
-<string name="DefaultAlarmTone_PrefSummary">O som que será usado nos alarmes de compromissos.</string>
+<string name="DefaultAlarmTone_PrefSummary">O arquivo de áudio que será usado nos alarmes de compromissos.</string>
+<string name="AlarmVolumeType_PrefTitle">Controle de Volume para o Alarme</string>
+<string name="AlarmVolumeType_PrefSummary">O controle de volume usado para ajustar o volume do alarme</string>
+<string name="AlarmBellVolume">Volume da campainha</string>
+<string name="MediaPlayerVolume">Volume da mídia</string>
 <string name="prefWorkdayStart_Title">Início do dia útil</string>
 <string name="prefWorkdayStart_Summary">A hora de início de um dia útil.</string>
 <string name="prefWorkdayFinish_Title">Fim do dia útil</string>
@@ -136,9 +142,14 @@
 <string name="RepeatsPrompt">Repetições:</string>
 <string name="AllDayPrompt">Evento dura o dia todo:</string>
 <string name="FromPrompt">De:</string>
+<string name="TodoFromPrompt">Iniciar em:</string>
 <string name="UntilPrompt">Até:</string>
 <string name="DuePrompt">Prazo:</string>
 <string name="CompletedPrompt">Completo:</string>
+<string name="DaysPrompt">Dias:</string>
+<string name="StartPrompt">Início:</string>
+<string name="CompletePrompt">Completo:</string>
+<string name="CollectionPrompt">Agenda:</string>
 <string name="defaultCalendar">Agenda padrão</string>
 <string name="theCalendarForNewEvents">A agenda padrão utilizada para novos compromissos.</string>
 <string name="TwelveTwentyfour_PrefTitle">Usar formato de 24 horas</string>
@@ -163,21 +174,21 @@
 <string name="EveryNthOfTheMonth">Em cada dia %s do mês</string>
 <string name="EveryMonthOnTheNthSomeday">Em todo(a) %s de cada mês</string>
 <string name="CustomRepeatRule">Repetição Personalizada</string>
-<string name="EventSaved">Evento salvo.</string>
+<string name="EventSaved">Compromisso gravado.</string>
 <string name="ModifiedAllInstances">Todas as instâncias deste compromisso serão modificadas.</string>
 <string name="ModifiedOneInstance">Apenas esta instância deste compromisso será modificada.</string>
 <string name="ModifiedThisAndFuture">Esta instância e todas as instâncias futuras serão modificadas.</string>
 <string name="ErrorSavingEvent">Erro ao salvar compromisso. Tente novamente.</string>
-<string name="NewEventTitle">Novo Evento</string>
+<string name="NewEventTitle">Novo Compromisso</string>
 <string name="ChooseACollection">Selecione uma coleção</string>
 <string name="ChooseAlarmTime">Selecione a hora do alarme</string>
 <string name="ChooseInstancesToChange">Que instâncias do compromisso serão alteradas?</string>
 <string name="ChooseRepeatFrequency">Escolha a frequência de repetição</string>
 <string name="Add_Alarm">Adicionar Alarme</string>
-<string name="errorMustHaveActiveCalendar">Não é possível editar compromisso sem uma agenda ativa.</string>
-<string name="errorSavingServerConfig">Erro ao salvar a configuração do servidor</string>
-<string name="errorSavingFile">Erro ao salvar arquivo</string>
-<string name="ServerDataSaved">Dados do servidor gravados. Arquivo: </string>
+<string name="errorMustHaveActiveCalendar">Não é possível editar um compromisso sem uma agenda ativa.</string>
+<string name="errorSavingServerConfig">Erro ao gravar a configuração do servidor</string>
+<string name="errorSavingFile">Erro ao gravar arquivo</string>
+<string name="ServerDataSaved">Dados do servidor gravados. Nome do arquivo: </string>
 <string name="NewManualServerConfiguration">Configuração manual</string>
 <string name="ManualServerConfigurationBlurb">Entrar manualmente as informações do servidor</string>
 <string name="SavedServerConfigurationBlurb">Uma configuração de servidor gravada</string>
@@ -185,6 +196,7 @@
 <string name="ForTheWholeDay">O dia todo</string>
 <string name="alarmAtEventTime">Na hora do compromisso</string>
 <string name="alarm10MinutesPrior">10 minutos antes</string>
+<string name="alarm15MinutesPrior">15 minutos antes</string>
 <string name="alarm30MinutesPrior">30 minutos antes</string>
 <string name="alarm1HourPrior">Uma hora antes</string>
 <string name="alarm2HoursPrior">Duas horas antes</string>
@@ -198,17 +210,22 @@
 <string name="couldNotDiscoverPrincipal">Não pude descobrir o caminho com as informações fornecidas</string>
 <string name="foundPrincipalPath">Caminho principal do servidor em &quot;%s&quot;</string>
 <string name="serverSupportsCalDAV">Servidor suporta CalDAV.</string>
+<string name="serverHasDAVNoCalDAV">O servidor suporta DAV, seu nome de usuário e senha funcionam, mas não há suporte a CalDAV.</string>
 <string name="serverLacksCalDAV">Servidor não suporta CalDAV.</string>
 <string name="serverFailedValidation">Ocorreu um erro ao validar o servidor:</string>
-<string name="saveSettingsAnyway">Gostaria de salvar as configurações de qualquer modo?</string>
+<string name="saveSettingsAnyway">Gostaria de gravar as configurações de qualquer modo?</string>
 <string name="serverValidationSuccess">Servidor validado com sucesso.</string>
 <string name="authenticationFailed">Não foi possível autenticar no servidor.</string>
 <string name="WeekViewPreferences">Preferências da Visualização de Semana</string>
+<string name="AlarmPreferences">Configurações do alarme</string>
+<string name="GeneralPreferences">Configurações gerais</string>
 <string name="checkServer">Validando o servidor</string>
 <string name="checkServer_Connecting">Conectando ao servidor, aguarde...</string>
 <string name="checkServer_Internet">Verificando a conexão com a internet</string>
+<string name="checkServer_SearchingForServer">Procurando por um servidor CalDav em &quot;%s&quot;</string>
+<string name="checkServer_DiscoveryCancelled">A busca pelo servidor foi cancelada</string>
 <string name="serverRecordAlreadyExists">Já existe um servidor configurado para este protocolo, porta, endereço, caminho e nome de usuário</string>
-<string name="newEventFromThis">Copiar para Novo Evento</string>
+<string name="newEventFromThis">Copiar para Novo Compromisso</string>
 <string name="Delete">Apagar</string>
 <string name="deleteAllInstances">Apagar todas as instâncias</string>
 <string name="deleteThisInstance">Apagar esta instância</string>
@@ -225,7 +242,7 @@
 <string name="Due">Prazo</string>
 <string name="All">Todos</string>
 <string name="Todo">A fazer</string>
-<string name="Events">Eventos</string>
+<string name="Events">Compromissos</string>
 <string name="Tasks">Tarefas</string>
 <string name="Unscheduled">Não agendado</string>
 <string name="ChooseAction">Escolher Ação</string>
@@ -233,5 +250,38 @@
 <string name="newTaskFromThis">Copiar para Nova Tarefa</string>
 <string name="dueTasksTitle">Tarefas para terminar em até uma semana</string>
 <string name="incompleteTasksTitle">Tarefas não Concluídas</string>
+<string name="incompleteTasksDue">Tarefas incompletas que terminam em uma semana</string>
 <string name="allTasksTitle">Todas as Tarefas</string>
+<string name="NewTaskTitle">Nova Tarefa</string>
+<string name="TaskSaved">Tarefa Gravada.</string>
+<string name="TaskModifiedAll">Todas as instâncias da tarefa foram alteradas.</string>
+<string name="TaskModifiedOne">Esta instância da tarefa foi alterada.</string>
+<string name="TaskModifiedThisAndFuture">Esta e todas as instâncias futuras foram alteradas.</string>
+<string name="TaskErrorSaving">Não pude salvar a tarefa - por favor, tente novamente.</string>
+<string name="username">Usuário:</string>
+<string name="password">Senha:</string>
+<string name="setRepeatRule">Configurar Repetição</string>
+<string name="eventName">Nome do Compromisso</string>
+<string name="todoName">Nome da Tarefa:</string>
+<string name="IsADate">O dia todo</string>
+<string name="NotSet">Não Configurado</string>
+<string name="Exactly">Exatamente</string>
+<string name="Start">Início</string>
+<string name="Finish">Fim</string>
+<string name="Before">Antes de</string>
+<string name="After">Após</string>
+<string name="Custom">Personalizar</string>
+<string name="floatingTime">Sem fuso</string>
+<string name="SetCustomAlarm">Personalizar alarme</string>
+<string name="showUpdateInformation">Informações da Versão</string>
+<string name="General_aCal_Information">Informações Gerais sobre o aCal</string>
+<string name="aCal_Website">O site do <b>aCal</b> é %s</string>
+<string name="aCal_IRC_Channel">Você pode conversar com os autores do aCal pelo canal &lt;a href=\\&quot;irc://irc.oftc.net/#acal\\&quot;>\\&quot;#acal em irc.oftc.net&lt;/a></string>
+<string name="aCal_Mailing_Lists">As listas de discussão por e-mail do &lt;em>aCal&lt;/em> são públicas, e você pode se inscrever pelo site &lt;a href=\\&quot;http://lists.acal.me/\\&quot;>lists.acal.me&lt;/a>. Neste site você também pode encontrar os arquivos de discussões passadas.</string>
+<string name="aCal_is_Free_Software">aCal é um software livre licenciado sob a General Public License versão 3 ou superior - GPLv3+. Você pode baixar &lt;a href=\\&quot;http://gitorious.org/acal\\&quot;>seu código fonte de seu repositório no Gitorious&lt;/a>.</string>
+<string name="TaskMarkedComplete">Tarefa marcada como completa.</string>
+<string name="TaskDeleted">Tarefa apagada.</string>
+<string name="endsAt">Termina em %s</string>
+<string name="days">Dias</string>
+<string name="noScheduledEvents">Sem eventos agendados</string>
 </resources>
