@@ -19,6 +19,7 @@
 package com.morphoss.acal.activity;
 
 import java.util.List;
+import java.util.TimeZone;
 
 import android.content.ContentValues;
 import android.content.Intent;
@@ -81,7 +82,6 @@ public class EventView extends AcalActivity implements OnGestureListener, OnTouc
 		this.setupButton(R.id.event_edit_button, EDIT);
 		this.setupButton(R.id.event_add_button, ADD);
 		
-		
 		Bundle b = this.getIntent().getExtras();
 		try {
 			long start = -1;
@@ -93,7 +93,15 @@ public class EventView extends AcalActivity implements OnGestureListener, OnTouc
 			if (b.containsKey(DTSTART_KEY)) start = b.getLong(DTSTART_KEY);
 			
 			if (this.event == null && this.sae == null && rid >= 0 && start >=0) {
-				this.event = AcalEvent.fromDatabase(this, rid, AcalDateTime.fromMillis(start));
+				AcalDateTime dtStart = AcalDateTime.localTimeFromMillis(start,false);
+				this.event = AcalEvent.fromDatabase(this, rid, dtStart);
+				dtStart = event.getStart();
+				if ( dtStart.isFloating() ) {
+					// All this weird screwing around because we don't pass floating into the widget table
+					// which we will fix properly after the current refactoring
+					dtStart.addSeconds( (TimeZone.getDefault().getOffset(dtStart.getMillis()) / 1000) );
+					event = AcalEvent.fromDatabase(this, rid, dtStart);
+				}
 				this.sae = SimpleAcalEvent.getSimpleEvent(this.event);
 			}
 			else if (this.event != null && this.sae == null) this.sae = SimpleAcalEvent.getSimpleEvent(this.event);
