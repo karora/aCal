@@ -425,6 +425,7 @@ public class CalendarDataService extends Service implements Runnable, DatabaseEv
 
 			List<AcalEvent> events = dataRequest.getEventsForDateRange(range);
 			Collections.sort(events);
+			while (events.size() > 0 && events.get(0).getLocalEnd().getMillis() < System.currentTimeMillis() ) events.remove(0);
 			while (events.size() > ShowUpcomingWidgetProvider.NUMBER_OF_EVENTS_TO_SHOW) events.remove(events.size()-1);
 
 			//step 2, notify provider of new data
