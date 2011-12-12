@@ -73,7 +73,12 @@ public class YearView extends AcalActivity implements OnGestureListener, OnTouch
 	@Override 
 	public void onPause() {
 		super.onPause();
-		this.selectedDate = view.getDisplayedDate();
+		try {
+			this.selectedDate = view.getDisplayedDate();
+		}
+		catch( Exception e ) {
+			Log.i(TAG,"Catchable error in YearView",e);
+		}
 	}
 	
 	@Override
