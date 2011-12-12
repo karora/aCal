@@ -40,3 +40,10 @@ Fix possible force-close deleting event.
 Fix force-close on "Today" in Year View.
 Fix interpretation of "Eastern Time" timezone alias.
 Basic one-way CardDAV sync to contacts (under development). 
+v34=1.32
+Opening event from desktop widget gave wrong time on event.
+Updated German and Brazilian translations.
+Added a few more timezone aliases.
+Fixed some bugs in CardDAV contacts sync
+Don't force screen into Portrait mode.
+Fix display of Calendars & Addressbooks list on Android 3.x/4.x
