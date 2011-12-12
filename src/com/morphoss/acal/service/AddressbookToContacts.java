@@ -110,7 +110,7 @@ public class AddressbookToContacts extends ServiceJob {
 						.appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
 						.appendQueryParameter(RawContacts.ACCOUNT_TYPE, account.type)
 						.build();
-				Cursor cur = cr.query( rawContactUri, new String[] { BaseColumns._ID, Contacts.DISPLAY_NAME },
+				Cursor cur = cr.query( rawContactUri, new String[] { BaseColumns._ID, Contacts.DISPLAY_NAME, RawContacts.VERSION },
 						RawContacts.SYNC1+"=?", new String[] { vCard.getUid() }, null);
 
 				if ( cur != null && cur.getCount() > 1 ) {
@@ -123,10 +123,16 @@ public class AddressbookToContacts extends ServiceJob {
 					}
 					else {
 					    while (cur.moveToNext()) {
-					        String id = cur.getString( cur.getColumnIndex(Contacts._ID));
+					        int id = cur.getInt( cur.getColumnIndex(Contacts._ID));
 					        String name = cur.getString( cur.getColumnIndex(Contacts.DISPLAY_NAME));
-					        if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,
-					        		"Found existing contact row for '"+name+"' ("+id+")");
+					        int rawVersion = cur.getInt(cur.getColumnIndex(RawContacts.VERSION));
+					        if ( rawVersion < vCard.getSequence() ) {
+					        	vCard.writeToContact(context, account, id);
+					        }
+					        else {
+					        	if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,
+					        			"Found existing contact row for '"+name+"' ("+id+")");
+					        }
 				        }
 				 	}
 				}
