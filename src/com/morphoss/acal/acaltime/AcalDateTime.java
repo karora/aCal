@@ -1490,6 +1490,7 @@ public class AcalDateTime implements Parcelable, Serializable, Cloneable, Compar
 	 * @param days
 	 */
 	public synchronized AcalDateTime addDays(int days) {
+		if ( days == 0 ) return this;
 		if ( Constants.debugDateTime ) checkEpoch();
 		if ( year == YEAR_NOT_SET ) calculateDateTime();
 
@@ -1546,12 +1547,18 @@ public class AcalDateTime implements Parcelable, Serializable, Cloneable, Compar
 
 
 	public AcalDateTime addMonths(int months) {
+		if ( months == 0 ) return this;
 		if ( Constants.debugDateTime ) checkEpoch();
 		if ( year == YEAR_NOT_SET ) calculateDateTime();
 		month--;
 		month += months;
-		year += month / 12;
-		if ( month < 0 ) year--;
+		if ( month < 0 ) {
+			year -= (-month+11) / 12;
+			month += ((-month+11) / 12) * 12;
+		}
+		else {
+			year += month / 12;
+		}
 		month %= 12;
 		month++;
 		if ( day > monthDays(year,month) ) day = (short) monthDays(year,month);
