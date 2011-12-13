@@ -682,6 +682,14 @@ public class EventEdit extends AcalActivity implements OnGestureListener, OnTouc
 							else {
 								if ( Constants.LOG_DEBUG ) Log.println(Constants.LOGD, TAG,"The timezone did not change from "+oldTzId+" to "+newTzId+", EndTzId was "+endTzId);
 							}
+							if ( newEnd.isDate() ) newEnd.setDaySecond(0);
+							if ( !newDateTime.before(newEnd) ) {
+								newEnd = newDateTime.clone();
+								if ( newEnd.isDate() )
+									newEnd.addDays(1);
+								else
+									newEnd.addSeconds(3600);
+							}
 							event.setField(EVENT_FIELD.startDate, newDateTime);
 							event.setField(EVENT_FIELD.endDate, newEnd);
 							updateLayout();
@@ -690,8 +698,16 @@ public class EventEdit extends AcalActivity implements OnGestureListener, OnTouc
 
 			case END_DATE_DIALOG:
 				end.setAsDate(start.isDate());
-				if ( end.before(start) ) end = start.clone();
+				if ( end.isDate() ) end.setDaySecond(0);
+				if ( !start.before(end) ) {
+					end = start.clone();
+					if ( end.isDate() )
+						end.addDays(1);
+					else
+						end.addSeconds(3600);
+				}
 				if ( end.isDate() ) {
+					end.setDaySecond(0);
 					// People expect an event starting on the 13th and ending on the 14th to be for
 					// two days.  For iCalendar it is one day, so we display the end date to be
 					// one day earlier than the actual setting, if we're viewing 
