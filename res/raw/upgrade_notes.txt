@@ -47,3 +47,5 @@ Added a few more timezone aliases.
 Fixed some bugs in CardDAV contacts sync
 Don't force screen into Portrait mode.
 Fix display of Calendars & Addressbooks list on Android 3.x/4.x
+v35=1.33
+Finished events now correctly disappear from widget
