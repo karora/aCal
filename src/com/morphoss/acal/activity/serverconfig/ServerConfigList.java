@@ -263,8 +263,8 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 			// configuration activity knows what to do.
 			ContentValues toPass = ServerConfigList.this.serverData.get(ServerConfigList.this.serverNames[position]);
 			
-			if (!toPass.containsKey(ServerConfiguration.MODEKEY))
-				toPass.put(ServerConfiguration.MODEKEY, ServerConfiguration.MODE_EDIT);
+			if (!toPass.containsKey(ServerConfiguration.KEY_MODE))
+				toPass.put(ServerConfiguration.KEY_MODE, ServerConfiguration.MODE_EDIT);
 
 			// We need to re-insert friendly name as it was removed when
 			// creating this.serverNames

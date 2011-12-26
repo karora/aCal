@@ -23,6 +23,7 @@ import java.util.HashMap;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -44,6 +45,7 @@ import android.widget.Toast;
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.R;
 import com.morphoss.acal.ServiceManager;
+import com.morphoss.acal.providers.DavCollections;
 import com.morphoss.acal.providers.Servers;
 import com.morphoss.acal.service.ServiceRequest;
 
@@ -71,10 +73,10 @@ public class ServerConfiguration extends PreferenceActivity implements OnPrefere
 	public int iface = INTERFACE_SIMPLE;
 
 	//The Key to be used in serverData for storing the mode value.
-	public static final String MODEKEY = "MODE";
+	public static final String KEY_MODE = "MODE";
 
 	//The Key to be used in serverData for storing the image resourceId
-	public static final String IMAGE_KEY = "IMAGE_RESOURCE";
+	public static final String KEY_IMAGE = "IMAGE_RESOURCE";
 
 
 	//The Modes available for this activity. serverData MUST have one of these or the activity will abort
@@ -133,19 +135,19 @@ public class ServerConfiguration extends PreferenceActivity implements OnPrefere
 			serverData = this.getIntent().getExtras().getParcelable("ServerData");
 		} catch (Exception e) {
 			serverData = new ContentValues();
-			serverData.put(MODEKEY, MODE_CREATE);
+			serverData.put(KEY_MODE, MODE_CREATE);
 		}
-		if ( serverData == null || !serverData.containsKey(MODEKEY) ) {
+		if ( serverData == null || !serverData.containsKey(KEY_MODE) ) {
 			//server data not correctly set
 			this.finish();
 		}
-		if ( serverData == null || serverData.getAsInteger(MODEKEY) == MODE_CREATE) {
+		if ( serverData == null || serverData.getAsInteger(KEY_MODE) == MODE_CREATE) {
 			createDefaultValues();
 		}
-		else if (serverData.getAsInteger(MODEKEY) == MODE_IMPORT) {
+		else if (serverData.getAsInteger(KEY_MODE) == MODE_IMPORT) {
 			createDefaultValuesForMissing();
 		}
-		else if (serverData.getAsInteger(MODEKEY) == MODE_EDIT){
+		else if (serverData.getAsInteger(KEY_MODE) == MODE_EDIT){
 			//ensure all required fields are present
 			if (!	serverData.containsKey(Servers.FRIENDLY_NAME) &&
 					serverData.containsKey(Servers.SUPPLIED_USER_URL) &&
@@ -220,7 +222,7 @@ public class ServerConfiguration extends PreferenceActivity implements OnPrefere
 		if (!	serverData.containsKey(Servers.ACTIVE)) serverData.put(Servers.ACTIVE,1);
 		if (!	serverData.containsKey(Servers.USE_SSL)) serverData.put(Servers.USE_SSL,1);
 		apply.setEnabled(true);
-		serverData.put(MODEKEY, MODE_CREATE);
+		serverData.put(KEY_MODE, MODE_CREATE);
 	}
 	
 	private void createDefaultValues() {
@@ -283,7 +285,7 @@ public class ServerConfiguration extends PreferenceActivity implements OnPrefere
 	}
 	
 	public void saveData() {
-		switch (serverData.getAsInteger(MODEKEY)) {
+		switch (serverData.getAsInteger(KEY_MODE)) {
 			case MODE_EDIT:
 				updateRecord();
 				break;
@@ -311,9 +313,13 @@ public class ServerConfiguration extends PreferenceActivity implements OnPrefere
 				Log.e(TAG,Log.getStackTraceString(e));
 			}
 		}
-
     }
-	
+
+	public void finishAndClose() {
+		this.setResult(RESULT_OK);
+		this.finish();
+	}
+
 	/**
 	 * <p>Called when exiting/pausing activity in CREATE Mode. Creates a new record. Changes activity from
 	 * CREATE mode to EDIT mode if update was successful.</p>
@@ -325,12 +331,12 @@ public class ServerConfiguration extends PreferenceActivity implements OnPrefere
 			if (id < 0) throw new Exception("Failed to add server");
 			serverData.put(Servers._ID, id);
 			//IMPORTANT if we don't change the mode its possible more than one record will be created.
-			serverData.put(MODEKEY, MODE_EDIT);
+			serverData.put(KEY_MODE, MODE_EDIT);
 			//Find server capabilities
 			
 		} catch (Exception e) {
 			//error updating
-			serverData.put(MODEKEY, MODE_CREATE);
+			serverData.put(KEY_MODE, MODE_CREATE);
 			Toast.makeText(this, getString(R.string.errorSavingServerConfig), Toast.LENGTH_LONG);
 		}
 	}

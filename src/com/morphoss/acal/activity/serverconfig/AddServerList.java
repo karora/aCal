@@ -21,7 +21,9 @@ package com.morphoss.acal.activity.serverconfig;
 import android.app.ListActivity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -32,7 +34,7 @@ public class AddServerList extends ListActivity implements OnClickListener {
 
 	public static final String TAG = "acal AddServerList";
 
-	private static final int CREATE_SERVER_REQUEST = 1;
+	public static final int KEY_CREATE_SERVER_REQUEST = 1;
 	private Button manualConfiguration;
 	public static final int ACTION_LOGIN = 1;
 	public static final int ACTION_CREATE = 2;
@@ -45,7 +47,6 @@ public class AddServerList extends ListActivity implements OnClickListener {
 		
 		manualConfiguration = (Button) findViewById(R.id.AddServerButton);
 		manualConfiguration.setOnClickListener(this);
-//		manualConfiguration.setBackgroundDrawable(getResources().getDrawable(R.drawable.plus_icon));
 		manualConfiguration.setText(getString(R.string.NewManualServerConfiguration));
 		manualConfiguration.setTextSize(24);
 	}
@@ -63,20 +64,26 @@ public class AddServerList extends ListActivity implements OnClickListener {
 		ContentValues newServer;
 		
 		newServer = new ContentValues();
-		newServer.put(ServerConfiguration.MODEKEY, ServerConfiguration.MODE_CREATE);
+		newServer.put(ServerConfiguration.KEY_MODE, ServerConfiguration.MODE_CREATE);
 
 		Intent serverConfigIntent = new Intent();
 
 		// Begin new activity
 		serverConfigIntent.setClassName("com.morphoss.acal", "com.morphoss.acal.activity.serverconfig.ServerConfiguration");
 		serverConfigIntent.putExtra("ServerData", newServer);
-		startActivityForResult(serverConfigIntent, CREATE_SERVER_REQUEST);
+		startActivityForResult(serverConfigIntent, KEY_CREATE_SERVER_REQUEST);
 	}
 	
      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-         if (requestCode == CREATE_SERVER_REQUEST ) {
+    	 if (requestCode == KEY_CREATE_SERVER_REQUEST ) {
              if (resultCode == RESULT_OK) finish();
          }
      }
 
+
+ 	public void signUp( String signUpUrl ) {
+ 		Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse(signUpUrl));
+ 		this.startActivity(viewIntent);
+ 	}
+     
 }

@@ -31,7 +31,6 @@ import java.util.Map.Entry;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,11 +47,11 @@ import com.morphoss.acal.providers.Servers;
 public class AddServerListAdapter extends BaseAdapter {
 
 	public static final String TAG = "Acal AddServerListAdapter";
-	private Context context;
+	private AddServerList context;
 	private ArrayList<ContentValues> data;
 	private int lastSavedConfig=0;
 	
-	public AddServerListAdapter(Context c) {
+	public AddServerListAdapter(AddServerList c) {
 		this.context = c;
 		populateData();
 	}
@@ -78,7 +77,7 @@ public class AddServerListAdapter extends BaseAdapter {
 						for (ServerConfigData scd : l) {
 							
 							ContentValues cv = scd.getContentValues();
-							cv.put(ServerConfiguration.MODEKEY, ServerConfiguration.MODE_IMPORT);
+							cv.put(ServerConfiguration.KEY_MODE, ServerConfiguration.MODE_IMPORT);
 							data.add(cv);
 							lastSavedConfig++;;
 						}
@@ -129,11 +128,11 @@ public class AddServerListAdapter extends BaseAdapter {
 						"Found "+l.size()+" pre-written serverconfig entries for '"+confEntry.getKey()+"'");
 				for (ServerConfigData scd : l) {
 					ContentValues cv = scd.getContentValues();
-					cv.put(ServerConfiguration.MODEKEY, ServerConfiguration.MODE_IMPORT);
+					cv.put(ServerConfiguration.KEY_MODE, ServerConfiguration.MODE_IMPORT);
 					if ( Constants.LOG_DEBUG ) Log.println(Constants.LOGD,TAG, 
 							"Added pre-written serverconfig for '"+confEntry.getKey()+"'");
 					if ( imageIds.getAsInteger(confEntry.getKey()) != null ) {
-						cv.put(ServerConfiguration.IMAGE_KEY, imageIds.getAsInteger(confEntry.getKey()));
+						cv.put(ServerConfiguration.KEY_IMAGE, imageIds.getAsInteger(confEntry.getKey()));
 						if ( Constants.LOG_DEBUG ) Log.println(Constants.LOGD,TAG, 
 								"Setup image for '"+confEntry.getKey()+"'");
 					}
@@ -197,10 +196,10 @@ public class AddServerListAdapter extends BaseAdapter {
 			blurb.setText(blurbString);
 		}
 		else {
-			if ( item.getAsInteger(ServerConfiguration.IMAGE_KEY) != null ) {
+			if ( item.getAsInteger(ServerConfiguration.KEY_IMAGE) != null ) {
 				Log.w(TAG, "Special lastSavedConfig image for '"+item.getAsString(Servers.FRIENDLY_NAME)+"'");
 				thisRow.setBackgroundColor(android.R.color.white);
-				thisRow.setBackgroundResource(item.getAsInteger(ServerConfiguration.IMAGE_KEY));
+				thisRow.setBackgroundResource(item.getAsInteger(ServerConfiguration.KEY_IMAGE));
 				icon.setBackgroundColor(0);
 				title.setText(item.getAsString(""));
 				blurb.setText(item.getAsString(""));
@@ -222,14 +221,9 @@ public class AddServerListAdapter extends BaseAdapter {
 				serverConfigIntent.setClassName("com.morphoss.acal",
 						"com.morphoss.acal.activity.serverconfig.ServerConfiguration");
 				serverConfigIntent.putExtra("ServerData", item);
-				context.startActivity(serverConfigIntent); 
+				context.startActivityForResult(serverConfigIntent, AddServerList.KEY_CREATE_SERVER_REQUEST);
 			}
 		});
 		return rowLayout;
-	}
-
-	public void signUp( String signUpUrl ) {
-		Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse("http://www.novoda.com"));
-		context.startActivity(viewIntent);
 	}
 }
