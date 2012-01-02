@@ -23,6 +23,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.RemoteViews;
 
+import com.morphoss.acal.AcalDebug;
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.DatabaseChangedEvent;
 import com.morphoss.acal.R;
@@ -59,6 +60,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			int[] ids = intent.getExtras().getIntArray(SHOW_UPCOMING_WIDGET_IDS_KEY);
 			this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
 		} else super.onReceive(context, intent);
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget onReceive");
 	}
 
 	
@@ -66,6 +68,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 
 		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
 				"onUpdate Called...");
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget onUpdate");
 		for (int widgetId : appWidgetIds) {
 
 			Intent updateIntent = new Intent();	
@@ -179,6 +182,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	
 	//Clean any events from the DB that have ended
 	public static void cleanOld(Context context) {
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget cleanOld");
 		long endTime = System.currentTimeMillis();
 		AcalDBHelper dbhelper = new AcalDBHelper(context);
 		SQLiteDatabase db = dbhelper.getReadableDatabase();
@@ -200,6 +204,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	 * @return
 	 */
 	public synchronized static ContentValues[] getCurrentData(Context context) {
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget getCurrentData");
 		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Retrieving current data");
 		ContentValues[] cvs = new ContentValues[NUMBER_OF_EVENTS_TO_SHOW];
 		AcalDBHelper dbhelper = new AcalDBHelper(context);
@@ -218,6 +223,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		cursor.close();
 		db.close();
 		dbhelper.close();
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget getCurrentData done");
 		return cvs;
 	}
 
@@ -225,6 +231,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG, 
 				"Checking to see if widget update is required...");
 
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget checkIfUpdateRequired");
 		//Turn events into content vals for easier processing
 		ContentValues[] cvs = new ContentValues[currentEvents.size()];
 		for (int i = 0; i< currentEvents.size(); i++) {
@@ -241,6 +248,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 					"Sending update broadcast");
 			StaticHelpers.updateWidgets(context, ShowUpcomingWidgetProvider.class);
 		}
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget checkIfUpdateRequired done");
 	}
 	
 	/**
@@ -254,6 +262,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
 				"Comparing current data to db");
 		
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget hasDataChanged");
 		if (oldData.length != newData.length) return true;
 		
 		for (int i = 0; i< NUMBER_OF_EVENTS_TO_SHOW && i< oldData.length; i++) {
@@ -286,6 +295,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	public static synchronized void updateData(Context context, ContentValues[] cvs) {
 		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
 				"Writing new values to DB");
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget upateData");
 		AcalDBHelper dbhelper = new AcalDBHelper(context);
 		SQLiteDatabase db = dbhelper.getWritableDatabase();
 		db.beginTransaction();
@@ -304,6 +314,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		db.endTransaction(); 
 		
 		db.close(); 
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget upateData done");
 	}
 
 	
