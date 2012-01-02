@@ -1,11 +1,13 @@
 package com.morphoss.acal.contacts;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +29,7 @@ import android.provider.ContactsContract.RawContacts.Data;
 import android.util.Log;
 
 import com.morphoss.acal.Constants;
+import com.morphoss.acal.acaltime.AcalDateTime;
 import com.morphoss.acal.davacal.AcalCollection;
 import com.morphoss.acal.davacal.AcalProperty;
 import com.morphoss.acal.davacal.PropertyName;
@@ -50,7 +53,7 @@ public class VCardContact {
 	private Map<String,Set<AcalProperty>> typeMap = null;
 	private Map<String,Set<AcalProperty>> groupMap = null;
 	private AcalProperty uid = null;
-	private AcalProperty sequence = null;
+	private int sequence = 0;
 
 	public VCardContact( ContentValues resourceRow, AcalCollection collectionObject ) throws VComponentCreationException {
 		vCardRow = resourceRow;
@@ -71,9 +74,13 @@ public class VCardContact {
 			// We want the contents to be expanded until we're done with this object
 		}
 
-		sequence = sourceCard.getProperty(PropertyName.SEQUENCE);
-		if ( sequence == null )
-			sequence = new AcalProperty("SEQUENCE", "1");
+		AcalDateTime revisionTime = AcalDateTime.fromAcalProperty(sourceCard.getProperty(PropertyName.REV));
+		if ( revisionTime == null ) {
+			String modTime = vCardRow.getAsString(DavResources.LAST_MODIFIED);
+			revisionTime = AcalDateTime.fromMillis(Date.parse(modTime)).setTimeZone(AcalDateTime.UTC.getID());
+		}
+		sequence = (int) ((revisionTime.getEpoch() - 1000000000L) % 2000000000L);
+		
 		uid = sourceCard.getProperty(PropertyName.UID);
 		if ( uid == null ) {
 			uid = new AcalProperty("UID", vCardRow.getAsString(DavResources._ID));
@@ -137,9 +144,7 @@ public class VCardContact {
 	}
 
 	public int getSequence() {
-		Integer result =  Integer.parseInt(sequence.getValue());
-		if ( result == null ) result = 1;
-		return result;
+		return sequence;
 	}
 
 	
