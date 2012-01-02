@@ -5,7 +5,7 @@
 <string name="firstDayOfWeek">Erster Wochentag</string>
 <string name="cancel">Abbrechen</string>
 <string name="appDescription">Ein Kalender für Android, der Ereignisse, Aufgaben, Notizen und Kontakte auf einem CalDAV- bzw. CardDAV-Server -- bspw. DAViCal (siehe www.davical.org) speichert.</string>
-<string name="appDescriptionTasks">Eine Aufgabenliste für Android, die Aufgaben auf einem CalDAV- bzw. CardDAV-Server -- bspw. DAViCal (siehe www.davical.org) speichert.</string>
+<string name="appDescriptionTasks">Eine Aufgabenliste für Android, die Aufgaben auf einem CalDAV- bzw. CardDAV-Server – bspw. DAViCal (siehe www.davical.org) speichert.</string>
 <string name="Active">aktiv</string>
 <string name="Add_Server">Server hinzufügen</string>
 <string name="A_name_for_this_server_configuration">Name, der für diese Server-Konfiguration verwendet werden soll</string>
@@ -21,8 +21,8 @@
 <string name="Server_Options">Servereinstellungen</string>
 <string name="Collection_Options">Sammlungsoptionen</string>
 <string name="Colour">Farbe</string>
-<string name="Default_timezone">Standard Zeitzone</string>
-<string name="DefaultAlarmTone">Default Alarmton</string>
+<string name="Default_timezone">Standard-Zeitzone</string>
+<string name="DefaultAlarmTone">Standard-Alarmton</string>
 <string name="Server_Path">Serverpfad</string>
 <string name="Server_Port">Serverport</string>
 <string name="Summary">Zusammenfassung</string>
@@ -96,13 +96,13 @@
 	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
 	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
 <string name="YearViewSize_PrefTitle">Anzahl der Monate in der Jahresansicht</string>
-<string name="YearViewSize_PrefSummary">Anzahl der Monate die in der Jahresansicht sichtbar sind</string>
-<string name="Snooze_PrefTitle">Snooze Zeitraum</string>
-<string name="Snooze_PrefSummary">Nach wievielen Minuten soll die Benachrichtigung wiederholt werden, wenn der Snooze Knopf gedrückt wurde.</string>
+<string name="YearViewSize_PrefSummary">Anzahl der Monate, die in der Jahresansicht sichtbar sind</string>
+<string name="Snooze_PrefTitle">Snooze-Zeitraum</string>
+<string name="Snooze_PrefSummary">Nach wievielen Minuten soll die Benachrichtigung wiederholt werden, wenn der Snooze-Knopf gedrückt wurde.</string>
 <string name="DefaultCollection_PrefTitle">Standardsammlung</string>
 <string name="DefaultCollection_PrefSummary">Die Standardsammlung für neue Elemente</string>
-<string name="DefaultAlarmTone_PrefTitle">Standard Erinnerungsmelodie</string>
-<string name="DefaultAlarmTone_PrefSummary">Standard Erinnerungsmelodie für Benachrichtigungen</string>
+<string name="DefaultAlarmTone_PrefTitle">Standard-Erinnerungsmelodie</string>
+<string name="DefaultAlarmTone_PrefSummary">Standard-Erinnerungsmelodie für Benachrichtigungen</string>
 <string name="AlarmVolumeType_PrefTitle">Einstellungen für die Alarmlautstärke</string>
 <string name="AlarmVolumeType_PrefSummary">Diese Einstellung wird für die Lautstärke des Alarms verwendet</string>
 <string name="AlarmBellVolume">Lautstärke des Alarms</string>
@@ -112,7 +112,7 @@
 <string name="prefWorkdayFinish_Title">Ende des Arbeitstages</string>
 <string name="prefWorkdayFinish_Summary">Die Endzeit des Arbeitstages</string>
 <string name="prefWeekViewLinesPerHour_Title">Zeilenhöhe</string>
-<string name="prefWeekViewLinesPerHour_Summary">Die Höhe jeder Stunde eines Tages in der Wochen Ansicht</string>
+<string name="prefWeekViewLinesPerHour_Summary">Die Höhe jeder Stunde eines Tages in der Wochenansicht</string>
 <string name="prefWeekViewDayWidth_Title">Spaltenbreite</string>
 <string name="prefWeekViewDayWidth_Summary">Die Breite der Tagesspalte in der Wochenansicht</string>
 <string name="Today">Heute</string>
@@ -160,8 +160,8 @@
 <string name="EveryFriday">Jeden Freitag</string>
 <string name="EverySaturday">Jeden Samstag</string>
 <string name="EverySunday">Jeden Sonntag</string>
-<string name="EveryNthOfTheMonth">An jedem %s des Monats</string>
-<string name="EveryMonthOnTheNthSomeday">Am %s jeden Monats</string>
+<string name="EveryNthOfTheMonth">An jedem %s. des Monats</string>
+<string name="EveryMonthOnTheNthSomeday">Am %s. jeden Monats</string>
 <string name="CustomRepeatRule">selbstdefinierte Wiederholung</string>
 <string name="EventSaved">Ereignis gespeichert</string>
 <string name="ModifiedAllInstances">Alle Vorkommnisse dieses Ereignisses bearbeitet.</string>
@@ -176,10 +176,10 @@
 <string name="Add_Alarm">Alarm hinzufügen</string>
 <string name="errorMustHaveActiveCalendar">Kann Ereignis nicht ohne aktiven Kalender editieren.</string>
 <string name="errorSavingServerConfig">Fehler beim Speichern der Serverkonfiguration</string>
-<string name="errorSavingFile">Fehler beim speichern der Datei</string>
-<string name="ServerDataSaved">Server Daten geschrieben. Dateiname: </string>
+<string name="errorSavingFile">Fehler beim Speichern der Datei</string>
+<string name="ServerDataSaved">Server-Daten geschrieben. Dateiname: </string>
 <string name="NewManualServerConfiguration">Manuelle Konfiguration</string>
-<string name="ManualServerConfigurationBlurb">Server Informationen manuell eingeben</string>
+<string name="ManualServerConfigurationBlurb">Server-Informationen manuell eingeben</string>
 <string name="SavedServerConfigurationBlurb">eine gespeicherte Server-Konfiguration</string>
 <string name="AllDaysInPeriod">Ganzer Tag, von %1$s bis %2$s</string>
 <string name="ForTheWholeDay">Ganzer Tag</string>
@@ -195,16 +195,16 @@
 <string name="changeAllInstances">Alle Vorkommnisse</string>
 <string name="changeThisAndFuture">Dieses und alle zukünftigen Vorkommnisse</string>
 <string name="internetNotAvailable">Keine Internetverbindung verfügbar</string>
-<string name="couldNotDiscoverPort">HTTP Port des CalDAV Servers konnte nicht ermittelt werden</string>
-<string name="couldNotDiscoverPrincipal">Der \\&quot;Principal\\&quot; Pfad des Servers konnte nicht ermittelt werden - benutze die Vorgaben des Benutzers.</string>
-<string name="foundPrincipalPath">\\&quot;Principal\\&quot; Pfad des Servers unter &quot;%s&quot; gefunden</string>
+<string name="couldNotDiscoverPort">HTTP-Port des CalDAV Servers konnte nicht ermittelt werden</string>
+<string name="couldNotDiscoverPrincipal">Der \\&quot;Principal\\&quot;-Pfad des Servers konnte nicht ermittelt werden - benutze die Vorgaben des Benutzers.</string>
+<string name="foundPrincipalPath">\\&quot;Principal\\&quot;-Pfad des Servers unter &quot;%s&quot; gefunden</string>
 <string name="serverSupportsCalDAV">Server unterstützt CalDAV.</string>
 <string name="serverHasDAVNoCalDAV">Der Server unterstützt DAV und Ihr Benutzername und Passwort funktionieren, aber CalDAV-Unterstützung ist nicht vorhanden.</string>
 <string name="serverLacksCalDAV">Server unterstützt CalDAV nicht.</string>
 <string name="serverFailedValidation">Es gab einen Fehler bei der Überprüfung des Servers.</string>
 <string name="saveSettingsAnyway">Möchten Sie diese Einstellungen trotzdem speichern?</string>
 <string name="serverValidationSuccess">Serverüberprüfung war erfolgreich.</string>
-<string name="authenticationFailed">Authentifizierung mit Server fehlgeschlagen</string>
+<string name="authenticationFailed">Authentifizierung am Server fehlgeschlagen</string>
 <string name="WeekViewPreferences">Einstellungen Wochenansicht</string>
 <string name="AlarmPreferences">Alarmeinstellungen</string>
 <string name="GeneralPreferences">Allgemeine Einstellungen</string>
@@ -261,10 +261,10 @@
 <string name="Custom">Benutzerdefiniert</string>
 <string name="SetCustomAlarm">Benutzerdefinierten Alarm setzen</string>
 <string name="showUpdateInformation">Aktualisierungsinformationen anzeigen</string>
-<string name="General_aCal_Information">Allgemeine aCal Informationen</string>
-<string name="aCal_Website">Die <b>aCal</b> Webseite ist %s</string>
-<string name="aCal_IRC_Channel">Sie können sich mit den aCal-Entwicklern im IRC unter &lt;a href=&quot;irc://irc.oftc.net/#acal&quot;>&quot;#acal auf irc.oftc.net&lt;/a></string>
-<string name="aCal_Mailing_Lists">Die &lt;em>aCal-&lt;/em>Mailinglisten sind öffentlich und Sie können sich unter &lt;a href=&quot;http://lists.acal.me/&quot;>lists.acal.me&lt;/a> anmelden. Dort findet sich auch das Nachrichtenarchiv.</string>
+<string name="General_aCal_Information">Allgemeine aCal-Informationen</string>
+<string name="aCal_Website">Die <b>aCal</b>-Webseite ist %s</string>
+<string name="aCal_IRC_Channel">Sie können sich mit den aCal-Entwicklern im IRC unter &lt;a href=&quot;irc://irc.oftc.net/#acal&quot;>&quot;#acal auf irc.oftc.net&lt;/a> unterhalten.</string>
+<string name="aCal_Mailing_Lists">Die &lt;em>aCal-&lt;/em>-Mailinglisten sind öffentlich und Sie können sich unter &lt;a href=&quot;http://lists.acal.me/&quot;>lists.acal.me&lt;/a> anmelden. Dort findet sich auch das Nachrichtenarchiv.</string>
 <string name="aCal_is_Free_Software">aCal ist &quot;Freie Software&quot; (&quot;frei&quot; im Sinne von &quot;Freiheit&quot;) lizenziert unter der General Public License Version 3 order später. Sie können sich den &lt;a href=&quot;http://gitorious.org/acal&quot;>Quelltext&lt;/a> von aCal herunterladen.</string>
 <string name="TaskMarkedComplete">Aufgabe als abgeschlossen markiert.</string>
 <string name="TaskDeleted">Aufgabe wurde gelöscht.</string>

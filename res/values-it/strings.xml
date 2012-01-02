@@ -9,7 +9,6 @@
 <string name="A_name_for_this_server_configuration">Nome da usare per questa configurazione</string>
 <string name="Authentication_Type">Tipo di Autenticazione</string>
 <string name="Simple_Path">Percorso</string>
-<string name="Simple_Domain">Dominio</string>
 <string name="Enter_a_brief_summary_of_the_event">Inserire una breve descrizione dell\'evento</string>
 <string name="Name">Nome</string>
 <string name="Force_full_resync">Forza la risincronizzazione</string>
@@ -29,7 +28,6 @@
 <string name="The_authentication_type_used">Autenticazione usata dal server</string>
 <string name="The_password_to_use">Password per l\'autenticazione</string>
 <string name="The_path_on_the_server">Indirizzo del server, es. &quot;/caldav.php/user/&quot;</string>
-<string name="The_domain_for_your_organisation">Dominio dell\'organizzazione, es. &quot;morphoss.com&quot;</string>
 <string name="The_servers_hostname">Nome del Server, es. &quot;calendar.davical.com&quot;</string>
 <string name="The_username_to_use">Nome Utente per l\'autenticazione</string>
 <string name="Username">Nome Utente</string>
@@ -50,5 +48,6 @@
 <string name="pActive_for_journal">Note attive</string>
 <string name="pActive_for_tasks">Promemoria attivi</string>
 <string name="pUse_Alarms">Usa l\'allarme per questo gruppo</string>
-<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
 </resources>

@@ -4,6 +4,7 @@
 <string name="theDayEachWeekStartsWith">De dag waarmee elke week begint</string>
 <string name="firstDayOfWeek">Eerste dag van de week</string>
 <string name="cancel">Annuleren</string>
+<string name="setButtonLabel">Stel in</string>
 <string name="appDescription">Een kalender voor Android die uw afspraken, taken, notities en contacten bewaart op een externe CalDAV / CardDAV server, zoals davical (Zie: www.davical.org)</string>
 <string name="appDescriptionTasks">Een takenlijst voor Android die uw taken bewaart op een externe CalDAV / CardDAV server, zoals davical (Zie: www.davical.org)</string>
 <string name="Active">Actief</string>
@@ -11,7 +12,7 @@
 <string name="A_name_for_this_server_configuration">Een naam om te gebruiken voor deze server configuratie</string>
 <string name="Authentication_Type">Authenticatie Type</string>
 <string name="Simple_Path">Eenvoudig Pad</string>
-<string name="Simple_Domain">Eenvoudig Domein</string>
+<string name="Simple_User_URL">Gebruikers URL</string>
 <string name="Enter_a_brief_summary_of_the_event">Geef een korte samenvatting van de afspraak</string>
 <string name="Name">Naam</string>
 <string name="Force_full_resync">Forceer hersynchronisatie</string>
@@ -32,7 +33,7 @@
 <string name="The_authentication_type_used">Het authenticatie type gebruikt door de server</string>
 <string name="The_password_to_use">Het wachtwoord te gebruiken voor authenticatie met de server</string>
 <string name="The_path_on_the_server">Het pad op de server, zoals &quot;/caldav.php/user/&quot;</string>
-<string name="The_domain_for_your_organisation">De domeinnaam van uw organisatie, zoals &quot;morphoss.com&quot;</string>
+<string name="A_URL_or_domain_name">Een URL of domeinnaam voor uw agendaserver</string>
 <string name="The_servers_hostname">De volledige hostnaam van de server zoals &quot;calendar.davical.com&quot;</string>
 <string name="The_username_to_use">De gebruikersnaam om te gebruiken voor authenticatie met de server</string>
 <string name="Username">Gebruikersnaam</string>
@@ -98,7 +99,10 @@
 <string name="thMar">Maa</string>
 <string name="thMay">Mei</string>
 <string name="thOct">Okt</string>
-<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
+<string name="abbrevMorning">AM</string>
+<string name="abbrevAfternoon">PM</string>
 <string name="YearViewSize_PrefTitle">Aantal weer te geven maanden in Jaar-weergave</string>
 <string name="YearViewSize_PrefSummary">Het aantal maanden dat wordt weergegeven in Jaar-weergave</string>
 <string name="Snooze_PrefTitle">Snooze-tijd</string>
@@ -107,6 +111,10 @@
 <string name="DefaultCollection_PrefSummary">De standaard collectie om te gebruiken voor nieuwe afspraken</string>
 <string name="DefaultAlarmTone_PrefTitle">Standaard alarmgeluid</string>
 <string name="DefaultAlarmTone_PrefSummary">Het standaard geluid voor notificaties.</string>
+<string name="AlarmVolumeType_PrefTitle">Instelling voor Alarm-volume</string>
+<string name="AlarmVolumeType_PrefSummary">De instelling waarmee het volume van het alarm kan geregeld worden</string>
+<string name="AlarmBellVolume">Alarm-volume</string>
+<string name="MediaPlayerVolume">Media-volume</string>
 <string name="prefWorkdayStart_Title">Aanvang werkdag</string>
 <string name="prefWorkdayStart_Summary">De werkdag vangt aan om</string>
 <string name="prefWorkdayFinish_Title">Einde werkdag</string>
@@ -130,9 +138,13 @@
 <string name="RepeatsPrompt">Herhaling:</string>
 <string name="AllDayPrompt">Activiteit duurt hele dag:</string>
 <string name="FromPrompt">Van:</string>
+<string name="TodoFromPrompt">Start op:</string>
 <string name="UntilPrompt">Tot:</string>
 <string name="DuePrompt">Vervaldag:</string>
 <string name="CompletedPrompt">Voltooid:</string>
+<string name="DaysPrompt">Dagen:</string>
+<string name="CompletePrompt">Compleet:</string>
+<string name="CollectionPrompt">Agenda:</string>
 <string name="defaultCalendar">Standaard kalender</string>
 <string name="theCalendarForNewEvents">De standaard kalender om te gebruiken voor nieuwe afspraken.</string>
 <string name="TwelveTwentyfour_PrefTitle">Gebruik 24-uurs formaat</string>
@@ -179,6 +191,7 @@
 <string name="ForTheWholeDay">De hele dag</string>
 <string name="alarmAtEventTime">Bij aanvang van de afspraak</string>
 <string name="alarm10MinutesPrior">10 minuten voor de activiteit</string>
+<string name="alarm15MinutesPrior">15 minuten ervoor</string>
 <string name="alarm30MinutesPrior">30 minuten voor de activiteit</string>
 <string name="alarm1HourPrior">1 uur voor de activiteit</string>
 <string name="alarm2HoursPrior">2 uren voor de activiteit</string>
@@ -192,15 +205,20 @@
 <string name="couldNotDiscoverPrincipal">Kon Principaal-pad niet vinden - de ingevoerde waarden worden gebruikt.</string>
 <string name="foundPrincipalPath">Principaal-pad van server gevonden op &quot;%s&quot;</string>
 <string name="serverSupportsCalDAV">Server ondersteunt CalDAV.</string>
+<string name="serverHasDAVNoCalDAV">De server ondersteunt DAV en uw gebruikersnaam en wachtwoord werken, maar er werd geen ondersteuning gevonden voor CalDAV.</string>
 <string name="serverLacksCalDAV">Server ondersteunt geen CalDAV.</string>
 <string name="serverFailedValidation">Er is een fout opgetreden bij het valideren van de server:</string>
 <string name="saveSettingsAnyway">Wilt u deze instellingen toch bewaren?</string>
 <string name="serverValidationSuccess">Server werd gevalideerd.</string>
 <string name="authenticationFailed">Niet in staat om te authenticeren bij server.</string>
 <string name="WeekViewPreferences">Instellingen van Week-weergave</string>
+<string name="AlarmPreferences">Alarm instellingen</string>
+<string name="GeneralPreferences">Algemene instellingen</string>
 <string name="checkServer">Validatie-server</string>
 <string name="checkServer_Connecting">Verbinding maken met server. Even geduld aub ...</string>
 <string name="checkServer_Internet">Controle van de internetverbinding</string>
+<string name="checkServer_SearchingForServer">CalDAV-server zoeken op &quot;%s&quot;</string>
+<string name="checkServer_DiscoveryCancelled">Zoektocht naar server werd onderbroken</string>
 <string name="serverRecordAlreadyExists">Er bestaat reeds een server voor dat protocol, poort, host, pad en gebruikersnaam</string>
 <string name="newEventFromThis">Kopiëren naar een nieuwe afspraak</string>
 <string name="Delete">Verwijderen</string>
@@ -226,5 +244,36 @@
 <string name="newTaskFromThis">Kopiëren naar Nieuwe taak</string>
 <string name="dueTasksTitle">Taken die vervallen binnen de week</string>
 <string name="incompleteTasksTitle">Onvolledige Taken</string>
+<string name="incompleteTasksDue">Onvoltooide taken die binnen de week vervallen</string>
 <string name="allTasksTitle">Alle taken</string>
+<string name="NewTaskTitle">Nieuwe Taak</string>
+<string name="TaskSaved">Taak bewaard.</string>
+<string name="TaskModifiedAll">Alle instanties van deze taak bijgewerkt.</string>
+<string name="TaskModifiedOne">Eén instantie van deze taak bijgewerkt.</string>
+<string name="TaskModifiedThisAndFuture">Deze en alle toekomstige instanties van deze taak bijgewerkt.</string>
+<string name="TaskErrorSaving">Fout bij het bewaren van taakgegevens - probeer aub opnieuw.</string>
+<string name="username">Gebruikersnaam:</string>
+<string name="password">Wachtwoord:</string>
+<string name="setRepeatRule">Stel Herhaling in</string>
+<string name="eventName">Afspraak Naam</string>
+<string name="todoName">Todo Naam:</string>
+<string name="IsADate">Is een Datum</string>
+<string name="NotSet">Niet ingesteld</string>
+<string name="Exactly">Exact</string>
+<string name="Finish">Einde</string>
+<string name="Before">Voor</string>
+<string name="After">Na</string>
+<string name="Custom">Aangepast</string>
+<string name="SetCustomAlarm">Stel een aangepast alarm in</string>
+<string name="showUpdateInformation">Toon Update Informatie</string>
+<string name="General_aCal_Information">Algemene aCal Informatie</string>
+<string name="aCal_Website">De <b>aCal</b> website is %s</string>
+<string name="aCal_IRC_Channel">Je kan chatten met de aCal auteurs via IRC in &lt;a href=\\&quot;irc://irc.oftc.net/#acal\\&quot;>\\&quot;#acal op irc.oftc.net&lt;/a></string>
+<string name="aCal_Mailing_Lists">De &lt;em>aCal&lt;/em> mailing lists zijn openbaar en je kan je abonneren op &lt;a href=\\&quot;http://lists.acal.me/\\&quot;>lists.acal.me&lt;/a>. Ook de archieven kan je daar raadplegen.</string>
+<string name="aCal_is_Free_Software">aCal is \\&quot;Vrije Software\\&quot;, uitgebracht onder een General Public License v3 of recenter.  De &lt;a href=\\&quot;http://gitorious.org/acal\\&quot;>broncode &lt;/a> kan gedownload worden via Gitorious.</string>
+<string name="TaskMarkedComplete">Taak gemarkeerd als voltooid.</string>
+<string name="TaskDeleted">Taak verwijderd.</string>
+<string name="endsAt">Eindigt %s</string>
+<string name="days">Dagen</string>
+<string name="noScheduledEvents">Geen geplande afspraken</string>
 </resources>

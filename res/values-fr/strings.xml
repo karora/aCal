@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Strings that should not be localised belong in unlocalisable_strings.xml -->
 <resources>
-<string name="theDayEachWeekStartsWith">Premier jour de chaque semaine.</string>
-<string name="firstDayOfWeek">Premier jour de la semaine</string>
+<string name="theDayEachWeekStartsWith">Ok</string>
+<string name="firstDayOfWeek">Temps flottant</string>
 <string name="cancel">Annuler</string>
-<string name="appDescription">Un calendrier pour Android qui sauvegardera vos évènements, tâches, notes et contacts sur un serveur CalDAV/CardDAV, tel que DAViCal (voir: www.davical.org)</string>
+<string name="appDescription">Un calendrier pour Android qui sauvegardera vos événements, tâches, notes et contacts sur un serveur CalDAV/CardDAV, tel que DAViCal (voir: www.davical.org)</string>
 <string name="appDescriptionTasks">Une liste de tâches pour Android qui sauvegardera vos tâches sur un serveur distant CalDAV / CardDAV, comme DAViCAL (visitez : www.davical.org)</string>
 <string name="Active">Actif</string>
 <string name="Add_Server">Ajouter un Serveur</string>
 <string name="A_name_for_this_server_configuration">Nom utilisé pour la configuration de ce serveur</string>
 <string name="Authentication_Type">Type d\'authentification</string>
 <string name="Simple_Path">Chemin simple</string>
+<string name="Simple_User_URL">Australie/Brisbane</string>
 <string name="Enter_a_brief_summary_of_the_event">Entrez un bref résumé de l\'événement</string>
 <string name="Name">Nom</string>
 <string name="Force_full_resync">Forcer la re-synchronisation</string>
@@ -29,14 +30,15 @@
 <string name="Sync_collection_now">Synchroniser maintenant</string>
 <string name="Disable_collection">Désactiver la collection</string>
 <string name="The_authentication_type_used">Type d\'authentification utilisé par le serveur</string>
-<string name="The_password_to_use">Mot de passe pour l\'autentification au serveur</string>
+<string name="The_password_to_use">Mot de passe pour l\'authentification au serveur</string>
 <string name="The_path_on_the_server">Chemin sur le serveur, tel que &quot;/caldav.php/user/&quot;</string>
-<string name="The_servers_hostname">Nom d\'hotes complet du serveur, comme &quot;calendar.davical.com&quot;</string>
-<string name="The_username_to_use">Nom d\'utilisateur pour l\'autentification au serveur</string>
+<string name="A_URL_or_domain_name">Une URL ou nom de domaine pour votre serveur de calendrier</string>
+<string name="The_servers_hostname">Nom d\'hôte complet du serveur, comme &quot;calendar.davical.com&quot;</string>
+<string name="The_username_to_use">Nom d\'utilisateur pour l\'authentification au serveur</string>
 <string name="Username">Nom d\'utilisateur</string>
 <string name="Use_SSL">Utiliser SSL</string>
 <string name="Whether_this_server_is_active">Si ce serveur doit-être activé</string>
-<string name="Whether_to_use_encryption">S\'il faut utiliser un connection cryptée avec le serveur</string>
+<string name="Whether_to_use_encryption">S\'il faut utiliser un connexion cryptée avec le serveur</string>
 <string name="appActivityEventCreate">Nouvel événement</string>
 <string name="appActivityServerConfigList">Serveurs</string>
 <string name="appActivityAddServerList">Modèles de serveur</string>
@@ -107,11 +109,15 @@
 <string name="YearViewSize_PrefTitle">Nombre de mois dans la vue annuelle</string>
 <string name="YearViewSize_PrefSummary">Nombre de mois visible dans la vue annuelle</string>
 <string name="Snooze_PrefTitle">Délai de répétition</string>
-<string name="Snooze_PrefSummary">Combien de minutes après l\'alarme doit-on répéter lors de l\'appui sur la fonction répéter</string>
+<string name="Snooze_PrefSummary">Combien de minutes doit-on attendre lors de l\'appui sur la fonction répéter avant de répéter l\'alarme</string>
 <string name="DefaultCollection_PrefTitle">Collection par défaut</string>
 <string name="DefaultCollection_PrefSummary">Collection par défaut à utiliser pour les nouveaux événements</string>
 <string name="DefaultAlarmTone_PrefTitle">Sonnerie par défaut</string>
 <string name="DefaultAlarmTone_PrefSummary">Son par défaut utilisé pour les alarmes.</string>
+<string name="AlarmVolumeType_PrefTitle">Réglage du volume de l\'alarme</string>
+<string name="AlarmVolumeType_PrefSummary">Réglage utilisé pour le volume de l\'alarme</string>
+<string name="AlarmBellVolume">Volume de la sonnerie</string>
+<string name="MediaPlayerVolume">Volume du morceau</string>
 <string name="prefWorkdayStart_Title">Début de journée</string>
 <string name="prefWorkdayStart_Summary">L\'heure de début de la journée de travail.</string>
 <string name="prefWorkdayFinish_Title">Fin de journée</string>
@@ -135,9 +141,14 @@
 <string name="RepeatsPrompt">Répétitions :</string>
 <string name="AllDayPrompt">Événement sur la journée :</string>
 <string name="FromPrompt">Du :</string>
+<string name="TodoFromPrompt">Démarre le :</string>
 <string name="UntilPrompt">Au :</string>
 <string name="DuePrompt">Prévu :</string>
 <string name="CompletedPrompt">Terminé :</string>
+<string name="DaysPrompt">Jours</string>
+<string name="StartPrompt">Début :</string>
+<string name="CompletePrompt">Terminé :</string>
+<string name="CollectionPrompt">Calendrier :</string>
 <string name="defaultCalendar">Calendrier par défaut </string>
 <string name="theCalendarForNewEvents">Calendrier à utiliser par défaut pour les nouveaux événements.</string>
 <string name="TwelveTwentyfour_PrefTitle">Utiliser le format 24h</string>
@@ -185,6 +196,7 @@
 <string name="ForTheWholeDay">Toute la journée</string>
 <string name="alarmAtEventTime"> l\'heure</string>
 <string name="alarm10MinutesPrior">10 minutes avant</string>
+<string name="alarm15MinutesPrior">15 minutes avant</string>
 <string name="alarm30MinutesPrior">30 minutes avant</string>
 <string name="alarm1HourPrior">Une heure avant</string>
 <string name="alarm2HoursPrior">Deux heures avant</string>
@@ -198,15 +210,20 @@
 <string name="couldNotDiscoverPrincipal">Impossible de découvrir le chemin principal - en utilisant les valeurs fournies.</string>
 <string name="foundPrincipalPath">Chemin principal du serveur trouvé à &quot;%s&quot;</string>
 <string name="serverSupportsCalDAV">Ce serveur prend en charge CalDAV.</string>
+<string name="serverHasDAVNoCalDAV">Europe/Londres</string>
 <string name="serverLacksCalDAV">Ce serveur ne supporte pas CalDAV.</string>
 <string name="serverFailedValidation">Il y eu une erreur lors de la validation du serveur:</string>
 <string name="saveSettingsAnyway">Souhaitez-vous quand même enregistrer ces paramètres ?</string>
 <string name="serverValidationSuccess">Validation du Serveur réussi.</string>
 <string name="authenticationFailed">Impossible de s\'authentifier auprès du serveur.</string>
 <string name="WeekViewPreferences">Paramêtres de la vue hebdomadaire</string>
+<string name="AlarmPreferences">Europe/Moscou</string>
+<string name="GeneralPreferences">Europe/Paris</string>
 <string name="checkServer">Validation du serveur</string>
 <string name="checkServer_Connecting">Connexion au serveur. Merci de patienter...</string>
 <string name="checkServer_Internet">Vérification de la connexion internet</string>
+<string name="checkServer_SearchingForServer">Recherche du serveur CalDAV sur &quot;%s&quot;</string>
+<string name="checkServer_DiscoveryCancelled">La recherche de serveur a été annulée</string>
 <string name="serverRecordAlreadyExists">Un serveur existe déjà pour ce protocole, port, serveur ou utilisateur</string>
 <string name="newEventFromThis">Copier vers un nouvel événement</string>
 <string name="Delete">Effacer</string>
@@ -233,5 +250,38 @@
 <string name="newTaskFromThis">Copier vers une nouvelle tâche</string>
 <string name="dueTasksTitle">Tâches prévues dans la semaine</string>
 <string name="incompleteTasksTitle">Tâches en cours</string>
+<string name="incompleteTasksDue">Tâches incomplètes à réaliser dans la semaine</string>
 <string name="allTasksTitle">Toutes les tâches</string>
+<string name="NewTaskTitle">Nouvelle tâche</string>
+<string name="TaskSaved">Tâche sauvegardée</string>
+<string name="TaskModifiedAll">Toutes les instance de cette tâche ont été modifiées</string>
+<string name="TaskModifiedOne">Une instance de cette tâche a été modifiée</string>
+<string name="TaskModifiedThisAndFuture">Cette instance et les suivante ont été modifiées</string>
+<string name="TaskErrorSaving">Erreur durant la sauvegarde des données - essayez plus tard</string>
+<string name="username">Nom d\'utilisateur :</string>
+<string name="password">Mot de passe :</string>
+<string name="setRepeatRule">Règles de répétitions</string>
+<string name="eventName">Nom de l\'événement</string>
+<string name="url">URL</string>
+<string name="todoName">Nom :</string>
+<string name="IsADate">Journée complète</string>
+<string name="NotSet">Non réglé</string>
+<string name="Exactly">Exactement</string>
+<string name="Start">Début</string>
+<string name="Finish">Fin</string>
+<string name="Before">Avant</string>
+<string name="After">Après</string>
+<string name="Custom">Personnalisé</string>
+<string name="SetCustomAlarm">Régler une alarme personnalisée</string>
+<string name="showUpdateInformation">Voir les notes de version</string>
+<string name="General_aCal_Information">Europe/Athène</string>
+<string name="aCal_Website">Le site web de <b>aCal</b> est %s</string>
+<string name="aCal_IRC_Channel">Vous pouvez dialoguer avec les auteurs de aCal sur IRC sur &lt;a \\nhref=&quot;irc://irc.oftc.net/#acal&quot;>&quot;#acal on \\nirc.oftc.net&lt;/a></string>
+<string name="aCal_Mailing_Lists">les listes de diffusion &lt;em>aCal&lt;/em> sont publiques et \\nvous pouvez y souscrire sur &lt;a href=&quot;http://lists.acal.me/&quot;>lists.acal.me&lt;/a>. Vous y trouverez également des archives.</string>
+<string name="aCal_is_Free_Software">aCal est un &quot;Logiciel Libre&quot; dont la licence est la GNU GPL v3 (General Public License v3 et plus). Vous pouvez télécharger le &lt;a href=&quot;http://gitorious.org/acal&quot;> code source de aCal depuis Gitorious&lt;/a></string>
+<string name="TaskMarkedComplete">Tâches terminées.</string>
+<string name="TaskDeleted">La tâche a été effacée.</string>
+<string name="endsAt">Se termine à %s</string>
+<string name="days">Jours</string>
+<string name="noScheduledEvents">Nombre d\'événements prévus</string>
 </resources>

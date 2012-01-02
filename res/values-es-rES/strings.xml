@@ -11,7 +11,6 @@
 <string name="A_name_for_this_server_configuration">Un nombre para esta configuración</string>
 <string name="Authentication_Type">Tipo de autenticación</string>
 <string name="Simple_Path">Ruta simple</string>
-<string name="Simple_Domain">Dominio simple</string>
 <string name="Enter_a_brief_summary_of_the_event">Introduce un breve resumen del evento</string>
 <string name="Name">Nombre</string>
 <string name="Force_full_resync">Forzar sincronización</string>
@@ -32,7 +31,6 @@
 <string name="The_authentication_type_used">El tipo de autenticación utilizado</string>
 <string name="The_password_to_use">La contraseña a usar</string>
 <string name="The_path_on_the_server">La ruta en el servidor</string>
-<string name="The_domain_for_your_organisation">El nombre de dominio de tu organización</string>
 <string name="The_servers_hostname">El nombre de host</string>
 <string name="The_username_to_use">El nombre de usuario a utilizar</string>
 <string name="Username">Nombre de usuario</string>
@@ -101,7 +99,8 @@
 <string name="thApr">Abr</string>
 <string name="thAug">Ago</string>
 <string name="thDec">Dic</string>
-<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
 <string name="YearViewSize_PrefTitle">Número de meses en vista anual</string>
 <string name="YearViewSize_PrefSummary">El número de meses visibles en la vista anual</string>
 <string name="Snooze_PrefTitle">Tiempo a dormir</string>

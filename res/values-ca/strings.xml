@@ -11,7 +11,6 @@
 <string name="A_name_for_this_server_configuration">Un nom per aquesta configuració</string>
 <string name="Authentication_Type">Tipus d\'autenticació</string>
 <string name="Simple_Path">Camí simple</string>
-<string name="Simple_Domain">Domini simple</string>
 <string name="Enter_a_brief_summary_of_the_event">Introdueix una breu descripció de la cita</string>
 <string name="Name">Nom</string>
 <string name="Force_full_resync">Forçar sincronització</string>
@@ -32,7 +31,6 @@
 <string name="The_authentication_type_used">El tipus d\'autenticació utilitzat</string>
 <string name="The_password_to_use">La contrasenya a utilitzar</string>
 <string name="The_path_on_the_server">El camí al servidor</string>
-<string name="The_domain_for_your_organisation">El nom de dominit de la teva organització</string>
 <string name="The_servers_hostname">El nom del servidor</string>
 <string name="The_username_to_use">L\'usuari a utilitzar</string>
 <string name="Username">Nom d\'usuari</string>
@@ -104,8 +102,9 @@
 <string name="thAug">Ago</string>
 <string name="thSep">Set</string>
 <string name="thDec">Des</string>
-<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm -->
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
 <string name="oneCharMorning">Caràcter per hores de matí</string>
+	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
 <string name="oneCharAfternoon">Caràcter per hores de tarda</string>
 <string name="YearViewSize_PrefTitle">Nombre de mesos a la vista anual</string>
 <string name="YearViewSize_PrefSummary">El nombre de mesos que són visibles a la vista mensual</string>
