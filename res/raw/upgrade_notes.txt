@@ -48,4 +48,7 @@ Fixed some bugs in CardDAV contacts sync
 Don't force screen into Portrait mode.
 Fix display of Calendars & Addressbooks list on Android 3.x/4.x
 v35=1.33
-Finished events now correctly disappear from widget
+Fixed major force-close problem becoming apparent over new year.
+All finished events should now disappear from widget correctly.
+Changed 'simple' configuration to work from a URL rather than server + path.
+Updated translations for nl_BE,fr & de. 
