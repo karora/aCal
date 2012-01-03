@@ -51,4 +51,5 @@ v35=1.33
 Fixed major force-close problem becoming apparent over new year.
 All finished events should now disappear from widget correctly.
 Changed 'simple' configuration to work from a URL rather than server + path.
-Updated translations for nl_BE,fr & de. 
+Updated translations for nl_BE,fr & de.
+Android Contacts data should now update for changes in the linked CardDAV addressbook data.   
