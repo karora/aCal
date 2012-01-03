@@ -21,11 +21,13 @@ package com.morphoss.acal.service;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.RawContacts;
 import android.util.Log;
@@ -42,6 +44,7 @@ import com.morphoss.acal.providers.Servers;
 public class AddressbookToContacts extends ServiceJob {
 
 	private static final String TAG = "aCal AddressBookToContacts";
+	private static final boolean DEBUG = true && Constants.DEBUG_MODE;
 	private int collectionId;
 	private aCalService context;
 	private ContentResolver cr;
@@ -110,15 +113,22 @@ public class AddressbookToContacts extends ServiceJob {
 						.appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
 						.appendQueryParameter(RawContacts.ACCOUNT_TYPE, account.type)
 						.build();
-				Cursor cur = cr.query( rawContactUri, new String[] { BaseColumns._ID, Contacts.DISPLAY_NAME, RawContacts.VERSION },
+				Cursor cur = cr.query( rawContactUri, new String[] { BaseColumns._ID, Contacts.DISPLAY_NAME, RawContacts.VERSION, RawContacts.SYNC1 },
 						RawContacts.SYNC1+"=?", new String[] { vCard.getUid() }, null);
 
 				if ( cur != null && cur.getCount() > 1 ) {
+					Log.println(Constants.LOGD, TAG, "Contact record from aCal is not present: inserting Android data.");
+					for( cur.moveToFirst(); !cur.isAfterLast(); cur.moveToNext() ) {
+						Log.w(TAG,String.format("UID:%s, _id:%d, name:%s, version:%s", vCard.getUid(), cur.getLong(0), cur.getString(1), cur.getInt(2)));
+					}
+					int count = cur.getCount();
 					cur.close();
-					throw new IllegalStateException("Found "+cur.getCount()+" RawContact rows for "+vCard.getUid());
+					Log.w(TAG,"Skipping contact with "+count+" RawContact rows for UID "+vCard.getUid()+". This Android Account should be removed and recreated.");
+					return;
 				}
 				try {
 					if ( cur.getCount() < 1 ) {
+						Log.println(Constants.LOGD, TAG, "Contact record from aCal is not present: inserting Android data.");
 						vCard.writeToContact(context, account, -1 );
 					}
 					else {
@@ -127,11 +137,12 @@ public class AddressbookToContacts extends ServiceJob {
 					        String name = cur.getString( cur.getColumnIndex(Contacts.DISPLAY_NAME));
 					        int rawVersion = cur.getInt(cur.getColumnIndex(RawContacts.VERSION));
 					        if ( rawVersion < vCard.getSequence() ) {
+								Log.println(Constants.LOGD, TAG, "Contact record from aCal is newer: updating Android data for '"+name+"' ("+id+") "+vCard.getSequence()+">"+rawVersion);
 					        	vCard.writeToContact(context, account, id);
 					        }
 					        else {
-					        	if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,
-					        			"Found existing contact row for '"+name+"' ("+id+")");
+					        	if ( DEBUG ) Log.println(Constants.LOGV,TAG,
+					        			"Existing Contact record up to date contact row for '"+name+"' ("+id+") "+vCard.getSequence()+"="+rawVersion);
 					        }
 				        }
 				 	}

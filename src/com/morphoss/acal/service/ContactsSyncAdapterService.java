@@ -110,6 +110,7 @@ public class ContactsSyncAdapterService extends Service {
 			}
 			Integer androidContactId = androidContacts.get(vc.getUid());
 			if ( androidContactId == null ) {
+				Log.println(Constants.LOGD, TAG, "Contact record from aCal not present: inserting Android data.");
 				vc.writeToContact(context, account, -1);
 			}
 			else {
@@ -120,9 +121,11 @@ public class ContactsSyncAdapterService extends Service {
 					vc.writeToVCard(context, androidContact);
 				}
 				else if ( aCalSequence == androidSequence ) {
-					Log.println(Constants.LOGD, TAG, "Records are in sync");
+					
+					Log.println(Constants.LOGD, TAG, "Contact record in sync for "+vc.getFullName()+" - "+aCalSequence+"="+androidSequence);
 				}
 				else {
+					Log.println(Constants.LOGD, TAG, "Contact record from aCal is newer: updating Android data.");
 					vc.writeToContact(context, account, androidContactId);
 				}
 				androidContacts.remove(vc.getUid());

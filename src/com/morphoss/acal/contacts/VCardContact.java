@@ -7,13 +7,13 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.accounts.Account;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderOperation.Builder;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -54,6 +54,10 @@ public class VCardContact {
 	private Map<String,Set<AcalProperty>> groupMap = null;
 	private AcalProperty uid = null;
 	private int sequence = 0;
+	
+	private Context context = null;
+	private ArrayList<ContentProviderOperation> ops = null;
+	private ContentResolver	cr;
 
 	public VCardContact( ContentValues resourceRow, AcalCollection collectionObject ) throws VComponentCreationException {
 		vCardRow = resourceRow;
@@ -149,28 +153,35 @@ public class VCardContact {
 
 	
 	public void writeToContact(Context context, Account account, Integer androidContactId) {
-		ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+		this.context = context;
+		this.cr = context.getContentResolver();
+		this.ops = new ArrayList<ContentProviderOperation>();
 		if ( androidContactId < 0 ) {
 			Log.println(Constants.LOGD,TAG,"Inserting data for '"+sourceCard.getProperty(PropertyName.FN).getValue()+"'");
 			ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI)
 						.withValue(RawContacts.ACCOUNT_TYPE, account.type)
 						.withValue(RawContacts.ACCOUNT_NAME, account.name)
 						.withValue(RawContacts.SYNC1, this.getUid())
+						.withValue(RawContacts.VERSION, this.getSequence())
 						.build());
 
-			this.writeContactDetails(ops, true, 0);
+			this.writeContactDetails(true, 0);
 		}
 		else {
 			Uri rawContactUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI, androidContactId);
 			Log.println(Constants.LOGD,TAG,"Updating data for '"+sourceCard.getProperty(PropertyName.FN).getValue()+"'");
-			ops.add(ContentProviderOperation.newUpdate(rawContactUri)
-						.withValue(RawContacts.ACCOUNT_TYPE, account.type)
-						.withValue(RawContacts.ACCOUNT_NAME, account.name)
-						.withValue(RawContacts.SYNC1, this.getUid())
-						.withValue(RawContacts.VERSION,this.getSequence())
-						.build());
 
-			this.writeContactDetails(ops, false, androidContactId);
+			ops.add(ContentProviderOperation.newUpdate(rawContactUri)
+					.withYieldAllowed(true)
+					.withValue(RawContacts.ACCOUNT_TYPE, account.type)
+					.withValue(RawContacts.ACCOUNT_NAME, account.name)
+					.withValue(RawContacts.SYNC1, this.getUid())
+					.withValue(RawContacts.VERSION, this.getSequence())
+					.build());
+
+
+			this.writeContactDetails(false, androidContactId);
+
 		}
 		
 		try {
@@ -186,43 +197,63 @@ public class VCardContact {
 			Log.e(TAG,Log.getStackTraceString(e));
 		}
 	}
-
 	
-	private void writeContactDetails(ArrayList<ContentProviderOperation> ops, boolean isInsert, int rawContactId) {
+	private void writeContactDetails(boolean isInsert, int rawContactId) {
 		String propertyName;
 		AcalProperty[] vCardProperties = sourceCard.getAllProperties();
+		Uri contactDataUri = ContactsContract.Data.CONTENT_URI;
+		if ( !isInsert )
+			contactDataUri.buildUpon().appendQueryParameter(ContactsContract.Data.RAW_CONTACT_ID, ""+rawContactId);
+
 		for (AcalProperty prop : vCardProperties) {
-			Builder op;
-			if ( isInsert ) {
-				op = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI);
-				op.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0);
-			}
-			else {
-				op = ContentProviderOperation.newUpdate(ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, rawContactId));
-			}
 			propertyName = prop.getName();
 			String nameSplit[] = simpleSplit.split(prop.getName().toUpperCase(Locale.US),2);
 			propertyName = (nameSplit.length == 2 ? nameSplit[1] : nameSplit[0]);
 
-			if ( propertyName.equals("FN") ) 		doStructuredName(op, prop, sourceCard.getProperty("N"));
-			else if ( propertyName.equals("TEL") )	doPhone(op, prop);
-			else if ( propertyName.equals("ADR") )	doStructuredAddress(op, prop);
-			else if ( propertyName.equals("EMAIL")) doEmail(op, prop);
-			else if ( propertyName.equals("PHOTO")) doPhoto(op, prop);
+			if ( propertyName.equals("FN") ) 		doStructuredName(isInsert, rawContactId, prop, sourceCard.getProperty("N"));
+			else if ( propertyName.equals("TEL") )	doPhone(isInsert, rawContactId, prop);
+			else if ( propertyName.equals("ADR") )	doStructuredAddress(isInsert, rawContactId, prop);
+			else if ( propertyName.equals("EMAIL")) doEmail(isInsert, rawContactId, prop);
+			else if ( propertyName.equals("PHOTO")) doPhoto(isInsert, rawContactId, prop);
 			else
 				continue;
 
-			
-			Log.println(Constants.LOGD,TAG,"Applying "+propertyName+" change for:"+op.build().toString());
-			ops.add(op.build());
 		}
 	}
 
+
+	private void applyOp(String type, Builder op) {
+		Log.println(Constants.LOGD,TAG,"Applying "+type+" change for:"+op.build().toString());
+		ops.add(op.build());
+	}
+
+
+	private ContentProviderOperation.Builder beginOp(boolean isInsert, int rawContactId, String mimeType, String selection, String[] selectionArgs ) {
+		ContentProviderOperation.Builder op;
+		if ( isInsert ) {
+			op = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI);
+			op.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0);
+		}
+		else {
+			selection = Data.RAW_CONTACT_ID + "="+rawContactId+" AND "+Data.MIMETYPE + "='"+mimeType+"' "+(selection==null?"":" AND "+selection);
+			Cursor cur = cr.query(ContactsContract.Data.CONTENT_URI, new String[] {Data._ID }, selection, selectionArgs, null);
+
+			if ( cur.getCount() == 0 )
+				op = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+						.withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId);
+			else
+				op = ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+						.withSelection(selection, selectionArgs);
+		}
+		op.withValue(Data.MIMETYPE, mimeType);
+		return op;
+	}
 	
-	private void doStructuredName(Builder op, AcalProperty fnProp, AcalProperty nProp) {
+	private void doStructuredName(boolean isInsert, int rawContactId, AcalProperty fnProp, AcalProperty nProp) {
 		Log.v(TAG,"Processing field FN:"+fnProp.getValue());
-	
-		op.withValue(Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE);
+
+		ContentProviderOperation.Builder op = beginOp( isInsert, rawContactId, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE, null,null);
+
 		if ( nProp != null ) {
 			Matcher m = structuredNameMatcher.matcher(nProp.getValue());
 			if ( m.matches() ) {
@@ -241,54 +272,50 @@ public class VCardContact {
 		}
 	
 		op.withValue(CommonDataKinds.StructuredName.DISPLAY_NAME, fnProp.getValue());
+		applyOp("FN",op);
 	}
 
 
-	private void doPhone(Builder op, AcalProperty telProp ) {
-		op.withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
+	private void doPhone(boolean isInsert, int rawContactId, AcalProperty telProp ) {
+		String phoneTypeName = telProp.getParam("TYPE");
+		int phoneType = CommonDataKinds.Phone.TYPE_OTHER;
+		if ( phoneTypeName != null ) {
+			phoneTypeName = phoneTypeName.toUpperCase(); 
+			if ( phoneTypeName.contains("HOME") )		phoneType = CommonDataKinds.Phone.TYPE_HOME;
+			else if ( phoneTypeName.contains("WORK") )	phoneType = CommonDataKinds.Phone.TYPE_WORK;
+			else if ( phoneTypeName.contains("CELL") )	phoneType = CommonDataKinds.Phone.TYPE_MOBILE;
+		}
+
+		ContentProviderOperation.Builder op = beginOp( isInsert, rawContactId, CommonDataKinds.Phone.CONTENT_ITEM_TYPE,
+				CommonDataKinds.Phone.TYPE+"="+phoneType+"", null);
+
 		op.withValue(CommonDataKinds.Phone.NUMBER,telProp.getValue());
-		String phoneType = telProp.getParam("TYPE");
-		if ( phoneType == null )
-			phoneType = "OTHER";
-		else
-			phoneType = phoneType.toUpperCase(); 
 		
-		if ( phoneType.contains("HOME") ) {
-			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_HOME);
-		}
-		else if ( phoneType.contains("WORK") ) {
-			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK);
-		}
-		else if ( phoneType.contains("CELL") ) {
-			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_MOBILE);
-		}
-		else {
-			op.withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_OTHER);
-		}
-		Log.v(TAG,"Processing field TEL:"+phoneType+":"+telProp.getValue());
+		applyOp("TEL",op);
 	}
 
 
-	private void doStructuredAddress(Builder op, AcalProperty adrProp) {
-		op.withValue(Data.MIMETYPE, CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE);
-		String addressType = adrProp.getParam("TYPE").toUpperCase();
+	private void doStructuredAddress(boolean isInsert, int rawContactId, AcalProperty adrProp) {
+		String addressTypeName = adrProp.getParam("TYPE").toUpperCase();
 		
-		int opTYpe;
-		if ( addressType.contains("HOME") ) opTYpe = CommonDataKinds.StructuredPostal.TYPE_HOME;
-		else if ( addressType.contains("WORK") ) opTYpe = CommonDataKinds.StructuredPostal.TYPE_WORK;
-		else opTYpe =  CommonDataKinds.StructuredPostal.TYPE_OTHER;
-		op.withValue(CommonDataKinds.StructuredPostal.TYPE, opTYpe);
-	
-		Log.v(TAG,"Processing field ADR:"+addressType+":"+adrProp.getValue());
+		Log.v(TAG,"Processing field ADR:"+addressTypeName+":"+adrProp.getValue());
 	
 		Matcher m = structuredAddressMatcher.matcher(adrProp.getValue());
 		if ( m.matches() ) {
+
+			int opType = CommonDataKinds.StructuredPostal.TYPE_OTHER;
+			if ( addressTypeName.contains("HOME") ) opType = CommonDataKinds.StructuredPostal.TYPE_HOME;
+			else if ( addressTypeName.contains("WORK") ) opType = CommonDataKinds.StructuredPostal.TYPE_WORK;
+
+			ContentProviderOperation.Builder op = beginOp( isInsert, rawContactId, CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE,
+					CommonDataKinds.StructuredPostal.TYPE+"="+opType+"", null);
+
+			op.withValue(CommonDataKinds.StructuredPostal.TYPE, opType);
+			
 			/**
-			 * The structured type value
-			 * corresponds, in sequence, to the post office box; the extended
-			 * address (e.g. apartment or suite number); the street address; the
-			 * locality (e.g., city); the region (e.g., state or province); the
-			 * postal code; the country name.
+			 * The structured type value corresponds, in sequence, to the post office box; the extended
+			 * address (e.g. apartment or suite number); the street address; the locality (e.g., city); 
+			 * the region (e.g., state or province); the postal code; the country name.
 			 */
 			op.withValue(CommonDataKinds.StructuredPostal.POBOX, m.group(1));
 			if ( m.group(2) == null || m.group(2).equals("") )
@@ -300,33 +327,37 @@ public class VCardContact {
 			op.withValue(CommonDataKinds.StructuredPostal.REGION, m.group(5));
 			op.withValue(CommonDataKinds.StructuredPostal.POSTCODE, m.group(6));
 			op.withValue(CommonDataKinds.StructuredPostal.COUNTRY, m.group(7));
-		}
-	}
-
-
-	private void doEmail(Builder op, AcalProperty emailProp) {
-		op.withValue(Data.MIMETYPE, CommonDataKinds.Email.CONTENT_ITEM_TYPE);
-		op.withValue(CommonDataKinds.Email.DATA,emailProp.getValue());
-		String emailType = emailProp.getParam("TYPE").toUpperCase(); 
-		if ( emailType.contains("HOME") ) {
-			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_HOME);
-		}
-		else if ( emailType.contains("WORK") ) {
-			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK);
+			
+			applyOp("ADR",op);
 		}
 		else {
-			op.withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_OTHER);
+			Log.i(TAG,"Ignoring badly structured ADR data in '"+adrProp.toRfcString()+"'");
 		}
-		Log.v(TAG,"Processing field EMAIL:"+emailType+":"+emailProp.getValue());
-		
 	}
 
 
-	private void doPhoto(Builder op, AcalProperty prop) {
+	private void doEmail(boolean isInsert, int rawContactId, AcalProperty emailProp) {
+		String emailTypeName = emailProp.getParam("TYPE").toUpperCase();
+		int emailType = CommonDataKinds.Email.TYPE_OTHER;
+		if ( emailTypeName.contains("HOME") )		emailType = CommonDataKinds.Email.TYPE_HOME;
+		else if ( emailTypeName.contains("WORK") ) 	emailType = CommonDataKinds.Email.TYPE_WORK;
+		Log.v(TAG,"Processing field EMAIL:"+emailTypeName+":"+emailProp.getValue());
+
+		ContentProviderOperation.Builder op = beginOp( isInsert, rawContactId, CommonDataKinds.Email.CONTENT_ITEM_TYPE,
+				CommonDataKinds.Email.TYPE+"="+emailType+"", null);
+		op.withValue(CommonDataKinds.Email.DATA,emailProp.getValue());
+		
+		applyOp("EMAIL",op);
+	}
+
+
+	private void doPhoto(boolean isInsert, int rawContactId, AcalProperty prop) {
 		byte[] decodedString = Base64Coder.decode(prop.getValue().replaceAll(" ",""));
-		op.withValue(Data.MIMETYPE, CommonDataKinds.Photo.CONTENT_ITEM_TYPE);
+		ContentProviderOperation.Builder op = beginOp( isInsert, rawContactId, CommonDataKinds.Photo.CONTENT_ITEM_TYPE,
+				null, null);
 		op.withValue(ContactsContract.CommonDataKinds.Photo.PHOTO,decodedString);
 		Log.v(TAG,"Processing field PHOTO:"+prop.getValue());
+		applyOp("PHOTO",op);
 	}
 
 
