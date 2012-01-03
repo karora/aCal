@@ -13,129 +13,129 @@
 		android:label="@string/appName"
 		android:theme="@android:style/Theme.NoTitleBar" >
 		<activity
-			android:label="@string/appName"
-			android:name="aCal" >
-			<intent-filter >
+			android:name="aCal"
+			android:label="@string/appName" >
+			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name="aCalTasks"
 			android:description="@string/appDescriptionTasks"
 			android:icon="@drawable/icon_tasks"
-			android:label="@string/appNameTasks"
-			android:name="aCalTasks" >
-			<intent-filter >
+			android:label="@string/appNameTasks" >
+			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:label="@string/appActivityMonthView"
-			android:name=".activity.MonthView" >
-			<intent-filter >
+			android:name=".activity.MonthView"
+			android:label="@string/appActivityMonthView" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.MonthView" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name=".activity.YearView"
 			android:icon="@drawable/icon"
 			android:label="@string/appActivityYearView"
-			android:launchMode="standard"
-			android:name=".activity.YearView" >
-			<intent-filter >
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.YearView" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name=".weekview.WeekViewActivity"
 			android:icon="@drawable/icon"
 			android:label="@string/appActivityWeekView"
-			android:launchMode="standard"
-			android:name=".weekview.WeekViewActivity" >
-			<intent-filter >
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.weekview.WeekViewActivity" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name=".activity.serverconfig.ServerConfigList"
 			android:icon="@drawable/icon"
 			android:label="@string/appActivityServerConfigList"
-			android:launchMode="standard"
-			android:name=".activity.serverconfig.ServerConfigList" >
-			<intent-filter >
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.serverconfig.ServerConfigList" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name=".activity.serverconfig.AddServerList"
 			android:icon="@drawable/icon"
 			android:label="@string/appActivityAddServerList"
-			android:launchMode="standard"
-			android:name=".activity.serverconfig.AddServerList" >
-			<intent-filter >
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.serverconfig.AddServerList" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name=".activity.CollectionConfigList"
 			android:icon="@drawable/icon"
 			android:label="@string/appActivityCollectionConfigList"
-			android:launchMode="standard"
-			android:name=".activity.CollectionConfigList" >
-			<intent-filter >
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.CollectionConfigList" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name=".activity.Settings"
 			android:icon="@drawable/icon"
 			android:label="@string/appActivitySettings"
-			android:launchMode="standard"
-			android:name=".activity.Settings" >
-			<intent-filter >
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.Settings" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name=".activity.DebugSettings"
 			android:icon="@drawable/icon"
 			android:label="@string/appActivityDebugSettings"
-			android:launchMode="standard"
-			android:name=".activity.DebugSettings" >
-			<intent-filter >
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.DebugSettings" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="standard"
-			android:name=".activity.serverconfig.ServerConfiguration" >
-			<intent-filter >
+			android:name=".activity.serverconfig.ServerConfiguration"
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.serverconfig.ServerConfiguration" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="standard"
-			android:name=".activity.CollectionConfiguration" >
-			<intent-filter >
+			android:name=".activity.CollectionConfiguration"
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.CollectionConfiguration" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="standard"
-			android:name=".activity.EventView" >
-			<intent-filter >
+			android:name=".activity.EventView"
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.EventView" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="standard"
-			android:name=".activity.EventEdit" >
-			<intent-filter >
+			android:name=".activity.EventEdit"
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.EventEdit" />
 				<action android:name="android.intent.action.VIEW" />
 				<category android:name="android.intent.category.DEFAULT" />
@@ -154,67 +154,67 @@
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="standard"
-			android:name=".activity.TodoListView" >
-			<intent-filter >
+			android:name=".activity.TodoListView"
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.TodoListView" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="standard"
-			android:name=".activity.TodoView" >
-			<intent-filter >
+			android:name=".activity.TodoView"
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.TodoView" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="standard"
-			android:name=".activity.TodoEdit" >
-			<intent-filter >
+			android:name=".activity.TodoEdit"
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.TodoEdit" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="standard"
-			android:name=".activity.ShowUpgradeChanges" >
-			<intent-filter >
+			android:name=".activity.ShowUpgradeChanges"
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.ShowUpgradeChanges" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:launchMode="singleTask"
-			android:name=".activity.AlarmActivity" >
-			<intent-filter >
+			android:name=".activity.AlarmActivity"
+			android:launchMode="singleTask" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.AlarmActivity" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
+			android:name=".activity.AcalPreferences"
 			android:label="@string/appActivityPreference"
-			android:launchMode="standard"
-			android:name=".activity.AcalPreferences" >
-			<intent-filter >
+			android:launchMode="standard" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.activity.AcalPreferences" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<activity
-			android:label="Number Picker"
-			android:name=".widget.Picker" >
-			<intent-filter >
+			android:name=".widget.Picker"
+			android:label="Number Picker" >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.widget.Picker" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
 		<service
-			android:exported="true"
 			android:name=".service.ContactsSyncAdapterService"
+			android:exported="true"
 			android:process=":contacts" >
-			<intent-filter >
+			<intent-filter>
 				<action android:name="android.content.SyncAdapter" />
 			</intent-filter>
 			<meta-data
@@ -222,40 +222,40 @@
 				android:resource="@xml/sync_contacts" />
 		</service>
 		<provider
+			android:name="com.morphoss.acal.providers.Servers"
 			android:authorities="servers"
-			android:exported="false"
-			android:name="com.morphoss.acal.providers.Servers" />
+			android:exported="false" />
 		<provider
+			android:name="com.morphoss.acal.providers.PathSets"
 			android:authorities="pathsets"
-			android:exported="false"
-			android:name="com.morphoss.acal.providers.PathSets" />
+			android:exported="false" />
 		<provider
+			android:name="com.morphoss.acal.providers.DavCollections"
 			android:authorities="collections"
-			android:exported="false"
-			android:name="com.morphoss.acal.providers.DavCollections" />
+			android:exported="false" />
 		<provider
+			android:name="com.morphoss.acal.providers.DavResources"
 			android:authorities="resources"
-			android:exported="false"
-			android:name="com.morphoss.acal.providers.DavResources" />
+			android:exported="false" />
 		<provider
+			android:name="com.morphoss.acal.providers.PendingChanges"
 			android:authorities="pendingchanges"
-			android:exported="false"
-			android:name="com.morphoss.acal.providers.PendingChanges" />
+			android:exported="false" />
 		<service android:name="com.morphoss.acal.service.aCalService" >
-			<intent-filter >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.service.aCalService" />
 			</intent-filter>
 		</service>
 		<service android:name="com.morphoss.acal.dataservice.CalendarDataService" >
-			<intent-filter >
+			<intent-filter>
 				<action android:name="com.morphoss.acal.dataservice.CalendarDataService" />
 			</intent-filter>
 		</service>
 		<service
-			android:exported="true"
 			android:name="com.morphoss.acal.service.AcalAuthenticator"
+			android:exported="true"
 			android:process=":auth" >
-			<intent-filter >
+			<intent-filter>
 				<action android:name="android.accounts.AccountAuthenticator" />
 			</intent-filter>
 			<meta-data
@@ -263,13 +263,13 @@
 				android:resource="@xml/authenticator" />
 		</service>
 		<receiver android:name="com.morphoss.acal.receivers.StartUpIntentReceiver" >
-			<intent-filter >
+			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
 				<category android:name="android.intent.category.HOME" />
 			</intent-filter>
 		</receiver>
 		<receiver android:name="com.morphoss.acal.desktop.ShowUpcomingWidgetProvider" >
-			<intent-filter >
+			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
 			</intent-filter>
 			<meta-data
