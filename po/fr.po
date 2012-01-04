@@ -4,7 +4,7 @@
 # 
 # Translators:
 # Andrew McMillan <andrew@mcmillan.net.nz>, 2011.
-#   <matthieu.cargnelli@gmail.com>, 2011.
+#   <matthieu.cargnelli@gmail.com>, 2011, 2012.
 # tikismoke <webmaster@tikijs.dyndns.org>, 2011.
 #   <transifex@monte-stello.com>, 2011.
 #   <webmaster@tikijs.dyndns.org>, 2011.
@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aCal\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-12-03 23:18+1300\n"
-"PO-Revision-Date: 2011-12-28 10:14+0000\n"
+"PO-Revision-Date: 2012-01-03 09:48+0000\n"
 "Last-Translator: mcargnelli <matthieu.cargnelli@gmail.com>\n"
 "Language-Team: French (http://www.transifex.net/projects/p/acal/team/fr/)\n"
 "MIME-Version: 1.0\n"
@@ -66,7 +66,7 @@ msgid "Simple_Path"
 msgstr "Chemin simple"
 
 msgid "Simple_User_URL"
-msgstr "Australie/Brisbane"
+msgstr "URL utilisateur"
 
 msgid "Enter_a_brief_summary_of_the_event"
 msgstr "Entrez un bref résumé de l'événement"
