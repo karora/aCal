@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -257,25 +258,25 @@ public class AcalRequestor {
 		Matcher m = uriMatcher.matcher(uriString);
 		if ( m.matches() ) {
 			if ( m.group(1) != null && !m.group(1).equals("") ) {
-				if ( Constants.LOG_VERBOSE ) Log.v(TAG,"Found protocol '"+m.group(1)+"'");
+				if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,"Found protocol '"+m.group(1)+"'");
 				protocol = m.group(1);
 				if ( m.group(3) == null || m.group(3).equals("") ) {
 					port = (protocol.equals("http") ? 80 : 443);
 				}
 			}
 			if ( m.group(2) != null ) {
-				if ( Constants.LOG_VERBOSE ) Log.v(TAG,"Found hostname '"+m.group(2)+"'");
+				if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,"Found hostname '"+m.group(2)+"'");
 				setHostName( m.group(2) );
 			}
 			if ( m.group(3) != null && !m.group(3).equals("") ) {
-				if ( Constants.LOG_VERBOSE ) Log.v(TAG,"Found port '"+m.group(3)+"'");
+				if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,"Found port '"+m.group(3)+"'");
 				port = Integer.parseInt(m.group(3));
 				if ( m.group(1) != null && (port == 0 || port == 80 || port == 443) ) {
 					port = (protocol.equals("http") ? 80 : 443);
 				}
 			}
 			if ( m.group(4) != null && !m.group(4).equals("") ) {
-				if ( Constants.LOG_VERBOSE ) Log.v(TAG,"Found path '"+m.group(4)+"'");
+				if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,"Found path '"+m.group(4)+"'");
 				setPath(m.group(4));
 			}
 			if ( !initialised ) initialise();
@@ -283,16 +284,16 @@ public class AcalRequestor {
 		else {
 			m = pathMatcher.matcher(uriString);
 			if (m.find()) {
-				if ( Constants.LOG_VERBOSE ) Log.v(TAG,"Found relative path '"+m.group(1)+"'");
+				if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,"Found relative path '"+m.group(1)+"'");
 				setPath( m.group(1) );
 			}
 			else {
-				if ( Constants.LOG_DEBUG ) Log.d(TAG, "Using Uri class to process redirect...");
+				if ( Constants.LOG_DEBUG ) Log.println(Constants.LOGD,TAG, "Using Uri class to process redirect...");
 				Uri newLocation = Uri.parse(uriString);
 				if ( newLocation.getHost() != null ) setHostName( newLocation.getHost() );
 				setPortProtocol( newLocation.getPort(), newLocation.getScheme());
 				setPath( newLocation.getPath() );
-				if ( Constants.LOG_VERBOSE ) Log.v(TAG,"Found new location at '"+fullUrl()+"'");
+				if ( Constants.LOG_VERBOSE ) Log.println(Constants.LOGV,TAG,"Found new location at '"+fullUrl()+"'");
 				
 			}
 		}
@@ -318,12 +319,12 @@ public class AcalRequestor {
 		// WWW-Authenticate: Digest realm="SabreDAV",qop="auth",nonce="4f08e719a85d0",opaque="df58bdff8cf60599c939187d0b5c54de"
 				
 		if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
-			Log.v(TAG,"Interpreting '"+authRequestHeader+"'");
+			Log.println(Constants.LOGV,TAG,"Interpreting '"+authRequestHeader+"'");
 
 		String name;
 		for( HeaderElement he : authRequestHeader.getElements() ) {
 			if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
-				Log.v(TAG,"Interpreting Element: '"+he.toString()+"' ("+he.getName()+":"+he.getValue()+")");
+				Log.println(Constants.LOGV,TAG,"Interpreting Element: '"+he.toString()+"' ("+he.getName()+":"+he.getValue()+")");
 			name = he.getName();
 
 			if ( name.equalsIgnoreCase("Basic realm") ) { 
@@ -336,7 +337,7 @@ public class AcalRequestor {
 				algorithm = "MD5";
 				authRealm = he.getValue();
 				if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
-					Log.v(TAG,"Found '"+getAuthTypeName(authType)+"' auth, realm: "+authRealm);
+					Log.println(Constants.LOGV,TAG,"Found '"+getAuthTypeName(authType)+"' auth, realm: "+authRealm);
 			}
 			else if ( name.equalsIgnoreCase("nonce") ) {
 				nonce = he.getValue();
@@ -370,7 +371,7 @@ public class AcalRequestor {
 		}
 		catch (NoSuchAlgorithmException e) {
 			Log.e(TAG, e.getMessage());
-			Log.v(TAG, Log.getStackTraceString(e));
+			Log.println(Constants.LOGV,TAG, Log.getStackTraceString(e));
 		}
 	    return "";
 	}
@@ -382,7 +383,7 @@ public class AcalRequestor {
 			case Servers.AUTH_BASIC:
 				authValue = String.format("Basic %s", Base64Coder.encodeString(username+":"+password));
 				if ( Constants.LOG_VERBOSE )
-					Log.v(TAG, "BasicAuthDebugging: '"+authValue+"'" );
+					Log.println(Constants.LOGV,TAG, "BasicAuthDebugging: '"+authValue+"'" );
 				break;
 			case Servers.AUTH_DIGEST:
 				String A1 = md5( username + ":" + authRealm + ":" + password);
@@ -391,7 +392,7 @@ public class AcalRequestor {
 				String printNC = String.format("%08x", ++authNC);
 				String responseString = A1+":"+nonce+":"+printNC+":"+cnonce+":auth:"+A2;
 				if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
-					Log.v(TAG, "DigestDebugging: '"+responseString+"'" );
+					Log.println(Constants.LOGV,TAG, "DigestDebugging: '"+responseString+"'" );
 				String response = md5(responseString);
 				authValue = String.format("Digest realm=\"%s\", username=\"%s\", nonce=\"%s\", uri=\"%s\""
 							+ ", response=\"%s\", algorithm=\"%s\", cnonce=\"%s\", opaque=\"%s\", nc=\"%s\""
@@ -548,7 +549,7 @@ public class AcalRequestor {
 	private String getLocationHeader() {
 		for( Header h : responseHeaders ) {
 			if (Constants.LOG_VERBOSE && Constants.debugDavCommunication)
-				Log.v(TAG, "Looking for redirect in Header: " + h.getName() + ":" + h.getValue());
+				Log.println(Constants.LOGV,TAG, "Looking for redirect in Header: " + h.getName() + ":" + h.getValue());
 			if (h.getName().equalsIgnoreCase("Location"))
 				return h.getValue();
 		}
@@ -560,7 +561,7 @@ public class AcalRequestor {
 		Header selectedAuthHeader = null;
 		for( Header h : responseHeaders ) {
 			if (Constants.LOG_VERBOSE && Constants.debugDavCommunication)
-				Log.v(TAG, "Looking for auth in Header: " + h.getName() + ":" + h.getValue());
+				Log.println(Constants.LOGV,TAG, "Looking for auth in Header: " + h.getName() + ":" + h.getValue());
 			if ( h.getName().equalsIgnoreCase("WWW-Authenticate") ) {
 				// If this is a digest Auth header we will return with it
 				for( HeaderElement he : h.getElements() ) {
@@ -621,7 +622,7 @@ public class AcalRequestor {
 			}
 
 			if ( Constants.LOG_DEBUG  ) {
-				Log.d(TAG, String.format("Method: %s, Protocol: %s, Hostname: %s, Port: %d, Path: %s",
+				Log.println(Constants.LOGD,TAG, String.format("Method: %s, Protocol: %s, Hostname: %s, Port: %d, Path: %s",
 							method, requestProtocol, hostName, requestPort, path) );
 			}
 			HttpHost host = new HttpHost(this.hostName, requestPort, requestProtocol);
@@ -676,7 +677,7 @@ public class AcalRequestor {
 			double timeTaken = ((double)(finish-start))/1000.0;
 
 			if ( Constants.LOG_DEBUG )
-				Log.d(TAG, "Response: "+statusCode+", Sent: "+up+", Received: "+down+", Took: "+timeTaken+" seconds");
+				Log.println(Constants.LOGD,TAG, "Response: "+statusCode+", Sent: "+up+", Received: "+down+", Took: "+timeTaken+" seconds");
 			
 			if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication ) {
 				Log.println(Constants.LOGV,TAG, "RESPONSE: "+response.getStatusLine().getProtocolVersion()+" "+response.getStatusLine().getStatusCode()+" "+response.getStatusLine().getReasonPhrase() );
@@ -732,12 +733,12 @@ public class AcalRequestor {
 		}
 		catch (SSLException e) {
 			if ( Constants.LOG_DEBUG && Constants.debugDavCommunication )
-				Log.d(TAG,Log.getStackTraceString(e));
+				Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
 			throw e;
 		}
 		catch (AuthenticationFailure e) {
 			if ( Constants.LOG_DEBUG && Constants.debugDavCommunication )
-				Log.d(TAG,Log.getStackTraceString(e));
+				Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
 			throw e;
 		}
 		catch (SocketException e) {
@@ -746,6 +747,10 @@ public class AcalRequestor {
 		catch (ConnectionPoolTimeoutException e)		{
 			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
 			throw e;
+		}
+		catch (SocketTimeoutException e)		{
+			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
+			throw new ConnectionFailedException( e.getClass().getSimpleName() + ": " + fullUrl() );
 		}
 		catch (ConnectTimeoutException e)		{
 			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
@@ -756,7 +761,7 @@ public class AcalRequestor {
 			throw new ConnectionFailedException( e.getClass().getSimpleName() + ": " + fullUrl() );
 		}
 		catch (Exception e) {
-			Log.d(TAG,Log.getStackTraceString(e));
+			Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
 			if ( statusCode < 300 || statusCode > 499 )
 				throw new SendRequestFailedException(e.getMessage());
 		}
@@ -788,7 +793,7 @@ public class AcalRequestor {
 		if ( path != null ) this.path = path;
 		try {
 			if ( Constants.LOG_DEBUG )
-				Log.d(TAG, String.format("%s request on %s", method, fullUrl()) );
+				Log.println(Constants.LOGD,TAG, String.format("%s request on %s", method, fullUrl()) );
 			result = sendRequest( headers, entity );
 		}
 		catch (SSLException e) 					{ throw e; }
@@ -826,7 +831,7 @@ public class AcalRequestor {
 			String oldUrl = fullUrl();
 			interpretUriString(getLocationHeader());
 			if (Constants.LOG_DEBUG)
-				Log.d(TAG, method + " " +oldUrl+" redirected to: "+fullUrl());
+				Log.println(Constants.LOGD,TAG, method + " " +oldUrl+" redirected to: "+fullUrl());
 			if ( redirectCount++ < redirectLimit ) {
 				// Follow redirect
 				return doRequest( method, null, headers, entity ); 
@@ -851,13 +856,13 @@ public class AcalRequestor {
 		long start = System.currentTimeMillis();
 
 		if ( Constants.LOG_DEBUG )
-			Log.d(TAG, String.format("%s XML request on %s", method, fullUrl()) );
+			Log.println(Constants.LOGD,TAG, String.format("%s XML request on %s", method, fullUrl()) );
 
 		DavNode root = null;
 		try {
 			InputStream responseStream = doRequest(method, requestPath, headers, xml);
 			if ( responseHeaders == null ) {
-				responseStream.close();
+				if ( responseStream != null ) responseStream.close();
 				return root;
 			}
 			for( Header h : responseHeaders ) {
@@ -883,7 +888,7 @@ public class AcalRequestor {
 		}
 		
 		if (Constants.LOG_VERBOSE)
-			Log.v(TAG, "Request and parse completed in " + (System.currentTimeMillis() - start) + "ms");
+			Log.println(Constants.LOGV,TAG, "Request and parse completed in " + (System.currentTimeMillis() - start) + "ms");
 		return root;
 	}
 
