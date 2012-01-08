@@ -28,7 +28,6 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -153,6 +152,7 @@ public class CheckServerDialog {
 		 * </p>
 		 */
 		private void checkServer() throws TestsCancelledException {
+			Iterator<TestPort> testers;
 			TestPort tester = null;
 			successMessages = new ArrayList<String>();
 			try {
@@ -173,7 +173,8 @@ public class CheckServerDialog {
 					}
 				}
 				else {
-					Iterator<TestPort> testers = TestPort.defaultIterator(requestor);
+					testers = TestPort.defaultIterator(requestor);
+					if ( TestPort.addSrvLookups(requestor) ) testers = TestPort.reIterate();
 
 					do {
 						tester = testers.next();
@@ -205,7 +206,7 @@ public class CheckServerDialog {
 					requestor.applyToServerSettings(serverData);
 				}
 				else {
-					Iterator<TestPort> testers = TestPort.reIterate();
+					testers = TestPort.reIterate();
 					int maxAchievement = TestPort.PORT_IS_CLOSED;
 					do {
 						tester = testers.next();
@@ -268,8 +269,7 @@ public class CheckServerDialog {
 			}
 			catch (Exception e) {
 				// Something unknown went wrong
-				Log.w(TAG, "Unexpected Failure: " + e.getMessage());
-				Log.w(TAG, Log.getStackTraceString(e));
+				Log.w(TAG, "Unexpected Failure: ", e);
 				Message m = Message.obtain();
 				Bundle b = new Bundle();
 				b.putInt(TYPE, SHOW_FAIL_DIALOG);
