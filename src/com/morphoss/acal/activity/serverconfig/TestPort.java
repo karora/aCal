@@ -385,6 +385,87 @@ public class TestPort {
 		return testPortSet.iterator();
 	}
 
+	/**
+	 * Using the dnsjava library, do a lookup for the SRV record for
+	 * the user's domain and then process these in priority order to insert
+	 * them into the start of the testPortSet.
+	 * @param requestor
+	 * @return
+	 */
+	public static boolean addSrvLookups(AcalRequestor requestor) {
+		
+		return false;
+
+/*
+ * The following code is tested, and works, but requires the DNSJava library.		
+ */
+/*		
+		Name baseDomain = null;
+		Name sslPrefix = null;
+		Name plainPrefix = null;
+		try {
+			baseDomain = new Name(requestor.getHostName());
+			sslPrefix = new Name("_caldavs._tcp");
+			plainPrefix = new Name("_caldav._tcp");
+		}
+		catch ( TextParseException e1 ) {
+			Log.w(TAG,"Auto-generated catch block", e1);
+			return false;
+		}
+
+		Name[] searchNames;
+		try {
+			searchNames = new Name[] {
+					Name.concatenate(sslPrefix, baseDomain),
+					Name.concatenate(sslPrefix, new Name(baseDomain,1)),
+					Name.concatenate(plainPrefix, baseDomain),
+					Name.concatenate(plainPrefix, new Name(baseDomain,1)),
+			};
+		}
+		catch ( NameTooLongException e ) {
+			Log.w(TAG,"Auto-generated catch block", e);
+			return false;
+		}
+		
+		boolean addedSome = false;
+		SimpleResolver resolver;
+		try {
+			resolver = new SimpleResolver( ResolverConfig.getCurrentConfig().server() );
+		}
+		catch ( UnknownHostException e1 ) {
+			// @todo Auto-generated catch block
+			Log.w(TAG,"Auto-generated catch block", e1);
+			return false;
+		}
+		resolver.setTimeout(5); // Set a short timeout
+
+		Lookup dnsLookup = null;
+		int inserted = 0;
+		for( int n=0; n<searchNames.length; n++ ) {
+			dnsLookup = new Lookup( searchNames[n], Type.SRV);
+			dnsLookup.setResolver(resolver);
+			Record[] answers = dnsLookup.run();
+			if ( answers != null ) {
+				for( int i=0; answers != null && i<answers.length; i++ ) {
+					SRVRecord srv = (SRVRecord) answers[i];
+					TestPort tp = new TestPort(requestor);
+					tp.hostName = srv.getTarget().toString();
+					tp.port = srv.getPort();
+					tp.path = "/.well-known/caldav";
+					tp.useSSL = (n < 2);   // The first two are SSL, the second two are not
+					testPortSet.add( inserted + i, tp );
+					addedSome = true;
+					
+					if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGI, TAG,
+							String.format("Got SRV response of '%s:%d' for %s query.", tp.hostName, tp.port, searchNames[n].toString()) );
+				}
+				inserted += answers.length;
+			}
+		}
+		return addedSome;
+*/
+	}
+
 	
 	/**
 	 * Return a URL Prefix like 'https://'
