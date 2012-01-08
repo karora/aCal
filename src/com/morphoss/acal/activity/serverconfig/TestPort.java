@@ -360,7 +360,7 @@ public class TestPort {
 	 * @return The ArrayList of default ports.
 	 */
 	private static ArrayList<TestPort> testPortSet = null;
-	public static Iterator<TestPort> defaultIterator(AcalRequestor requestor) {
+	public static Iterator<TestPort> defaultIterator(AcalRequestor requestor ) {
 		if ( testPortSet == null )
 			testPortSet = new ArrayList<TestPort>(10);
 		else
@@ -368,8 +368,10 @@ public class TestPort {
 
 		testPortSet.add( new TestPort(requestor,443,true) );
 		testPortSet.add( new TestPort(requestor,8443,true) );
-		testPortSet.add( new TestPort(requestor,80,false) );
-		testPortSet.add( new TestPort(requestor,8008,false) );
+		if ( ! requestor.getProtocol().equals("https") ) {
+			testPortSet.add( new TestPort(requestor,80,false) );
+			testPortSet.add( new TestPort(requestor,8008,false) );
+		}
 		testPortSet.add( new TestPort(requestor,8843,true) );
 //		testPortSet.add( new TestPort(requestor,4443,true) );
 		testPortSet.add( new TestPort(requestor,8043,true) );
