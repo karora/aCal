@@ -206,13 +206,18 @@ public class CheckServerDialog {
 					requestor.applyToServerSettings(serverData);
 				}
 				else {
-					testers = TestPort.reIterate();
 					int maxAchievement = TestPort.PORT_IS_CLOSED;
-					do {
-						tester = testers.next();
+					if ( advancedMode ) {
 						if ( tester.getAchievement() > maxAchievement ) maxAchievement = tester.getAchievement(); 
 					}
-					while ( testers.hasNext() );
+					else {
+						testers = TestPort.reIterate();
+						do {
+							tester = testers.next();
+							if ( tester.getAchievement() > maxAchievement ) maxAchievement = tester.getAchievement(); 
+						}
+						while ( testers.hasNext() );
+					}
 
 					if ( maxAchievement == TestPort.AUTH_FAILED ) {
 						Log.w(TAG, "Failed Auth: " + requestor.fullUrl());
