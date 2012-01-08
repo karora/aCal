@@ -28,21 +28,14 @@ public class AcalConnectionPool {
 	private static SchemeRegistry schemeRegistry = null;
 	private static ThreadSafeClientConnManager connectionPool = null;
 	
-	public static HttpParams defaultHttpParams(String userAgent, int socketTimeOut, int connectionTimeOut) {
+	private static String userAgent = null; 
+	
+	public static HttpParams defaultHttpParams(int socketTimeOut, int connectionTimeOut) {
 		if ( httpParams == null ) {
-			if ( userAgent == null ) {
-				userAgent = aCalService.aCalVersion;
-		
-				// User-Agent: aCal/0.3 (google; Nexus One; passion; HTC; passion; FRG83D)  Android/2.2.1 (75603)
-				userAgent += " (" + Build.BRAND + "; " + Build.MODEL + "; " + Build.PRODUCT + "; "
-							+ Build.MANUFACTURER + "; " + Build.DEVICE + "; " + Build.DISPLAY + "; " + Build.BOARD + ") "
-							+ " Android/" + Build.VERSION.RELEASE + " (" + Build.VERSION.INCREMENTAL + ")";
-			}
-
 			httpParams = new BasicHttpParams();
 			httpParams.setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
 			httpParams.setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET, HTTP.UTF_8);
-			httpParams.setParameter(CoreProtocolPNames.USER_AGENT, userAgent );
+			httpParams.setParameter(CoreProtocolPNames.USER_AGENT, getUserAgent() );
 			httpParams.setParameter(CoreConnectionPNames.SOCKET_BUFFER_SIZE,DEFAULT_BUFFER_SIZE);
 			httpParams.setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
 
@@ -94,4 +87,15 @@ public class AcalConnectionPool {
 		httpParams.setLongParameter(ConnManagerPNames.TIMEOUT, connectionTimeOut + 1000 ); 	
 	}
 
+	public static String getUserAgent() {
+		if ( userAgent == null ) {
+			userAgent = aCalService.aCalVersion;
+	
+			// User-Agent: aCal/0.3 (google; Nexus One; passion; HTC; passion; FRG83D)  Android/2.2.1 (75603)
+			userAgent += " (" + Build.BRAND + "; " + Build.MODEL + "; " + Build.PRODUCT + "; "
+						+ Build.MANUFACTURER + "; " + Build.DEVICE + "; " + Build.DISPLAY + "; " + Build.BOARD + ") "
+						+ " Android/" + Build.VERSION.RELEASE + " (" + Build.VERSION.INCREMENTAL + ")";
+		}
+		return userAgent;
+	}
 }
