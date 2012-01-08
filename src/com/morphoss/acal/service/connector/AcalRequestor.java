@@ -74,22 +74,20 @@ public class AcalRequestor {
 	private String method = "PROPFIND";
 
 	// Authentication crap.
-	protected boolean authRequired = false;
-	protected int authType  = Servers.AUTH_NONE; 
-	protected Header wwwAuthenticate = null;
-	protected String authRealm = null;
-	protected String nonce = null;
-	protected String opaque = null;
-	protected String cnonce = null;
-	protected String qop = null;
-	protected int authNC = 0;
-	protected String algorithm = null;
+	private boolean authRequired = false;
+	private int authType  = Servers.AUTH_NONE; 
+//	private Header wwwAuthenticate = null;
+	private String authRealm = null;
+	private String nonce = null;
+	private String opaque = null;
+	private String cnonce = null;
+	private String qop = null;
+	private int authNC = 0;
+	private String algorithm = null;
 
 	private String username = null;
 	private String password = null;
 	
-	private static String userAgent = null;
-
 	private HttpParams httpParams;
 	private HttpClient httpClient;
 	private ThreadSafeClientConnManager connManager;
@@ -196,7 +194,7 @@ public class AcalRequestor {
 
 	
 	private void initialise() {
-		httpParams = AcalConnectionPool.defaultHttpParams(null, socketTimeOut, connectionTimeOut);
+		httpParams = AcalConnectionPool.defaultHttpParams(socketTimeOut, connectionTimeOut);
 		connManager = AcalConnectionPool.getHttpConnectionPool();
 		httpClient = new DefaultHttpClient(connManager, httpParams);
 
@@ -316,31 +314,29 @@ public class AcalRequestor {
 		// Adjust our authentication setup so the next request will be able
 		// to send the correct authentication headers...
 
-		// 'WWW-Authenticate: Digest realm="DAViCal CalDAV Server", qop="auth", nonce="55a1a0c53c0f337e4675befabeff6a122b5b78de", opaque="52295deb26cc99c2dcc6614e70ed471f7a163e7a", algorithm="MD5"'
-
-		if ( Constants.LOG_VERBOSE )
+		// WWW-Authenticate: Digest realm="DAViCal CalDAV Server", qop="auth", nonce="55a1a0c53c0f337e4675befabeff6a122b5b78de", opaque="52295deb26cc99c2dcc6614e70ed471f7a163e7a", algorithm="MD5"
+		// WWW-Authenticate: Digest realm="SabreDAV",qop="auth",nonce="4f08e719a85d0",opaque="df58bdff8cf60599c939187d0b5c54de"
+				
+		if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
 			Log.v(TAG,"Interpreting '"+authRequestHeader+"'");
 
 		String name;
 		for( HeaderElement he : authRequestHeader.getElements() ) {
-			if ( Constants.LOG_VERBOSE )
+			if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
 				Log.v(TAG,"Interpreting Element: '"+he.toString()+"' ("+he.getName()+":"+he.getValue()+")");
 			name = he.getName();
-			if ( name.length() > 6 && name.substring(0, 7).equalsIgnoreCase("Digest ") ) {
-				authType = Servers.AUTH_DIGEST;
-				name = name.substring(7);
-			}
-			else if ( name.length() > 5 && name.substring(0, 6).equalsIgnoreCase("Basic ") ) {
+
+			if ( name.equalsIgnoreCase("Basic realm") ) { 
 				authType = Servers.AUTH_BASIC;
 				name = name.substring(6);
 			}
-
-			if ( name.equalsIgnoreCase("realm") ) { 
-				authRealm = he.getValue();
-				if ( Constants.LOG_VERBOSE ) Log.v(TAG,"Found '"+getAuthTypeName(authType)+"' auth, realm: "+authRealm);
-			}
-			else if ( name.equalsIgnoreCase("qop") ) {
+			else if ( name.equalsIgnoreCase("Digest realm") ) { 
+				authType = Servers.AUTH_DIGEST;
 				qop = "auth";
+				algorithm = "MD5";
+				authRealm = he.getValue();
+				if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
+					Log.v(TAG,"Found '"+getAuthTypeName(authType)+"' auth, realm: "+authRealm);
 			}
 			else if ( name.equalsIgnoreCase("nonce") ) {
 				nonce = he.getValue();
@@ -348,10 +344,16 @@ public class AcalRequestor {
 			else if ( name.equalsIgnoreCase("opaque") ) {
 				opaque = he.getValue();
 			}
-			else if ( name.equalsIgnoreCase("algorithm") ) {
-				algorithm = "MD5";
+			else if ( name.equalsIgnoreCase("qop") ) {
+				if ( !he.getValue().equalsIgnoreCase(qop) ) {
+					Log.w(TAG, "Digest Auth requested qop of '"+he.getValue()+"' but we only support '"+qop+"'");
+				}
 			}
-			
+			else if ( name.equalsIgnoreCase("algorithm") ) {
+				if ( !he.getValue().equalsIgnoreCase(algorithm) ) {
+					Log.w(TAG, "Digest Auth requested algorithm of '"+he.getValue()+"' but we only support '"+algorithm+"'");
+				}
+			}
 		}
 
 		authRequired = true;
@@ -385,17 +387,17 @@ public class AcalRequestor {
 			case Servers.AUTH_DIGEST:
 				String A1 = md5( username + ":" + authRealm + ":" + password);
 				String A2 = md5( method + ":" + path );
-				cnonce = md5(userAgent);
+				cnonce = md5(AcalConnectionPool.getUserAgent());
 				String printNC = String.format("%08x", ++authNC);
 				String responseString = A1+":"+nonce+":"+printNC+":"+cnonce+":auth:"+A2;
 				if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
 					Log.v(TAG, "DigestDebugging: '"+responseString+"'" );
 				String response = md5(responseString);
 				authValue = String.format("Digest realm=\"%s\", username=\"%s\", nonce=\"%s\", uri=\"%s\""
-							+ ", response=\"%s\", algorithm=\"MD5\", cnonce=\"%s\", opaque=\"%s\", nc=\"%s\""
+							+ ", response=\"%s\", algorithm=\"%s\", cnonce=\"%s\", opaque=\"%s\", nc=\"%s\""
 							+ (qop == null ? "" : ", qop=\"auth\""),
 							authRealm, username, nonce, path,
-							response, cnonce, opaque, printNC );
+							response, algorithm, cnonce, opaque, printNC );
 				break;
 			default:
 				throw new AuthenticationFailure("Unknown authentication type");
@@ -590,7 +592,7 @@ public class AcalRequestor {
 		try {
 			// Create request and add headers and entity
 			DavRequest request = new DavRequest(method, this.fullUrl());
-//			request.addHeader(new BasicHeader("User-Agent", userAgent));
+//			request.addHeader(new BasicHeader("User-Agent", AcalConnectionPool.getUserAgent()));
 			if ( headers != null ) for (Header h : headers) request.addHeader(h);
 
 			if ( authRequired && authType != Servers.AUTH_NONE)
@@ -863,7 +865,7 @@ public class AcalRequestor {
 					for( HeaderElement he : h.getElements() ) {
 						if ( "text/plain".equals(he.getName()) || "text/html".equals(he.getName()) ) {
 							Log.println(Constants.LOGI, TAG, "Response is not an XML document");
-							responseStream.close();
+							if ( responseStream != null ) responseStream.close();
 							return root;
 						}
 					}
