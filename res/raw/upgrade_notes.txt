@@ -52,4 +52,9 @@ Fixed major force-close problem becoming apparent over new year.
 All finished events should now disappear from widget correctly.
 Changed 'simple' configuration to work from a URL rather than server + path.
 Updated translations for nl_BE,fr & de.
-Android Contacts data should now update for changes in the linked CardDAV addressbook data.   
+Android Contacts data should now update for changes in the linked CardDAV addressbook data.
+v36=1.34
+Fixed a bug in Digest authentication, which is often used with SabreDAV (including OwnCloud and others using this).
+Corrected typo in French translation.
+Copied nl_NL translation from the nl_BE translation on advice from a native nl_NL speaker.
+Fix display of messages when advanced configuration settings is used but they still don't work.    
