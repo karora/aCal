@@ -101,8 +101,10 @@ public class HomeSetDiscovery extends ServiceJob {
 			List<DavNode> responseList = root.getNodesFromPath("multistatus/response");
 			for (DavNode response : responseList) {
 				List<DavNode> calendars = response.getNodesFromPath("propstat/prop/calendar-home-set/href");
-				ContentValues[] inserts = new ContentValues[calendars.size()];
-				for (int i = 0; i < calendars.size(); i++) {
+				List<DavNode> addressbooks = response.getNodesFromPath("propstat/prop/addressbook-home-set/href");
+				ContentValues[] inserts = new ContentValues[calendars.size() + addressbooks.size()];
+				int i;
+				for (i = 0; i < calendars.size(); i++) {
 					DavNode curCalendar = calendars.get(i);
 					ContentValues cv = new ContentValues();
 					cv.put(PathSets.SERVER_ID, this.serverId);
@@ -110,6 +112,16 @@ public class HomeSetDiscovery extends ServiceJob {
 					cv.put(PathSets.PATH, curCalendar.getText());
 					inserts[i] = cv;
 				}
+				
+				for (int j = 0; j < addressbooks.size(); j++) {
+					DavNode curAddressBook = addressbooks.get(j);
+					ContentValues cv = new ContentValues();
+					cv.put(PathSets.SERVER_ID, this.serverId);
+					cv.put(PathSets.SET_TYPE, PathSets.ADDRESSBOOK_HOME_SET);
+					cv.put(PathSets.PATH, curAddressBook.getText());
+					inserts[i+j] = cv;
+				}
+				
 				cr.bulkInsert(PathSets.CONTENT_URI, inserts);
 
 				//Remove subtree to free up memory
