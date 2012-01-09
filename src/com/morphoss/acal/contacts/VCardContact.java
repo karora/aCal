@@ -201,13 +201,18 @@ public class VCardContact {
 			String nameSplit[] = simpleSplit.split(prop.getName().toUpperCase(Locale.US),2);
 			propertyName = (nameSplit.length == 2 ? nameSplit[1] : nameSplit[0]);
 
-			if ( propertyName.equals("FN") ) 		doStructuredName(isInsert, rawContactId, prop, sourceCard.getProperty("N"));
-			else if ( propertyName.equals("TEL") )	doPhone(isInsert, rawContactId, prop);
-			else if ( propertyName.equals("ADR") )	doStructuredAddress(isInsert, rawContactId, prop);
-			else if ( propertyName.equals("EMAIL")) doEmail(isInsert, rawContactId, prop);
-			else if ( propertyName.equals("PHOTO")) doPhoto(isInsert, rawContactId, prop);
-			else
-				continue;
+			try {
+				if ( propertyName.equals("FN") ) 		doStructuredName(isInsert, rawContactId, prop, sourceCard.getProperty("N"));
+				else if ( propertyName.equals("TEL") )	doPhone(isInsert, rawContactId, prop);
+				else if ( propertyName.equals("ADR") )	doStructuredAddress(isInsert, rawContactId, prop);
+				else if ( propertyName.equals("EMAIL")) doEmail(isInsert, rawContactId, prop);
+				else if ( propertyName.equals("PHOTO")) doPhoto(isInsert, rawContactId, prop);
+				else
+					continue;
+			}
+			catch( Exception e ) {
+				Log.e(TAG,"Error processing VCARD "+propertyName+" in \n"+sourceCard.getCurrentBlob()+"\n", e);
+			}
 
 		}
 	}
@@ -288,6 +293,8 @@ public class VCardContact {
 
 	private void doStructuredAddress(boolean isInsert, int rawContactId, AcalProperty adrProp) {
 		String addressTypeName = adrProp.getParam("TYPE").toUpperCase();
+		if ( addressTypeName == null ) addressTypeName = "";
+		else addressTypeName.toUpperCase();
 		
 		Log.v(TAG,"Processing field ADR:"+addressTypeName+":"+adrProp.getValue());
 	
@@ -328,7 +335,9 @@ public class VCardContact {
 
 
 	private void doEmail(boolean isInsert, int rawContactId, AcalProperty emailProp) {
-		String emailTypeName = emailProp.getParam("TYPE").toUpperCase();
+		String emailTypeName = emailProp.getParam("TYPE");
+		if ( emailTypeName == null ) emailTypeName = "";
+		else emailTypeName.toUpperCase();
 		int emailType = CommonDataKinds.Email.TYPE_OTHER;
 		if ( emailTypeName.contains("HOME") )		emailType = CommonDataKinds.Email.TYPE_HOME;
 		else if ( emailTypeName.contains("WORK") ) 	emailType = CommonDataKinds.Email.TYPE_WORK;
