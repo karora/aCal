@@ -58,4 +58,5 @@ Fixed a bug in Digest authentication, which is often used with SabreDAV (includi
 Corrected typo in French translation.
 Copied nl_NL translation from the nl_BE translation on advice from a native nl_NL speaker.
 Fix display of messages when advanced configuration settings is used but they still don't work.
-Handle discovery of CardDAV addressbooks where addressbook-home-set differs from calendar-home-set.     
+Handle discovery of CardDAV addressbooks where addressbook-home-set differs from calendar-home-set.
+Fix handling of domain names with two parts.      
