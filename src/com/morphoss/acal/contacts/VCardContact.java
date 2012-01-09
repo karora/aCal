@@ -36,7 +36,6 @@ import com.morphoss.acal.davacal.PropertyName;
 import com.morphoss.acal.davacal.VCard;
 import com.morphoss.acal.davacal.VComponent;
 import com.morphoss.acal.davacal.VComponentCreationException;
-import com.morphoss.acal.davacal.YouMustSurroundThisMethodInTryCatchOrIllEatYouException;
 import com.morphoss.acal.providers.DavResources;
 import com.morphoss.acal.service.connector.Base64Coder;
 
@@ -63,21 +62,13 @@ public class VCardContact {
 		vCardRow = resourceRow;
 		try {
 			sourceCard = (VCard) VComponent.createComponentFromResource(resourceRow, collectionObject);
+			sourceCard.setEditable();
 		}
 		catch ( Exception e ) {
 			Log.w(TAG,"Could not build VCard from resource", e);
 			throw new VComponentCreationException("Could not build VCard from resource", e); 
 		}
  
-		try {
-			sourceCard.setPersistentOn();
-		}
-		catch ( YouMustSurroundThisMethodInTryCatchOrIllEatYouException e ) { }
-		finally {
-			// We don't sourceCard.setPersistentOff();
-			// We want the contents to be expanded until we're done with this object
-		}
-
 		AcalDateTime revisionTime = AcalDateTime.fromAcalProperty(sourceCard.getProperty(PropertyName.REV));
 		if ( revisionTime == null ) {
 			String modTime = vCardRow.getAsString(DavResources.LAST_MODIFIED);
