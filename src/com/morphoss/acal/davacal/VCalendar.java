@@ -300,8 +300,9 @@ public class VCalendar extends VComponent {
 	public Masterable getMasterChild() {
 		if (childrenSet) {
 			for (VComponent vc : this.getChildren()) {
-				if ( vc instanceof VEvent)   return (VEvent)vc;
-				if ( vc instanceof VTodo )	 return (VTodo) vc;
+				if ( vc instanceof VEvent)   	return (VEvent)vc;
+				if ( vc instanceof VTodo )		 return (VTodo) vc;
+				if ( vc instanceof VJournal )	 return (VJournal) vc;
 			}
 		}
 		for( PartInfo childInfo : content.partInfo ) {
@@ -311,6 +312,10 @@ public class VCalendar extends VComponent {
 			}
 			else if ( childInfo.type.equals(VTODO) ) {
 				return new VTodo(new ComponentParts(childInfo.getComponent(content.componentString)),
+						resourceId, collectionData,this);
+			}
+			else if ( childInfo.type.equals(VJOURNAL) ) {
+				return new VJournal(new ComponentParts(childInfo.getComponent(content.componentString)),
 						resourceId, collectionData,this);
 			}
 		}
