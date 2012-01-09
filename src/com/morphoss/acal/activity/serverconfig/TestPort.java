@@ -458,10 +458,16 @@ public class TestPort {
 					testPortSet.add( inserted + i, tp );
 					addedSome = true;
 					
-					if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGI, TAG,
+					if ( Constants.debugCheckServerDialog ) 
+						Log.println(Constants.LOGI, TAG,
 							String.format("Got SRV response of '%s:%d' for %s query.", tp.hostName, tp.port, searchNames[n].toString()) );
 				}
 				inserted += answers.length;
+			}
+			else {
+				if ( Constants.debugCheckServerDialog ) 
+					Log.println(Constants.LOGI, TAG,
+						String.format("No SRV response for %s query.", searchNames[n].toString()) );
 			}
 		}
 		return addedSome;
