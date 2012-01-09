@@ -245,7 +245,7 @@ public class AcalRequestor {
 		final Pattern uriMatcher = Pattern.compile(
 					"^(?:(https?)://)?" + // Protocol
 					"(" + // host spec
-					"(?:(?:[a-z0-9-]+[.]){2,7}(?:[a-z0-9-]+))" +  // Hostname or IPv4 address
+					"(?:(?:[a-z0-9-]+[.]){1,7}(?:[a-z0-9-]+))" +  // Hostname or IPv4 address
 					"|(?:\\[(?:[0-9a-f]{0,4}:)+(?:[0-9a-f]{0,4})?\\])" + // IPv6 address
 					")" +
 					"(?:[:]([0-9]{2,5}))?" + // Port number
