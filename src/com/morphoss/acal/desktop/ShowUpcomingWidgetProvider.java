@@ -56,11 +56,18 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		if (intent.hasExtra(SHOW_UPCOMING_WIDGET_IDS_KEY)) {
-			int[] ids = intent.getExtras().getIntArray(SHOW_UPCOMING_WIDGET_IDS_KEY);
-			this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
-		} else super.onReceive(context, intent);
-		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget onReceive");
+		try {
+			if ( intent.hasExtra(SHOW_UPCOMING_WIDGET_IDS_KEY) ) {
+				int[] ids = intent.getExtras().getIntArray(SHOW_UPCOMING_WIDGET_IDS_KEY);
+				this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
+				if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget onReceive ended update");
+			}
+			else
+				super.onReceive(context, intent);
+		}
+		catch ( Exception e ) {
+			Log.w(TAG, "Unexpected exception in OnReceive", e);
+		}
 	}
 
 	
@@ -68,7 +75,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 
 		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
 				"onUpdate Called...");
-		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget onUpdate");
+		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget onUpdate started");
 		for (int widgetId : appWidgetIds) {
 
 			Intent updateIntent = new Intent();	
