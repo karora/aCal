@@ -298,7 +298,11 @@
 	<string name="TaskMarkedComplete">Task marked as completed.</string>
 	<string name="TaskDeleted">Task was deleted.</string>
 	<string name="endsAt">Ends %s</string>
+	<string name="Finished">Finished</string>
 	<string name="days">Days</string>
 	<string name="noScheduledEvents">No scheduled events</string>
-	<string name="Finished">Finished</string>
+	<string name="Event">Event</string>
+	<string name="Task">Task</string>
+	<string name="weekends">weekends</string>
+	<string name="weekdays">weekdays</string>
 </resources>

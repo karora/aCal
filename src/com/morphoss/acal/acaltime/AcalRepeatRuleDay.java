@@ -88,6 +88,15 @@ public class AcalRepeatRuleDay {
 		}
 		return ret;
 	}
+
+	public boolean isWeekDay() {
+		switch( wDay ) {
+			case AcalDateTime.SATURDAY:
+			case AcalDateTime.SUNDAY:
+				return false;
+		}
+		return true;
+	}
 }
 
 

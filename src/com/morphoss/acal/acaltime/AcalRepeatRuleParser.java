@@ -234,11 +234,24 @@ public abstract class AcalRepeatRuleParser {
 		if ( byday != null ) {
 			firstOne = true;
 			s.append(" on ");
+			StringBuilder s2 = new StringBuilder();
+			int weekdays = 0;
+			int weekends = 0;
 			for( int i=0; i<byday.length; i++ ) {
 				if ( firstOne ) firstOne = false;
-				else s.append(", ");
-				s.append(byday[i].toPrettyString()); 
+				else s2.append(", ");
+				s2.append(byday[i].toPrettyString());
+				if ( byday[i].isWeekDay() )
+					weekdays++;
+				else
+					weekends++;
 			}
+			if ( weekdays == 5 && weekends == 0 ) 
+				s.append(cx.getString(R.string.weekdays));
+			else if ( weekends == 2 && weekdays == 0 )
+				s.append(cx.getString(R.string.weekends));
+			else
+				s.append(s2.toString());
 		}
 
 		if ( bysetpos != null ) {
