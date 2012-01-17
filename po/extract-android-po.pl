@@ -16,9 +16,17 @@ use Getopt::Long qw(:config permute);  # allow mixed args.
 
 
 # Stuff that should not be hard-coded, but is :-)
-my $resources_dir = "../res";
+my $po_dir = $0;
+$po_dir =~ s{[^/]*$}{};
+my $resources_dir = $po_dir;
+$resources_dir =~ s{po/$}{res};
+if ( ! -d $resources_dir ) {
+  $resources_dir =~ s{^\./$}{../res};
+  if ( ! -d $resources_dir ) {
+    die "Couldn't find resources dir at '$resources_dir'";
+  }
+}
 my @extract_filenames = ( "strings", "timezonenames" );
-my $build_filename = "strings";
 my $messages_filename = "messages.pot";
 
 my $debug = 0;
@@ -42,7 +50,7 @@ if ( $extractmode ) {
 }
 elsif ( $buildmode ) {
   # From the language po files build the various strings files.
-  build_strings_files($messages_filename, $build_filename );
+  build_strings_files($messages_filename, \@extract_filenames );
 }
 else {
   usage();
@@ -104,16 +112,18 @@ from the la_NG.po file.
 =cut
 sub build_strings_files {
   my $template_file = shift;
-  my $stringsfile = shift;
+  my $buildfilenames = shift;
 
   # Now merge into each translation
-  opendir(my $dh, ".");
+  opendir(my $dh, $po_dir);
   while( my $fn = readdir($dh) ) {
     if( $fn =~ m{^([a-z]{2}(_[A-Z]{2})?)\.po$} ) {
       my $lang = $1;
-      printf( "Building language: %s\n", $lang );
-      my $strings = get_translated_strings($fn);
-      merge_into_xml( $lang, $strings, $stringsfile );
+      printf( "Building language: %s from %s\n", $lang, $fn );
+      my $strings = get_translated_strings($po_dir.$fn);
+      for my $stringsfile ( @$buildfilenames ) {
+        merge_into_xml( $lang, $strings, $stringsfile );
+      }
     }
   }
   closedir($dh);
@@ -166,8 +176,8 @@ sub merge_into_xml {
   my $outdir = sprintf('%s/values-%s', $resources_dir, $lang);
   mkdir $outdir unless( -d $outdir );
   my $out_filename = sprintf( '%s/%s.xml', $outdir, $strings_filename);
-  open( XMLIN, "<", $in_filename );
-  open( XMLOUT, ">", $out_filename );
+  open( XMLIN, "<", $in_filename ) || die "Couldn't open '$in_filename' for reading";
+  open( XMLOUT, ">", $out_filename ) || die "Couldn't open '$out_filename' for writing";
 
   while( <XMLIN> ) {
     if ( ! m{<!--} && m{<string (.*?)name="(.*?)"(.*?)>(.*?)</string>} ) {
