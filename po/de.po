@@ -9,6 +9,7 @@
 # Joerg Knoche <transifex@roerch.ping.de>, 2011.
 #   <mail@felixmoeller.de>, 2011.
 # Matthias Althaus <contact@althaus.it>, 2011.
+# Philipp Hahn <pmhahn+transifex@pmhahn.de>, 2012.
 # SunTsu <transifex.20.suntsu@spamgourmet.com>, 2011.
 #   <werner.heise@lessingstadt.de>, 2011.
 msgid ""
@@ -16,8 +17,8 @@ msgstr ""
 "Project-Id-Version: aCal\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-12-03 23:18+1300\n"
-"PO-Revision-Date: 2011-12-26 10:26+0000\n"
-"Last-Translator: chrysn <chrysn@fsfe.org>\n"
+"PO-Revision-Date: 2012-01-11 12:37+0000\n"
+"Last-Translator: Philipp Hahn <pmhahn+transifex@pmhahn.de>\n"
 "Language-Team: German (http://www.transifex.net/projects/p/acal/team/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -40,7 +41,7 @@ msgid "cancel"
 msgstr "Abbrechen"
 
 msgid "setButtonLabel"
-msgstr ""
+msgstr "Anwenden"
 
 msgid "appDescription"
 msgstr ""
@@ -378,10 +379,10 @@ msgid "oneCharAfternoon"
 msgstr "p"
 
 msgid "abbrevMorning"
-msgstr ""
+msgstr "AM"
 
 msgid "abbrevAfternoon"
-msgstr ""
+msgstr "PM"
 
 msgid "YearViewSize_PrefTitle"
 msgstr "Anzahl der Monate in der Jahresansicht"
@@ -900,7 +901,7 @@ msgid "Custom"
 msgstr "Benutzerdefiniert"
 
 msgid "floatingTime"
-msgstr ""
+msgstr "Schwebende Zeitzone"
 
 msgid "SetCustomAlarm"
 msgstr "Benutzerdefinierten Alarm setzen"
@@ -955,222 +956,222 @@ msgid "tzNameAfricaCairo"
 msgstr "Afrika/Kairo"
 
 msgid "tzNameAfricaCasablanca"
-msgstr ""
+msgstr "Afrika/Casablanca"
 
 msgid "tzNameAfricaHarare"
-msgstr ""
+msgstr "Afrika/Harare"
 
 msgid "tzNameAfricaNairobi"
-msgstr ""
+msgstr "Afrika/Nairobi"
 
 msgid "tzNameAfricaNdjamena"
-msgstr ""
+msgstr "Afrika/N'Djamena"
 
 msgid "tzNameAmericaAnchorage"
-msgstr ""
+msgstr "Amerika/Anchorage"
 
 msgid "tzNameAmericaArgentinaBuenos_Aires"
-msgstr ""
+msgstr "Amerika/Argentinien/Buenos Aires"
 
 msgid "tzNameAmericaBogota"
-msgstr ""
+msgstr "Amerika/bogota"
 
 msgid "tzNameAmericaChicago"
-msgstr ""
+msgstr "Amerika/Chicago"
 
 msgid "tzNameAmericaDenver"
-msgstr ""
+msgstr "Amerika/Denver"
 
 msgid "tzNameAmericaGodthab"
-msgstr ""
+msgstr "Amerika/Godthab"
 
 msgid "tzNameAmericaHalifax"
-msgstr ""
+msgstr "Amerika/Halifax"
 
 msgid "tzNameAmericaIndianaIndianapolis"
-msgstr ""
+msgstr "Amerika/Indiana/Indianapolis"
 
 msgid "tzNameAmericaLa_Paz"
-msgstr ""
+msgstr "Amerika/La Paz"
 
 msgid "tzNameAmericaLos_Angeles"
-msgstr ""
+msgstr "Amerika/Los Angeles"
 
 msgid "tzNameAmericaNew_York"
-msgstr ""
+msgstr "Amerika/New York"
 
 msgid "tzNameAmericaNoronha"
-msgstr ""
+msgstr "Amerika/Noronha"
 
 msgid "tzNameAmericaPanama"
-msgstr ""
+msgstr "Amerika/Panama"
 
 msgid "tzNameAmericaPhoenix"
-msgstr ""
+msgstr "Amerika/Phoenix"
 
 msgid "tzNameAmericaRegina"
-msgstr ""
+msgstr "Amerika/Regina"
 
 msgid "tzNameAmericaSantiago"
-msgstr ""
+msgstr "Amerika/Santiago"
 
 msgid "tzNameAmericaSao_Paulo"
-msgstr ""
+msgstr "Amerika/São Paulo"
 
 msgid "tzNameAmericaSt_Johns"
-msgstr ""
+msgstr "Amerika/St. Johns"
 
 msgid "tzNameAmericaTegucigalpa"
-msgstr ""
+msgstr "Amerika/Tegucigalpa"
 
 msgid "tzNameAsiaBaghdad"
-msgstr ""
+msgstr "Asien/Bagdad"
 
 msgid "tzNameAsiaBangkok"
-msgstr ""
+msgstr "Asien/Bankok"
 
 msgid "tzNameAsiaColombo"
-msgstr ""
+msgstr "Asien/Colombo"
 
 msgid "tzNameAsiaDhaka"
-msgstr ""
+msgstr "Asien/Dhaka"
 
 msgid "tzNameAsiaIrkutsk"
-msgstr ""
+msgstr "Asien/Irkutsk"
 
 msgid "tzNameAsiaJerusalem"
-msgstr ""
+msgstr "Asien/Jerusalem"
 
 msgid "tzNameAsiaKabul"
-msgstr ""
+msgstr "Asien/Kabul"
 
 msgid "tzNameAsiaKarachi"
-msgstr ""
+msgstr "Asien/Karachi"
 
 msgid "tzNameAsiaKathmandu"
-msgstr ""
+msgstr "Asien/Kathmandu"
 
 msgid "tzNameAsiaKolkata"
-msgstr ""
+msgstr "Asien/Kolkata"
 
 msgid "tzNameAsiaKrasnoyarsk"
-msgstr ""
+msgstr "Asien/Karasnojarsk"
 
 msgid "tzNameAsiaMagadan"
-msgstr ""
+msgstr "Asien/Magadan"
 
 msgid "tzNameAsiaMuscat"
-msgstr ""
+msgstr "Asien/Muscat"
 
 msgid "tzNameAsiaNovosibirsk"
-msgstr ""
+msgstr "Asien/Novosibirsk"
 
 msgid "tzNameAsiaRangoon"
-msgstr ""
+msgstr "Asien/Rangun"
 
 msgid "tzNameAsiaRiyadh"
-msgstr ""
+msgstr "Asien/Riad"
 
 msgid "tzNameAsiaSeoul"
-msgstr ""
+msgstr "Asien/Seoul"
 
 msgid "tzNameAsiaShanghai"
-msgstr ""
+msgstr "Asien/Shanghai"
 
 msgid "tzNameAsiaSingapore"
-msgstr ""
+msgstr "Asien/Singapur"
 
 msgid "tzNameAsiaTaipei"
-msgstr ""
+msgstr "Asien/Taipeh"
 
 msgid "tzNameAsiaTehran"
-msgstr ""
+msgstr "Asien/Teheran"
 
 msgid "tzNameAsiaTokyo"
-msgstr ""
+msgstr "Asien/Tokio"
 
 msgid "tzNameAsiaVladivostok"
-msgstr ""
+msgstr "Asien/Wladiwostok"
 
 msgid "tzNameAsiaYakutsk"
-msgstr ""
+msgstr "Asien/Jakutsk"
 
 msgid "tzNameAsiaYekaterinburg"
-msgstr ""
+msgstr "Asien/Jekaterinburg"
 
 msgid "tzNameAsiaYerevan"
-msgstr ""
+msgstr "Asien/Jerevan"
 
 msgid "tzNameAtlanticAzores"
-msgstr ""
+msgstr "Atlantik/Azoren"
 
 msgid "tzNameAtlanticCape_Verde"
-msgstr ""
+msgstr "Atlantik/Kapverdische Inseln"
 
 msgid "tzNameAustraliaAdelaide"
-msgstr ""
+msgstr "Australien/Delaide"
 
 msgid "tzNameAustraliaBrisbane"
-msgstr ""
+msgstr "Australien/Brisbane"
 
 msgid "tzNameAustraliaDarwin"
-msgstr ""
+msgstr "Australien/Darwin"
 
 msgid "tzNameAustraliaHobart"
-msgstr ""
+msgstr "Australien/Hobart"
 
 msgid "tzNameAustraliaPerth"
-msgstr ""
+msgstr "Australien/perth"
 
 msgid "tzNameAustraliaSydney"
-msgstr ""
+msgstr "Australien/Sydney"
 
 msgid "tzNameEuropeAthens"
-msgstr ""
+msgstr "Europa/Athen"
 
 msgid "tzNameEuropeBerlin"
-msgstr ""
+msgstr "Europa/Berlin"
 
 msgid "tzNameEuropeBucharest"
-msgstr ""
+msgstr "Europa/Bukarest"
 
 msgid "tzNameEuropeHelsinki"
-msgstr ""
+msgstr "Europa/Helsinki"
 
 msgid "tzNameEuropeLisbon"
-msgstr ""
+msgstr "Europa/lissabon"
 
 msgid "tzNameEuropeLondon"
-msgstr ""
+msgstr "Europa/London"
 
 msgid "tzNameEuropeMoscow"
-msgstr ""
+msgstr "Europa/Moskau"
 
 msgid "tzNameEuropeParis"
-msgstr ""
+msgstr "Europa/Paris"
 
 msgid "tzNameEuropePrague"
-msgstr ""
+msgstr "Europa/Prag"
 
 msgid "tzNamePacificApia"
-msgstr ""
+msgstr "Pazifik/Apia"
 
 msgid "tzNamePacificAuckland"
-msgstr ""
+msgstr "Pazifik/Auckland"
 
 msgid "tzNamePacificFiji"
-msgstr ""
+msgstr "Pazifik/Fidschi"
 
 msgid "tzNamePacificGuam"
-msgstr ""
+msgstr "Pazifik/Guam"
 
 msgid "tzNamePacificHonolulu"
-msgstr ""
+msgstr "Pazifik/Honolulu"
 
 msgid "tzNamePacificKwajalein"
-msgstr ""
+msgstr "Pazifik/Kwajalein"
 
 msgid "tzNamePacificTongatapu"
-msgstr ""
+msgstr "Pazifik/Tongatapu"
 
 

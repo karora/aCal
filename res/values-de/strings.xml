@@ -4,6 +4,7 @@
 <string name="theDayEachWeekStartsWith">Die Woche fängt an mit</string>
 <string name="firstDayOfWeek">Erster Wochentag</string>
 <string name="cancel">Abbrechen</string>
+<string name="setButtonLabel">Anwenden</string>
 <string name="appDescription">Ein Kalender für Android, der Ereignisse, Aufgaben, Notizen und Kontakte auf einem CalDAV- bzw. CardDAV-Server -- bspw. DAViCal (siehe www.davical.org) speichert.</string>
 <string name="appDescriptionTasks">Eine Aufgabenliste für Android, die Aufgaben auf einem CalDAV- bzw. CardDAV-Server – bspw. DAViCal (siehe www.davical.org) speichert.</string>
 <string name="Active">aktiv</string>
@@ -95,6 +96,8 @@
 <string name="thDec">Dez</string>
 	<!-- If the user is displaying AM/PM we need a single character to display e.g. 9a for 9:00am in the morning -->
 	<!-- If the user is displaying AM/PM we need a single character to display e.g. 1p for 1:00pm in the afternoon -->
+<string name="abbrevMorning">AM</string>
+<string name="abbrevAfternoon">PM</string>
 <string name="YearViewSize_PrefTitle">Anzahl der Monate in der Jahresansicht</string>
 <string name="YearViewSize_PrefSummary">Anzahl der Monate, die in der Jahresansicht sichtbar sind</string>
 <string name="Snooze_PrefTitle">Snooze-Zeitraum</string>
@@ -259,6 +262,7 @@
 <string name="Before">Vor</string>
 <string name="After">Nach</string>
 <string name="Custom">Benutzerdefiniert</string>
+<string name="floatingTime">Schwebende Zeitzone</string>
 <string name="SetCustomAlarm">Benutzerdefinierten Alarm setzen</string>
 <string name="showUpdateInformation">Aktualisierungsinformationen anzeigen</string>
 <string name="General_aCal_Information">Allgemeine aCal-Informationen</string>

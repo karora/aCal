@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aCal\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-28 00:18+1300\n"
-"PO-Revision-Date: 2011-11-27 11:18+0000\n"
-"Last-Translator: karora <andrew@mcmillan.net.nz>\n"
+"POT-Creation-Date: 2011-12-03 23:18+1300\n"
+"PO-Revision-Date: 2012-01-11 12:37+0000\n"
+"Last-Translator: Andrew McMillan <andrew@mcmillan.net.nz>\n"
 "Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/acal/team/es_ES/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -693,6 +693,9 @@ msgstr "Se ha encontrado la ruta a la identidad en &quot;%s&quot;"
 msgid "serverSupportsCalDAV"
 msgstr "El servidor soporta CalDAV"
 
+msgid "serverHasDAVNoCalDAV"
+msgstr ""
+
 msgid "serverLacksCalDAV"
 msgstr "El servidor no tiene soporte CalDAV"
 
@@ -711,6 +714,12 @@ msgstr "Error de autenticación"
 msgid "WeekViewPreferences"
 msgstr "Preferencias de vista semanal"
 
+msgid "AlarmPreferences"
+msgstr ""
+
+msgid "GeneralPreferences"
+msgstr ""
+
 msgid "checkServer"
 msgstr "Validando servidor"
 
@@ -721,6 +730,9 @@ msgid "checkServer_Internet"
 msgstr "Comprobando conexión a internet"
 
 msgid "checkServer_SearchingForServer"
+msgstr ""
+
+msgid "checkServer_DiscoveryCancelled"
 msgstr ""
 
 msgid "serverRecordAlreadyExists"
@@ -799,6 +811,9 @@ msgid "dueTasksTitle"
 msgstr ""
 
 msgid "incompleteTasksTitle"
+msgstr ""
+
+msgid "incompleteTasksDue"
 msgstr ""
 
 msgid "allTasksTitle"
@@ -889,6 +904,21 @@ msgid "aCal_Mailing_Lists"
 msgstr ""
 
 msgid "aCal_is_Free_Software"
+msgstr ""
+
+msgid "TaskMarkedComplete"
+msgstr ""
+
+msgid "TaskDeleted"
+msgstr ""
+
+msgid "endsAt"
+msgstr ""
+
+msgid "days"
+msgstr ""
+
+msgid "noScheduledEvents"
 msgstr ""
 
 # SourceFileEnd:../res/values/strings.xml

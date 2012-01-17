@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+#   <formalist@email.it>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: aCal\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-28 00:18+1300\n"
-"PO-Revision-Date: 2011-11-27 11:18+0000\n"
-"Last-Translator: karora <andrew@mcmillan.net.nz>\n"
+"POT-Creation-Date: 2011-12-03 23:18+1300\n"
+"PO-Revision-Date: 2012-01-15 18:30+0000\n"
+"Last-Translator: formalist <formalist@email.it>\n"
 "Language-Team: Italian (http://www.transifex.net/projects/p/acal/team/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -32,7 +33,7 @@ msgid "cancel"
 msgstr "Cancel"
 
 msgid "setButtonLabel"
-msgstr ""
+msgstr "Set"
 
 msgid "appDescription"
 msgstr ""
@@ -42,6 +43,8 @@ msgstr ""
 
 msgid "appDescriptionTasks"
 msgstr ""
+"Una lista di Promemoria per Android che memorizza i tuoi promemoria su un "
+"server remoto CalDAV / CardDAV (vedi: www.davical.org)"
 
 msgid "Active"
 msgstr "Attivo"
@@ -59,7 +62,7 @@ msgid "Simple_Path"
 msgstr "Percorso"
 
 msgid "Simple_User_URL"
-msgstr ""
+msgstr "URL utente:"
 
 msgid "Enter_a_brief_summary_of_the_event"
 msgstr "Inserire una breve descrizione dell'evento"
@@ -122,7 +125,7 @@ msgid "The_path_on_the_server"
 msgstr "Indirizzo del server, es. &quot;/caldav.php/user/&quot;"
 
 msgid "A_URL_or_domain_name"
-msgstr ""
+msgstr "Una URL o il nome del dominio del tuo server di calendario"
 
 msgid "The_servers_hostname"
 msgstr "Nome del Server, es. &quot;calendar.davical.com&quot;"
@@ -185,930 +188,975 @@ msgid "pUse_Alarms"
 msgstr "Usa l'allarme per questo gruppo"
 
 msgid "Use_Alarms"
-msgstr ""
+msgstr "Allarmi abilitati"
 
 msgid "Active_addressbook"
-msgstr ""
+msgstr "Questo gruppo è usato per memorizzare contatti?"
 
 msgid "Active_for_events"
-msgstr ""
+msgstr "Questo gruppo è usato per memorizzare eventi?"
 
 msgid "Active_for_journal"
-msgstr ""
+msgstr "Questo gruppo è usato per memorizzare note?"
 
 msgid "Active_for_tasks"
-msgstr ""
+msgstr "Questo gruppo è usato per memorizzare promemoria?"
 
 msgid "The_colour_associated_with_this_collection"
-msgstr ""
+msgstr "Il colore associato ai dati di questo gruppo"
 
 msgid "The_timezone_new_events_default_to"
-msgstr ""
+msgstr "Il fuso orario usato per i nuovi eventi di questo gruppo"
 
 msgid "pMax_age_on_3g"
-msgstr ""
+msgstr "Minuti ogni sincronizzazione in 3g"
 
 msgid "The_maximum_age_for_data_while_on_3g"
-msgstr ""
+msgstr "Tempo massimo (in minuti) prima dell'aggiornamento, quando in 3G"
 
 msgid "pMax_age_on_wifi"
-msgstr ""
+msgstr "Minuti ogni sincronizzazione in wifi"
 
 msgid "The_maximum_age_for_data_while_on_wifi"
-msgstr ""
+msgstr "Tempo massimo (in minuti) prima dell'aggiornamento, quando in wifi"
 
 msgid "Use_alarms_from_this_calendar"
-msgstr ""
+msgstr "Gli allarmi di questo calendario devono essere visualizzati?"
 
 msgid "Monday"
-msgstr ""
+msgstr "Lunedì"
 
 msgid "Tuesday"
-msgstr ""
+msgstr "Martedì"
 
 msgid "Wednesday"
-msgstr ""
+msgstr "Mercoledì"
 
 msgid "Thursday"
-msgstr ""
+msgstr "Giovedì"
 
 msgid "Friday"
-msgstr ""
+msgstr "Venerdì"
 
 msgid "Saturday"
-msgstr ""
+msgstr "Sabato"
 
 msgid "Sunday"
-msgstr ""
+msgstr "Domenica"
 
 msgid "Mon"
-msgstr ""
+msgstr "Lun"
 
 msgid "Tue"
-msgstr ""
+msgstr "Mar"
 
 msgid "Wed"
-msgstr ""
+msgstr "Mer"
 
 msgid "Thu"
-msgstr ""
+msgstr "Gio"
 
 msgid "Fri"
-msgstr ""
+msgstr "Ven"
 
 msgid "Sat"
-msgstr ""
+msgstr "Sab"
 
 msgid "Sun"
-msgstr ""
+msgstr "Dom"
 
 msgid "chMon"
-msgstr ""
+msgstr "L"
 
 msgid "chTue"
-msgstr ""
+msgstr "M"
 
 msgid "chWed"
-msgstr ""
+msgstr "M"
 
 msgid "chThu"
-msgstr ""
+msgstr "G"
 
 msgid "chFri"
-msgstr ""
+msgstr "V"
 
 msgid "chSat"
-msgstr ""
+msgstr "S"
 
 msgid "chSun"
-msgstr ""
+msgstr "D"
 
 msgid "January"
-msgstr ""
+msgstr "Gennaio"
 
 msgid "February"
-msgstr ""
+msgstr "Febbraio"
 
 msgid "March"
-msgstr ""
+msgstr "Marzo"
 
 msgid "April"
-msgstr ""
+msgstr "Aprile"
 
 msgid "May"
-msgstr ""
+msgstr "Maggio"
 
 msgid "June"
-msgstr ""
+msgstr "Giugno"
 
 msgid "July"
-msgstr ""
+msgstr "Luglio"
 
 msgid "August"
-msgstr ""
+msgstr "Agosto"
 
 msgid "September"
-msgstr ""
+msgstr "Settembre"
 
 msgid "October"
-msgstr ""
+msgstr "Ottobre"
 
 msgid "November"
-msgstr ""
+msgstr "Novembre"
 
 msgid "December"
-msgstr ""
+msgstr "Dicembre"
 
 msgid "thJan"
-msgstr ""
+msgstr "Gen"
 
 msgid "thFeb"
-msgstr ""
+msgstr "Feb"
 
 msgid "thMar"
-msgstr ""
+msgstr "Mar"
 
 msgid "thApr"
-msgstr ""
+msgstr "Apr"
 
 msgid "thMay"
-msgstr ""
+msgstr "Mag"
 
 msgid "thJun"
-msgstr ""
+msgstr "Giu"
 
 msgid "thJul"
-msgstr ""
+msgstr "Lug"
 
 msgid "thAug"
-msgstr ""
+msgstr "Ago"
 
 msgid "thSep"
-msgstr ""
+msgstr "Set"
 
 msgid "thOct"
-msgstr ""
+msgstr "Ott"
 
 msgid "thNov"
-msgstr ""
+msgstr "Nov"
 
 msgid "thDec"
-msgstr ""
+msgstr "Dic"
 
 # If the user is displaying AM/PM we need a single character to display e.g.
 # 9a for 9:00am in the morning
 msgid "oneCharMorning"
-msgstr ""
+msgstr "a"
 
 # If the user is displaying AM/PM we need a single character to display e.g.
 # 1p for 1:00pm in the afternoon
 msgid "oneCharAfternoon"
-msgstr ""
+msgstr "p"
 
 msgid "abbrevMorning"
-msgstr ""
+msgstr "am"
 
 msgid "abbrevAfternoon"
-msgstr ""
+msgstr "pm"
 
 msgid "YearViewSize_PrefTitle"
-msgstr ""
+msgstr "Numero di Mesi nella vista Annuale"
 
 msgid "YearViewSize_PrefSummary"
-msgstr ""
+msgstr "Numero di mesi visibili nella vista Annuale"
 
 msgid "Snooze_PrefTitle"
-msgstr ""
+msgstr "Tempo di differimento"
 
 msgid "Snooze_PrefSummary"
 msgstr ""
+"Di quanti minuti rimandare l'allarme alla pressione del tasto 'Snooze'"
 
 msgid "DefaultCollection_PrefTitle"
-msgstr ""
+msgstr "Gruppo di default"
 
 msgid "DefaultCollection_PrefSummary"
-msgstr ""
+msgstr "Gruppo di default da usare per i nuovi eventi"
 
 msgid "DefaultAlarmTone_PrefTitle"
-msgstr ""
+msgstr "Tono standard per l'allarme"
 
 msgid "DefaultAlarmTone_PrefSummary"
-msgstr ""
+msgstr "Il suono standard per gli allarmi."
 
 msgid "AlarmVolumeType_PrefTitle"
-msgstr ""
+msgstr "Impostazione Volume Allarme"
 
 msgid "AlarmVolumeType_PrefSummary"
-msgstr ""
+msgstr "L'impostazione usata per il volume dell'Allarme"
 
 msgid "AlarmBellVolume"
-msgstr ""
+msgstr "Volume dell'Allarme"
 
 msgid "MediaPlayerVolume"
-msgstr ""
+msgstr "Volume dei suoni (media)"
 
 msgid "prefWorkdayStart_Title"
-msgstr ""
+msgstr "Inizio giorno lavorativo"
 
 msgid "prefWorkdayStart_Summary"
-msgstr ""
+msgstr "L'ora di inizio del giorno lavorativo"
 
 msgid "prefWorkdayFinish_Title"
-msgstr ""
+msgstr "Fine giorno lavorativo"
 
 msgid "prefWorkdayFinish_Summary"
-msgstr ""
+msgstr "L'ora di fine del giorno lavorativo"
 
 msgid "prefWeekViewLinesPerHour_Title"
-msgstr ""
+msgstr "Spessore Righe"
 
 msgid "prefWeekViewLinesPerHour_Summary"
-msgstr ""
+msgstr "Lo spessore di ogni ora del giorno nella vista Settimanale"
 
 msgid "prefWeekViewDayWidth_Title"
-msgstr ""
+msgstr "Ampiezza colonna"
 
 msgid "prefWeekViewDayWidth_Summary"
-msgstr ""
+msgstr "L'ampiezza di ogni colonna/giorno nella vista Settimanale"
 
 msgid "Today"
-msgstr ""
+msgstr "Oggi"
 
 msgid "Year"
-msgstr ""
+msgstr "Anno"
 
 msgid "Month"
-msgstr ""
+msgstr "Mese"
 
 msgid "Week"
-msgstr ""
+msgstr "Settimana"
 
 msgid "Edit"
-msgstr ""
+msgstr "Modifica"
 
 msgid "Apply"
-msgstr ""
+msgstr "Applica"
 
 msgid "Advanced"
-msgstr ""
+msgstr "Avanzato"
 
 msgid "Simple"
-msgstr ""
+msgstr "Semplice"
 
 msgid "Add"
-msgstr ""
+msgstr "Aggiungi"
 
 msgid "UnNamedServer"
-msgstr ""
+msgstr "Server senza nome"
 
 msgid "LocationPrompt"
-msgstr ""
+msgstr "Dove:"
 
 msgid "NotesPrompt"
-msgstr ""
+msgstr "Note:"
 
 msgid "AlarmsPrompt"
-msgstr ""
+msgstr "Allarmi:"
 
 msgid "RepeatsPrompt"
-msgstr ""
+msgstr "Ripetizioni:"
 
 msgid "AllDayPrompt"
-msgstr ""
+msgstr "Tutto il giorno:"
 
 msgid "FromPrompt"
-msgstr ""
+msgstr "Da:"
 
 msgid "TodoFromPrompt"
-msgstr ""
+msgstr "Inizia il:"
 
 msgid "UntilPrompt"
-msgstr ""
+msgstr "Fino a:"
 
 msgid "DuePrompt"
-msgstr ""
+msgstr "Scadenza:"
 
 msgid "CompletedPrompt"
-msgstr ""
+msgstr "Finito:"
 
 msgid "DaysPrompt"
-msgstr ""
+msgstr "Giorni:"
 
 msgid "StartPrompt"
-msgstr ""
+msgstr "Inizio:"
 
 msgid "CompletePrompt"
-msgstr ""
+msgstr "Completo:"
 
 msgid "CollectionPrompt"
-msgstr ""
+msgstr "Calendario:"
 
 msgid "defaultCalendar"
-msgstr ""
+msgstr "Calendario standard"
 
 msgid "theCalendarForNewEvents"
-msgstr ""
+msgstr "Il calendario standard per i nuovi eventi"
 
 msgid "TwelveTwentyfour_PrefTitle"
-msgstr ""
+msgstr "Usa il formato 24-ore"
 
 msgid "TwelveTwentyfour_OnSummary"
-msgstr ""
+msgstr "14:00"
 
 msgid "TwelveTwentyfour_OffSummary"
-msgstr ""
+msgstr "2:00pm"
 
 msgid "OnlyOnce"
-msgstr ""
+msgstr "Accade una sola volta"
 
 msgid "EveryWeekday"
-msgstr ""
+msgstr "Ogni settimana"
 
 msgid "EveryWeekend"
-msgstr ""
+msgstr "Ogni fine settimana"
 
 msgid "EveryDay"
-msgstr ""
+msgstr "Giornalierodì"
 
 msgid "EveryWeek"
-msgstr ""
+msgstr "Settimanale"
 
 msgid "EveryMonth"
-msgstr ""
+msgstr "Mensile"
 
 msgid "EveryYear"
-msgstr ""
+msgstr "Annuale"
 
 msgid "EveryNDays"
-msgstr ""
+msgstr "Ogni %s giorni"
 
 msgid "EveryNWeeks"
-msgstr ""
+msgstr "Ogni %s settimane"
 
 msgid "EveryNMonths"
-msgstr ""
+msgstr "Ogni %s mesi"
 
 msgid "EveryNYears"
-msgstr ""
+msgstr "Ogni %s anni"
 
 msgid "EveryMonday"
-msgstr ""
+msgstr "Ogni lunedì"
 
 msgid "EveryTuesday"
-msgstr ""
+msgstr "Ogni martedì"
 
 msgid "EveryWednesday"
-msgstr ""
+msgstr "Ogni mercoledì"
 
 msgid "EveryThursday"
-msgstr ""
+msgstr "Ogni giovedì"
 
 msgid "EveryFriday"
-msgstr ""
+msgstr "Ogni venerdì"
 
 msgid "EverySaturday"
-msgstr ""
+msgstr "Ogni sabato"
 
 msgid "EverySunday"
-msgstr ""
+msgstr "Ogni domenica"
 
 msgid "EveryNthOfTheMonth"
-msgstr ""
+msgstr "Ogni %s del mese"
 
 msgid "EveryMonthOnTheNthSomeday"
-msgstr ""
+msgstr "Il %s di ogni mese"
 
 msgid "CustomRepeatRule"
-msgstr ""
+msgstr "Ripetizione personalizzata"
 
 msgid "EventSaved"
-msgstr ""
+msgstr "Evento salvato."
 
 msgid "ModifiedAllInstances"
-msgstr ""
+msgstr "Tutti gli eventi sono stati salvati."
 
 msgid "ModifiedOneInstance"
-msgstr ""
+msgstr "La singola istanza dell'evento è stata modificata"
 
 msgid "ModifiedThisAndFuture"
-msgstr ""
+msgstr "Questa e tutte le future istanze dell'evento sono state modificate."
 
 msgid "ErrorSavingEvent"
-msgstr ""
+msgstr "Errore durante il salvataggio dell'evento - riprovare più tardi."
 
 msgid "NewEventTitle"
-msgstr ""
+msgstr "Nuovo Evento"
 
 msgid "ChooseACollection"
-msgstr ""
+msgstr "Scegli un gruppo"
 
 msgid "ChooseAlarmTime"
-msgstr ""
+msgstr "Scegli un orario per l'allarme"
 
 msgid "ChooseInstancesToChange"
-msgstr ""
+msgstr "Quali istanze sono da cambiare?"
 
 msgid "ChooseRepeatFrequency"
-msgstr ""
+msgstr "Scegli una frequenza di ripetizione"
 
 msgid "Add_Alarm"
-msgstr ""
+msgstr "Aggiungi allarme"
 
 msgid "errorMustHaveActiveCalendar"
-msgstr ""
+msgstr "Non posso modificare l'evento senza un calendario attivo"
 
 msgid "errorSavingServerConfig"
-msgstr ""
+msgstr "Errore nel salvataggio della configurazione del server"
 
 msgid "errorSavingFile"
-msgstr ""
+msgstr "Errore durante il salvataggio nel file"
 
 msgid "ServerDataSaved"
-msgstr ""
+msgstr "Dati memorizzati sul server. Nome del file:"
 
 msgid "NewManualServerConfiguration"
-msgstr ""
+msgstr "Configurazione Manuale"
 
 msgid "ManualServerConfigurationBlurb"
-msgstr ""
+msgstr "Immetti manualmente le informazioni del server"
 
 msgid "SavedServerConfigurationBlurb"
-msgstr ""
+msgstr "Una configurazione del server salvata"
 
 msgid "AllDaysInPeriod"
-msgstr ""
+msgstr "Tutto il giorno, da %1$s a %2$s"
 
 msgid "ForTheWholeDay"
-msgstr ""
+msgstr "Tutto il giorno"
 
 msgid "alarmAtEventTime"
-msgstr ""
+msgstr "All'ora dell'evento"
 
 msgid "alarm10MinutesPrior"
-msgstr ""
+msgstr "10 minuti prima"
 
 msgid "alarm15MinutesPrior"
-msgstr ""
+msgstr "15 minuti prima"
 
 msgid "alarm30MinutesPrior"
-msgstr ""
+msgstr "30 minuti prima"
 
 msgid "alarm1HourPrior"
-msgstr ""
+msgstr "Un ora prima"
 
 msgid "alarm2HoursPrior"
-msgstr ""
+msgstr "Due ore prima"
 
 msgid "alarmCustom"
-msgstr ""
+msgstr "Allarme personalizzato"
 
 msgid "alarmsDisabledNote"
-msgstr ""
+msgstr "(tutti gli allarmi sono disabilitati per questo calendario)"
 
 msgid "changeThisInstance"
-msgstr ""
+msgstr "Solo questa istanza"
 
 msgid "changeAllInstances"
-msgstr ""
+msgstr "Tutte le istanze"
 
 msgid "changeThisAndFuture"
-msgstr ""
+msgstr "Questa e tutte le istanze future"
 
 msgid "internetNotAvailable"
-msgstr ""
+msgstr "Internet non è momentaneamente disponibile"
 
 msgid "couldNotDiscoverPort"
-msgstr ""
+msgstr "Impossibile scoprire la porta HTTP del server CalDAV"
 
 msgid "couldNotDiscoverPrincipal"
-msgstr ""
+msgstr "Impossibile scoprire il percorso principale - usati i valori forniti"
 
 msgid "foundPrincipalPath"
-msgstr ""
+msgstr "Trovato il percorso principale del server presso &quot;%s&quot;"
 
 msgid "serverSupportsCalDAV"
+msgstr "Il server supporta CalDAV."
+
+msgid "serverHasDAVNoCalDAV"
 msgstr ""
+"ll server supporta DAV e il tuo Nome Utente e Password funzionano, ma il "
+"supporto a CalDAV non è stato riscontrato."
 
 msgid "serverLacksCalDAV"
-msgstr ""
+msgstr "Il server non supporta CalDAV."
 
 msgid "serverFailedValidation"
-msgstr ""
+msgstr "Si è verificato un errore durante la validazione del server:"
 
 msgid "saveSettingsAnyway"
-msgstr ""
+msgstr "Vuoi salvare lo stesso queste impostazioni?"
 
 msgid "serverValidationSuccess"
-msgstr ""
+msgstr "Il server è stato validato con successo."
 
 msgid "authenticationFailed"
-msgstr ""
+msgstr "Autenticazione fallita: controlla il tuo nome utente e la password"
 
 msgid "WeekViewPreferences"
-msgstr ""
+msgstr "Vista Settimanale"
+
+msgid "AlarmPreferences"
+msgstr "Impostazione Allarme"
+
+msgid "GeneralPreferences"
+msgstr "Impostazioni Generali"
 
 msgid "checkServer"
-msgstr ""
+msgstr "Sto convalidando il server"
 
 msgid "checkServer_Connecting"
-msgstr ""
+msgstr "Mi sto collegando al server, attendere prego..."
 
 msgid "checkServer_Internet"
-msgstr ""
+msgstr "Sto verificando la connettività Internet"
 
 msgid "checkServer_SearchingForServer"
-msgstr ""
+msgstr "Sto cercando il server CalDAV presso &quot;%s&quot;"
+
+msgid "checkServer_DiscoveryCancelled"
+msgstr "La ricerca del server è stata cancellata"
 
 msgid "serverRecordAlreadyExists"
 msgstr ""
+"Un server esista già per questa combinazione di protocollo, porta, server, "
+"percorso e nome utente"
 
 msgid "newEventFromThis"
-msgstr ""
+msgstr "Copia in un nuovo evento"
 
 msgid "Delete"
-msgstr ""
+msgstr "Cancella"
 
 msgid "deleteAllInstances"
-msgstr ""
+msgstr "Cancella tutte le istanze"
 
 msgid "deleteThisInstance"
-msgstr ""
+msgstr "Cancella questa istanza"
 
 msgid "deleteThisAndFuture"
-msgstr ""
+msgstr "Cancella questo e i futuri"
 
 msgid "newAllDayEventOn"
-msgstr ""
+msgstr "Nuovo evento il %s"
 
 msgid "newHourEventAt"
-msgstr ""
+msgstr "Nuovo evento alle %s"
 
 msgid "editSomeEvent"
-msgstr ""
+msgstr "Modifica: %s"
 
 msgid "copySomeEvent"
-msgstr ""
+msgstr "Copia: %s"
 
 msgid "deleteSomeEvent"
-msgstr ""
+msgstr "Cancella: %s"
 
 msgid "noCollectionsFound"
-msgstr ""
+msgstr "Non sono stati trovati calendari"
 
 msgid "aCalVersionChanges"
-msgstr ""
+msgstr "Benvenuto in una nuova versione di aCal!"
 
 msgid "newWithVersion"
-msgstr ""
+msgstr "Modifiche nella versione %s"
 
 msgid "newVersionSeen"
-msgstr ""
+msgstr "Grazie, ora visualizza!"
 
 msgid "Due"
-msgstr ""
+msgstr "Scadenza"
 
 msgid "All"
-msgstr ""
+msgstr "Tutto"
 
 msgid "Todo"
-msgstr ""
+msgstr "Da Fare"
 
 msgid "Events"
-msgstr ""
+msgstr "Evento"
 
 msgid "Tasks"
-msgstr ""
+msgstr "Promemoria"
 
 msgid "Unscheduled"
-msgstr ""
+msgstr "Non programmato"
 
 msgid "ChooseAction"
-msgstr ""
+msgstr "Scegli un'azione"
 
 msgid "SetCompleted"
-msgstr ""
+msgstr "Set completato"
 
 msgid "newTaskFromThis"
-msgstr ""
+msgstr "Copia in un nuovo Promemoria"
 
 msgid "dueTasksTitle"
-msgstr ""
+msgstr "Promemoria in scadenza entro un settimana"
 
 msgid "incompleteTasksTitle"
-msgstr ""
+msgstr "Promemoria incompleto"
+
+msgid "incompleteTasksDue"
+msgstr "Promemoria non completati in scadenza entro una settimana"
 
 msgid "allTasksTitle"
-msgstr ""
+msgstr "Tutti i promemoria"
 
 msgid "NewTaskTitle"
-msgstr ""
+msgstr "Nuovo Promemoria"
 
 msgid "TaskSaved"
-msgstr ""
+msgstr "Promemoria Salvato"
 
 msgid "TaskModifiedAll"
-msgstr ""
+msgstr "Tutte le istanze di questo promemoria sono state modificate."
 
 msgid "TaskModifiedOne"
-msgstr ""
+msgstr "La singola istanza di questo promemoria è state modificata."
 
 msgid "TaskModifiedThisAndFuture"
 msgstr ""
+"Questa e le future istanze di questo promemoria sono state modificate."
 
 msgid "TaskErrorSaving"
-msgstr ""
+msgstr "Errore nel salvataggio del promemoria - riprovare più tardi."
 
 msgid "username"
-msgstr ""
+msgstr "Nome utente:"
 
 msgid "password"
-msgstr ""
+msgstr "Password:"
 
 msgid "setRepeatRule"
-msgstr ""
+msgstr "Imposta regola di ripetizione"
 
 msgid "eventName"
-msgstr ""
+msgstr "Nome Evento"
 
 msgid "plus"
-msgstr ""
+msgstr "+"
 
 msgid "url"
-msgstr ""
+msgstr "URL:"
 
 msgid "todoName"
-msgstr ""
+msgstr "Nome promemoria:"
 
 msgid "IsADate"
-msgstr ""
+msgstr "E' una Data"
 
 msgid "NotSet"
-msgstr ""
+msgstr "Non impostato"
 
 msgid "Exactly"
-msgstr ""
+msgstr "Esattamente"
 
 msgid "Start"
-msgstr ""
+msgstr "Inizio"
 
 msgid "Finish"
-msgstr ""
+msgstr "Fine"
 
 msgid "Before"
-msgstr ""
+msgstr "Prima"
 
 msgid "After"
-msgstr ""
+msgstr "Dopo"
 
 msgid "Custom"
-msgstr ""
+msgstr "Personalizzato"
 
 msgid "floatingTime"
-msgstr ""
+msgstr "Tempo fluttuante"
 
 msgid "SetCustomAlarm"
-msgstr ""
+msgstr "Imposta un allarme personalizzato"
 
 msgid "showUpdateInformation"
-msgstr ""
+msgstr "Mostra informazioni di aggiornamento"
 
 msgid "General_aCal_Information"
-msgstr ""
+msgstr "Informazioni generali aCal"
 
 msgid "aCal_Website"
-msgstr ""
+msgstr "Il sito di <b>aCal</b> è %s"
 
 msgid "aCal_IRC_Channel"
 msgstr ""
+"Puoi chattare con gli autori di aCal nel canale IRC &lt;a "
+"href=\"irc://irc.oftc.net/#acal\">\"#acal su irc.oftc.net&lt;/a>"
 
 msgid "aCal_Mailing_Lists"
 msgstr ""
+"Le mailing list di &lt;em>aCal&lt;/em> sono pubbliche e puoi iscriverti "
+"all'indirizzo &lt;a href=\"http://lists.acal.me/\">lists.acal.me&lt;/a>. "
+"Sono anche disponibili gli archivi."
 
 msgid "aCal_is_Free_Software"
 msgstr ""
+"aCal è \"Free Software\" (Software Libero) (\"free\" come \"freedom\" = "
+"\"libertà\") che è licenziato sotto la General Public License v3 o "
+"successiva.  Puoi scaricare presso &lt;a href=\"http://gitorious.org/acal\">"
+" il codice sorgente di aCal da Gitorious&lt;/a>"
+
+msgid "TaskMarkedComplete"
+msgstr "Promemoria contrassegnati come completi."
+
+msgid "TaskDeleted"
+msgstr "Il promemoria è stato cancellato."
+
+msgid "endsAt"
+msgstr "Finisce %s%"
+
+msgid "days"
+msgstr "Giorni"
+
+msgid "noScheduledEvents"
+msgstr "Non ci sono eventi programmati"
 
 # SourceFileEnd:../res/values/strings.xml
 # SourceFileStart:../res/values/timezonenames.xml
 msgid "tzNameAfricaCairo"
-msgstr ""
+msgstr "Africa/Cairo"
 
 msgid "tzNameAfricaCasablanca"
-msgstr ""
+msgstr "Africa/Casablanca"
 
 msgid "tzNameAfricaHarare"
-msgstr ""
+msgstr "Africa/Harare"
 
 msgid "tzNameAfricaNairobi"
-msgstr ""
+msgstr "Africa/Nairobi"
 
 msgid "tzNameAfricaNdjamena"
-msgstr ""
+msgstr "Africa/Ndjamena"
 
 msgid "tzNameAmericaAnchorage"
-msgstr ""
+msgstr "America/Anchorage"
 
 msgid "tzNameAmericaArgentinaBuenos_Aires"
-msgstr ""
+msgstr "America/Argentina/Buenos_Aires"
 
 msgid "tzNameAmericaBogota"
-msgstr ""
+msgstr "America/Bogota"
 
 msgid "tzNameAmericaChicago"
-msgstr ""
+msgstr "America/Chicago"
 
 msgid "tzNameAmericaDenver"
-msgstr ""
+msgstr "America/Denver"
 
 msgid "tzNameAmericaGodthab"
-msgstr ""
+msgstr "America/Godthab"
 
 msgid "tzNameAmericaHalifax"
-msgstr ""
+msgstr "America/Halifax"
 
 msgid "tzNameAmericaIndianaIndianapolis"
-msgstr ""
+msgstr "America/Indiana/Indianapolis"
 
 msgid "tzNameAmericaLa_Paz"
-msgstr ""
+msgstr "America/La_Paz"
 
 msgid "tzNameAmericaLos_Angeles"
-msgstr ""
+msgstr "America/Los_Angeles"
 
 msgid "tzNameAmericaNew_York"
-msgstr ""
+msgstr "America/New_York"
 
 msgid "tzNameAmericaNoronha"
-msgstr ""
+msgstr "America/Noronha"
 
 msgid "tzNameAmericaPanama"
-msgstr ""
+msgstr "America/Panama"
 
 msgid "tzNameAmericaPhoenix"
-msgstr ""
+msgstr "America/Phoenix"
 
 msgid "tzNameAmericaRegina"
-msgstr ""
+msgstr "America/Regina"
 
 msgid "tzNameAmericaSantiago"
-msgstr ""
+msgstr "America/Santiago"
 
 msgid "tzNameAmericaSao_Paulo"
-msgstr ""
+msgstr "America/San Paolo"
 
 msgid "tzNameAmericaSt_Johns"
-msgstr ""
+msgstr "America/St_Johns"
 
 msgid "tzNameAmericaTegucigalpa"
-msgstr ""
+msgstr "America/Tegucigalpa"
 
 msgid "tzNameAsiaBaghdad"
-msgstr ""
+msgstr "Asia/Baghdad"
 
 msgid "tzNameAsiaBangkok"
-msgstr ""
+msgstr "Asia/Bangkok"
 
 msgid "tzNameAsiaColombo"
-msgstr ""
+msgstr "Asia/Colombo"
 
 msgid "tzNameAsiaDhaka"
-msgstr ""
+msgstr "Asia/Dhaka"
 
 msgid "tzNameAsiaIrkutsk"
-msgstr ""
+msgstr "Asia/Irkutsk"
 
 msgid "tzNameAsiaJerusalem"
-msgstr ""
+msgstr "Asia/Gerusalemme"
 
 msgid "tzNameAsiaKabul"
-msgstr ""
+msgstr "Asia/Kabul"
 
 msgid "tzNameAsiaKarachi"
-msgstr ""
+msgstr "Asia/Karachi"
 
 msgid "tzNameAsiaKathmandu"
-msgstr ""
+msgstr "Asia/Kathmandu"
 
 msgid "tzNameAsiaKolkata"
-msgstr ""
+msgstr "Asia/Kolkata"
 
 msgid "tzNameAsiaKrasnoyarsk"
-msgstr ""
+msgstr "Asia/Krasnoyarsk"
 
 msgid "tzNameAsiaMagadan"
-msgstr ""
+msgstr "Asia/Magadan"
 
 msgid "tzNameAsiaMuscat"
-msgstr ""
+msgstr "Asia/Muscat"
 
 msgid "tzNameAsiaNovosibirsk"
-msgstr ""
+msgstr "Asia/Novosibirsk"
 
 msgid "tzNameAsiaRangoon"
-msgstr ""
+msgstr "Asia/Rangoon"
 
 msgid "tzNameAsiaRiyadh"
-msgstr ""
+msgstr "Asia/Riyadh"
 
 msgid "tzNameAsiaSeoul"
-msgstr ""
+msgstr "Asia/Seoul"
 
 msgid "tzNameAsiaShanghai"
-msgstr ""
+msgstr "Asia/Shanghai"
 
 msgid "tzNameAsiaSingapore"
-msgstr ""
+msgstr "Asia/Singapore"
 
 msgid "tzNameAsiaTaipei"
-msgstr ""
+msgstr "Asia/Taipei"
 
 msgid "tzNameAsiaTehran"
-msgstr ""
+msgstr "Asia/Tehran"
 
 msgid "tzNameAsiaTokyo"
-msgstr ""
+msgstr "Asia/Tokyo"
 
 msgid "tzNameAsiaVladivostok"
-msgstr ""
+msgstr "Asia/Vladivostok"
 
 msgid "tzNameAsiaYakutsk"
-msgstr ""
+msgstr "Asia/Yakutsk"
 
 msgid "tzNameAsiaYekaterinburg"
-msgstr ""
+msgstr "Asia/Yekaterinburg"
 
 msgid "tzNameAsiaYerevan"
-msgstr ""
+msgstr "Asia/Yerevan"
 
 msgid "tzNameAtlanticAzores"
-msgstr ""
+msgstr "Atlantic/Azzorre"
 
 msgid "tzNameAtlanticCape_Verde"
-msgstr ""
+msgstr "Atlantic/Capo_Verde"
 
 msgid "tzNameAustraliaAdelaide"
-msgstr ""
+msgstr "Australia/Adelaide"
 
 msgid "tzNameAustraliaBrisbane"
-msgstr ""
+msgstr "Australia/Brisbane"
 
 msgid "tzNameAustraliaDarwin"
-msgstr ""
+msgstr "Australia/Darwin"
 
 msgid "tzNameAustraliaHobart"
-msgstr ""
+msgstr "Australia/Hobart"
 
 msgid "tzNameAustraliaPerth"
-msgstr ""
+msgstr "Australia/Perth"
 
 msgid "tzNameAustraliaSydney"
-msgstr ""
+msgstr "Australia/Sydney"
 
 msgid "tzNameEuropeAthens"
-msgstr ""
+msgstr "Europa/Atene"
 
 msgid "tzNameEuropeBerlin"
-msgstr ""
+msgstr "Europa/Berlino"
 
 msgid "tzNameEuropeBucharest"
-msgstr ""
+msgstr "Europa/Bucarest"
 
 msgid "tzNameEuropeHelsinki"
-msgstr ""
+msgstr "Europa/Helsinki"
 
 msgid "tzNameEuropeLisbon"
-msgstr ""
+msgstr "Europa/Lisbona"
 
 msgid "tzNameEuropeLondon"
-msgstr ""
+msgstr "Europa/Londra"
 
 msgid "tzNameEuropeMoscow"
-msgstr ""
+msgstr "Europa/Mosca"
 
 msgid "tzNameEuropeParis"
-msgstr ""
+msgstr "Europa/Parigi"
 
 msgid "tzNameEuropePrague"
-msgstr ""
+msgstr "Europa/Praga"
 
 msgid "tzNamePacificApia"
-msgstr ""
+msgstr "Pacific/Apia"
 
 msgid "tzNamePacificAuckland"
-msgstr ""
+msgstr "Pacific/Auckland"
 
 msgid "tzNamePacificFiji"
-msgstr ""
+msgstr "Pacific/Fiji"
 
 msgid "tzNamePacificGuam"
-msgstr ""
+msgstr "Pacific/Guam"
 
 msgid "tzNamePacificHonolulu"
-msgstr ""
+msgstr "Pacific/Honolulu"
 
 msgid "tzNamePacificKwajalein"
-msgstr ""
+msgstr "Pacific/Kwajalein"
 
 msgid "tzNamePacificTongatapu"
-msgstr ""
+msgstr "Pacific/Tongatapu"
 
 

@@ -4,6 +4,7 @@
 <string name="theDayEachWeekStartsWith">Ok</string>
 <string name="firstDayOfWeek">Temps flottant</string>
 <string name="cancel">Annuler</string>
+<string name="setButtonLabel">OK</string>
 <string name="appDescription">Un calendrier pour Android qui sauvegardera vos événements, tâches, notes et contacts sur un serveur CalDAV/CardDAV, tel que DAViCal (voir: www.davical.org)</string>
 <string name="appDescriptionTasks">Une liste de tâches pour Android qui sauvegardera vos tâches sur un serveur distant CalDAV / CardDAV, comme DAViCAL (visitez : www.davical.org)</string>
 <string name="Active">Actif</string>
@@ -272,6 +273,7 @@
 <string name="Before">Avant</string>
 <string name="After">Après</string>
 <string name="Custom">Personnalisé</string>
+<string name="floatingTime">flottant</string>
 <string name="SetCustomAlarm">Régler une alarme personnalisée</string>
 <string name="showUpdateInformation">Voir les notes de version</string>
 <string name="General_aCal_Information">Europe/Athène</string>
