@@ -235,11 +235,16 @@ public class AcalRequestor {
 	/**
 	 * Interpret the URI in the string to set protocol, host, port & path for the next request.
 	 * If the URI only matches a path part then protocol/host/port will be unchanged. This call
-	 * will only allow for path parts that are anchored to the web root.  This is generally used
-	 * internally for following Location: redirects.
+	 * will only allow for path parts that are anchored to the web root.  This is used internally
+	 * for following Location: redirects.
+	 * 
+	 * This is also used to interpret the 'path' parameter to the request calls generally.
+	 * 
 	 * @param uriString
 	 */
 	public void interpretUriString(String uriString) {
+
+		if ( uriString == null ) return;
 
 		// Match a URL, including an ipv6 address like http://[DEAD:BEEF:CAFE:F00D::]:8008/
 		final Pattern uriMatcher = Pattern.compile(
@@ -778,7 +783,7 @@ public class AcalRequestor {
 	 * supplying these (if possible).  Likewise the method will follow up to five redirects
 	 * before giving up on a request.
 	 * @param method
-	 * @param path
+	 * @param pathOrUrl
 	 * @param headers
 	 * @param entity
 	 * @return
@@ -786,11 +791,11 @@ public class AcalRequestor {
 	 * @throws SSLException
 	 * @throws ConnectionFailedException 
 	 */
-	public InputStream doRequest( String method, String path, Header[] headers, String entity )
+	public InputStream doRequest( String method, String pathOrUrl, Header[] headers, String entity )
 			throws SendRequestFailedException, SSLException, ConnectionFailedException {
 		InputStream result = null;
 		this.method = method;
-		if ( path != null ) this.path = path;
+		interpretUriString(pathOrUrl);
 		try {
 			if ( Constants.LOG_DEBUG )
 				Log.println(Constants.LOGD,TAG, String.format("%s request on %s", method, fullUrl()) );

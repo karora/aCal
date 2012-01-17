@@ -51,6 +51,7 @@ public class HomeSetsUpdate extends ServiceJob {
 	private aCalService context;
 	private ContentResolver cr;
 	private AcalRequestor requestor;
+	private ContentValues	serverData;
 
 	private final static Header[] pCalendarHeaders = new Header[] {
 		new BasicHeader("Depth","1"),
@@ -94,7 +95,7 @@ public class HomeSetsUpdate extends ServiceJob {
 	public void run(aCalService context) {
 		this.context = context;
 		this.cr = context.getContentResolver();
-		ContentValues serverData = Servers.getRow(serverId, cr);
+		this.serverData = Servers.getRow(serverId, cr);
 		this.requestor = AcalRequestor.fromServerValues(serverData);
 
 		if (Constants.LOG_DEBUG) Log.d(TAG, "Refreshing DavCollections for server "+this.serverId);
@@ -164,6 +165,7 @@ public class HomeSetsUpdate extends ServiceJob {
 		cursor.close();
 
 		try {
+			requestor.applyFromServer(serverData);
 			DavNode root = requestor.doXmlRequest("PROPFIND", homeSet, pCalendarHeaders, pCalendarRequest);
 			if (requestor.getStatusCode() == 404) {
 				Log.i(TAG, "PROPFIND got 404 on " + homeSet + " so a HomeSetDiscovery is being scheduled.");
@@ -181,6 +183,8 @@ public class HomeSetsUpdate extends ServiceJob {
 					//Get current collection path
 					collectionPath = response.getFirstNodeText("href");
 					if ( collectionPath != null ) {
+						requestor.interpretUriString(collectionPath);
+						collectionPath = requestor.fullUrl();
 						if ( collectionPath.equals(homeSet) ) {
 							// Update CTAG and NEEDS_SYNC if this is the home-set URL
 							String ctag = propstat.getFirstNodeText("prop/getctag");
@@ -252,8 +256,10 @@ public class HomeSetsUpdate extends ServiceJob {
 		if (Constants.LOG_DEBUG) Log.d(TAG,"Updating collection from propstat for "+collectionPath);
 
 		ContentValues cv = new ContentValues();
-		cv.put(DavCollections.COLLECTION_PATH, collectionPath);
 		cv.put(DavCollections.SERVER_ID, this.serverId);
+		cv.put(DavCollections.COLLECTION_PATH, requestor.fullUrl());
+		
+		Log.w(TAG,"Found collection at "+requestor.fullUrl());
 
 		boolean holds_addressbook=false;
 		boolean holds_events=false;

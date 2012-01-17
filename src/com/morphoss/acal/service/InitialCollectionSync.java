@@ -137,7 +137,7 @@ public class InitialCollectionSync extends ServiceJob {
 			serverData = Servers.getRow(serverId, cr);
 			if (serverData == null) throw new Exception("No record for ID " + serverId);
 			requestor = AcalRequestor.fromServerValues(serverData);
-			requestor.setPath(collectionPath);
+			requestor.interpretUriString(collectionPath);
 		}
 		catch (Exception e) {
 			// Error getting data
