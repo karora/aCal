@@ -43,6 +43,7 @@ public class TestPort {
 	private Boolean authOK 		= null;
 	private Boolean hasDAV		= null;
 	private Boolean hasCalDAV 	= null;
+	private Boolean hasPrincipalURL 	= null;
 
 	public final static int NO_CONNECTION = 0;
 	public final static int PORT_IS_CLOSED = 1;
@@ -51,9 +52,11 @@ public class TestPort {
 	public final static int SERVER_SUPPORTS_DAV = 4;
 	public final static int AUTH_FAILED = 5;
 	public final static int AUTH_SUCCEEDED = 6;
-	public final static int HAS_CALDAV = 7;
+	public final static int HAS_PRINCIPAL_URL = 7;
+	public final static int HAS_CALDAV = 8;
 	
 	private int achievement = NO_CONNECTION;
+	private String principalCollectionHref = null;
 
 	/**
 	 * Construct based on values from the AcalRequestor
@@ -215,7 +218,7 @@ public class TestPort {
 				authOK = true;
 				setAchievement(AUTH_SUCCEEDED);
 
-				String principalCollectionHref = null;
+				principalCollectionHref  = null;
 				for ( DavNode response : root.getNodesFromPath("multistatus/response") ) {
 					String responseHref = response.getFirstNodeText("href"); 
 					if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGD, TAG, "Checking response for "+responseHref);
@@ -230,12 +233,14 @@ public class TestPort {
 									if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGD, TAG, "This is a principal URL :-)");
 									requestor.interpretUriString(responseHref);
 									setFieldsFromRequestor();
+									hasPrincipalURL = true;
 									return true;
 								}
 								else if ( thisTag.equals("current-user-principal") ) {
 									if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGD, TAG, "Found the principal URL :-)");
 									requestor.interpretUriString(prop.getFirstNodeText("href"));
 									setFieldsFromRequestor();
+									hasPrincipalURL = true;
 									return true;
 								}
 								else if ( thisTag.equals("principal-collection-set") ) {
@@ -311,7 +316,7 @@ public class TestPort {
 
 		if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGI,TAG,
 				"Starting CalDAV dependency discovery on "+requestor.fullUrl());
-		if ( !isOpen() || !hasDAV() || !authOK() ) return false;
+		if ( !isOpen() || !hasDAV() || !authOK() || !hasPrincipalUrl() ) return false;
 
 		if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGI,TAG, "All CalDAV dependencies are present.");
 		if ( hasCalDAV == null ) {
@@ -351,6 +356,22 @@ public class TestPort {
 		if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGI,TAG,
 				"Checking authOK which was: "+(authOK == null ? "uncertain, assumed OK" : (authOK ? "OK" : "bad")));
 		return (authOK == null || authOK ? true : false);
+	}
+
+
+	/**
+	 * Return whether or not we have a principal URL
+	 */
+	public boolean hasPrincipalUrl() {
+		if ( hasPrincipalURL == null ) {
+			if ( !doPropfindPrincipal(path) ) {
+				if ( principalCollectionHref != null ) {
+					// doPrincipalPropertyReport(principalCollectionHref);
+				}
+			}
+			
+		}
+		return hasPrincipalURL;
 	}
 	
 	/**
