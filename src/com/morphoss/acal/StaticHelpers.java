@@ -21,8 +21,6 @@ package com.morphoss.acal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.morphoss.acal.desktop.ShowUpcomingWidgetProvider;
-
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
@@ -30,6 +28,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Parcel;
+
+import com.morphoss.acal.desktop.ShowUpcomingWidgetProvider;
 
 
 public final class StaticHelpers {
@@ -221,4 +221,26 @@ public final class StaticHelpers {
 		return src.readLong();
 	}
 
+	/**
+	 * Since ContentValues and SQlite don't play well with booleans it's useful to have this
+	 * to convert stuff from a number that's really a boolean.
+	 * @param zeroIsFalse
+	 * @param defaultValue
+	 * @return
+	 */
+	public static boolean toBoolean( Integer zeroIsFalse, boolean defaultValue ) {
+		if ( zeroIsFalse == null ) return defaultValue;
+		else if ( zeroIsFalse == 0 ) return false;
+		else return true;
+	}
+
+	/**
+	 * Strip any leading protocol://server.domain:port from the incoming URL.
+	 * @param stripFromUrl
+	 * @return The URL which is the bare pathname
+	 */
+	public static String pathOnServer( String stripFromUrl ) {
+		Matcher m = Constants.matchProtocolServerPort.matcher(stripFromUrl);
+		return m.replaceAll("");
+	}
 }
