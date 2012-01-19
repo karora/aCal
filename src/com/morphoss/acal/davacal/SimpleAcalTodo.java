@@ -120,32 +120,45 @@ public class SimpleAcalTodo implements Parcelable, Comparable<SimpleAcalTodo> {
 
 		// Per RFC5545 DTSTART is optional, and one of DUE or DURATION may be present
 		AcalProperty aProperty = task.getProperty("DTSTART");
-		if ( aProperty != null )
-			dtstart = AcalDateTime.fromAcalProperty(aProperty).applyLocalTimeZone().getEpoch();
-		else {
-			dtstart = null;
+		Long tmpDtstart = null;
+		try {
+			if ( aProperty != null )
+				tmpDtstart = AcalDateTime.fromAcalProperty(aProperty).applyLocalTimeZone().getEpoch();
 		}
+		catch( NullPointerException e ) {};
+
 		aProperty = task.getProperty("DUE");
-		if ( aProperty != null ) {
-			due = AcalDateTime.fromAcalProperty(aProperty).applyLocalTimeZone().getEpoch();
-			duration = null;
+		Long tmpDue = null;
+		Long tmpDuration = null;
+		try {
+			if ( aProperty != null )
+				tmpDue = AcalDateTime.fromAcalProperty(aProperty).applyLocalTimeZone().getEpoch();
 		}
-		else {
+		catch( NullPointerException e ) {};
+		if ( tmpDue == null ) {
 			aProperty = task.getProperty("DURATION");
-			if ( aProperty != null ) {
-				duration = AcalDuration.fromProperty(aProperty).getDurationMillis() / 1000L;
+			try {
+				if ( aProperty != null )
+					tmpDuration = AcalDuration.fromProperty(aProperty).getDurationMillis() / 1000L;
 			}
-			else duration = null;
-			if ( dtstart != null && duration != null ) {
-				due = dtstart + duration;
+			catch( NullPointerException e ) {};
+
+			if ( tmpDtstart != null && tmpDuration != null ) {
+				tmpDue = tmpDtstart + tmpDuration;
 			}
-			else due = null;
 		}
+		dtstart = tmpDtstart;
+		due = tmpDue;
+		duration = tmpDuration;
+		
 		aProperty = task.getProperty("COMPLETED");
-		if ( aProperty != null ) {
-			completed = AcalDateTime.fromAcalProperty(aProperty).applyLocalTimeZone().getEpoch();
+		Long tmpCompleted = null;
+		try {
+			if ( aProperty != null )
+				tmpCompleted = AcalDateTime.fromAcalProperty(aProperty).applyLocalTimeZone().getEpoch();
 		}
-		else completed = null;
+		catch( NullPointerException e ) {};
+		completed = tmpCompleted;
 		
 		summary = task.safePropertyValue("SUMMARY");
 		location = task.safePropertyValue("LOCATION");
