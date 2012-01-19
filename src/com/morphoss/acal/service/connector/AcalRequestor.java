@@ -323,6 +323,8 @@ public class AcalRequestor {
 
 		// WWW-Authenticate: Digest realm="DAViCal CalDAV Server", qop="auth", nonce="55a1a0c53c0f337e4675befabeff6a122b5b78de", opaque="52295deb26cc99c2dcc6614e70ed471f7a163e7a", algorithm="MD5"
 		// WWW-Authenticate: Digest realm="SabreDAV",qop="auth",nonce="4f08e719a85d0",opaque="df58bdff8cf60599c939187d0b5c54de"
+		// WWW-Authenticate:digest nonce="130183646896936966342199963268042751958404602087869166446", realm="Test Realm", algorithm="md5"
+
 				
 		if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
 			Log.println(Constants.LOGV,TAG,"Interpreting '"+authRequestHeader+"'");
@@ -335,7 +337,7 @@ public class AcalRequestor {
 
 			if ( name.length() > 7 && name.substring(0, 7).equalsIgnoreCase("Digest ") ) { 
 				authType = Servers.AUTH_DIGEST;
-				qop = "auth";
+				qop = null;
 				algorithm = "md5";
 				name = name.substring(7);
 				if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
@@ -356,14 +358,17 @@ public class AcalRequestor {
 				opaque = he.getValue();
 			}
 			else if ( name.equalsIgnoreCase("qop") ) {
-				if ( !he.getValue().equalsIgnoreCase(qop) ) {
-					Log.w(TAG, "Digest Auth requested qop of '"+he.getValue()+"' but we only support '"+qop+"'");
+				if ( !he.getValue().equalsIgnoreCase("auth") ) {
+					Log.w(TAG, "Digest Auth requested qop of '"+he.getValue()+"' but we only support 'auth'");
 				}
 			}
 			else if ( name.equalsIgnoreCase("algorithm") ) {
 				if ( !he.getValue().equalsIgnoreCase(algorithm) ) {
 					Log.w(TAG, "Digest Auth requested algorithm of '"+he.getValue()+"' but we only support '"+algorithm+"'");
 				}
+			}
+			else {
+				Log.w(TAG, "Digest Auth requested algorithm of '"+he.getValue()+"' but we only support '"+algorithm+"'");
 			}
 		}
 
