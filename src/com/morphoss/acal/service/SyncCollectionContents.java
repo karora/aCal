@@ -172,9 +172,9 @@ public class SyncCollectionContents extends ServiceJob {
 			else 
 				syncMarkedResources( originalData );
 			
-			boolean supportsSync = (serverData.getAsInteger(Servers.HAS_SYNC) != null
-											&& (1 == serverData.getAsInteger(Servers.HAS_SYNC)) );
-			if ( ( supportsSync ? doRegularSyncReport() : doRegularSyncPropfind() ) ) {
+			if ( (StaticHelpers.toBoolean(serverData.getAsInteger(Servers.HAS_SYNC),false) && !this.synchronisationForced
+						? doRegularSyncReport() 
+						: doRegularSyncPropfind() ) ) {
 				originalData = findSyncNeededResources();
 				syncMarkedResources(originalData);
 			}
@@ -703,6 +703,7 @@ public class SyncCollectionContents extends ServiceJob {
 		}
 
 		int limit;
+		String pathOnServer =  StaticHelpers.pathOnServer(collectionPath);
 		StringBuilder hrefList; 
 		for (int hrefIndex = 0; hrefIndex < hrefs.length; hrefIndex += nPerMultiget) {
 			limit = nPerMultiget + hrefIndex;
@@ -710,7 +711,7 @@ public class SyncCollectionContents extends ServiceJob {
 			
 			hrefList = new StringBuilder();
 			for (int i = hrefIndex; i < limit; i++) {
-				hrefList.append(String.format("<D:href>%s</D:href>\n", collectionPath + hrefs[i].toString()));
+				hrefList.append(String.format("<D:href>%s</D:href>\n", pathOnServer + hrefs[i].toString()));
 			}
 		
 			if (Constants.LOG_DEBUG)
