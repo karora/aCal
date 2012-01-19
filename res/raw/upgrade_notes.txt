@@ -63,4 +63,9 @@ Fix handling of domain names with two parts.
 Fix force close processing invalid VCARD data in contacts sync adaptor.
 v37=1.35
 Fix a force close processing some VCARD records.
-Fix an occasional force close in the Widget       
+Fix an occasional force close in the Widget
+v38=1.36
+Fix some further problems with Digest authentication
+Fix handling of case where a 'server' is served by multiple domain names (e.g. iCloud).
+Make forced resynchronisation force more things.
+Fix sync-token on initial collection sync using sync-report.       
