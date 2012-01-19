@@ -199,8 +199,8 @@
 <string name="changeThisAndFuture">Dieses und alle zukünftigen Vorkommnisse</string>
 <string name="internetNotAvailable">Keine Internetverbindung verfügbar</string>
 <string name="couldNotDiscoverPort">HTTP-Port des CalDAV Servers konnte nicht ermittelt werden</string>
-<string name="couldNotDiscoverPrincipal">Der \\&quot;Principal\\&quot;-Pfad des Servers konnte nicht ermittelt werden - benutze die Vorgaben des Benutzers.</string>
-<string name="foundPrincipalPath">\\&quot;Principal\\&quot;-Pfad des Servers unter &quot;%s&quot; gefunden</string>
+<string name="couldNotDiscoverPrincipal">Der &quot;Principal&quot;-Pfad des Servers konnte nicht ermittelt werden - benutze die Vorgaben des Benutzers.</string>
+<string name="foundPrincipalPath">&quot;Principal&quot;-Pfad des Servers unter &quot;%s&quot; gefunden</string>
 <string name="serverSupportsCalDAV">Server unterstützt CalDAV.</string>
 <string name="serverHasDAVNoCalDAV">Der Server unterstützt DAV und Ihr Benutzername und Passwort funktionieren, aber CalDAV-Unterstützung ist nicht vorhanden.</string>
 <string name="serverLacksCalDAV">Server unterstützt CalDAV nicht.</string>
