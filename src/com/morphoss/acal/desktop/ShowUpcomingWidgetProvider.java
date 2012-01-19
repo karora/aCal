@@ -18,9 +18,12 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.RemoteViews;
 
 import com.morphoss.acal.AcalDebug;
@@ -76,6 +79,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
 				"onUpdate Called...");
 		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget onUpdate started");
+		LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		for (int widgetId : appWidgetIds) {
 
 			Intent updateIntent = new Intent();	
@@ -91,7 +95,18 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			
 			
 			RemoteViews views = new RemoteViews(context.getPackageName(),R.layout.show_upcoming_widget_layout);
-			views.removeAllViews(R.id.upcoming_container);
+			ViewGroup upcomingContainerGroup = (ViewGroup) inflater.inflate(R.id.upcoming_container, null);
+			if ( Build.VERSION.SDK_INT >= 7 ) {
+				try {
+					views.removeAllViews(R.id.upcoming_container);
+				}
+				catch( Exception e ) {
+					Log.i(TAG,"Probably running an old version of Android :-(",e);
+				}
+			}
+			else {
+				upcomingContainerGroup.removeAllViews();
+			}
 			
 			//Used to calculate when we should trigger an update.
 			long timeOfNextEventEnd = Long.MAX_VALUE;
@@ -120,8 +135,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 						//inflate row
 						RemoteViews row = new RemoteViews(context.getPackageName(), R.layout.show_upcoming_widget_base_row);
 	
-						LayoutInflater lf = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-						ShowUpcomingRowLayout rowLayout = (ShowUpcomingRowLayout)lf.inflate(R.layout.show_upcoming_widget_custom_row, null);
+						ShowUpcomingRowLayout rowLayout = (ShowUpcomingRowLayout)inflater.inflate(R.layout.show_upcoming_widget_custom_row, null);
 	
 						row.setImageViewBitmap(R.id.upcoming_row_image, rowLayout.setData(
 								cvs[i].getAsInteger(ShowUpcomingWidgetProvider.FIELD_COLOUR),
@@ -135,7 +149,11 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 						if (timeOfNextEventStart > dtstart.getMillis()) timeOfNextEventStart = dtstart.getMillis();
 						
 						//addview
-						views.addView(R.id.upcoming_container, row);
+						if ( Build.VERSION.SDK_INT >= 7 )
+							views.addView(R.id.upcoming_container, row);
+						else {
+							View rowView = (View) inflater.inflate(R.layout.show_upcoming_widget_base_row, null);
+						}
 					}
 					catch( Exception e ) {
 						Log.e(TAG,"Error getting widget datetime",e);
@@ -152,7 +170,11 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 							rowLayout.setData(Color.BLACK,context.getString(R.string.noScheduledEvents), "" ));
 					
 					//addview
-					views.addView(R.id.upcoming_container, row);
+					if ( Build.VERSION.SDK_INT >= 7 )
+						views.addView(R.id.upcoming_container, row);
+					else {
+						View rowView = (View) inflater.inflate(R.layout.show_upcoming_widget_base_row, null);
+					}
 				}
 			}
 			
