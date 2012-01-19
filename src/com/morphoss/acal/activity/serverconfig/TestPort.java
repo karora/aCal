@@ -68,7 +68,7 @@ public class TestPort {
 		this.hostName = requestor.getHostName();
 		this.port = requestor.getPort();
 		this.useSSL = requestor.getProtocol().equals("https");
-		connectTimeOut = 500 + (useSSL ? 300 : 0);
+		connectTimeOut = 300 + (useSSL ? 300 : 0);
 	}
 
 
