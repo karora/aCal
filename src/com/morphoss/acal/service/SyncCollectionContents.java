@@ -310,7 +310,7 @@ public class SyncCollectionContents extends ServiceJob {
 //							+ "<getlastmodified/>"
 //							+ "<" + dataType + "-data xmlns=\"" + nameSpace + "\"/>"
 						+ "</prop>"
-					+ "<sync-token>" + oldSyncToken + "</sync-token>"
+						+ (oldSyncToken == null ? "" : "<sync-token>" + oldSyncToken + "</sync-token>")
 					+ "</sync-collection>"
 				);
 
@@ -320,6 +320,7 @@ public class SyncCollectionContents extends ServiceJob {
 			Log.i(TAG, "Unable to sync collection " + this.collectionPath + " (ID:" + this.collectionId
 						+ " - no data from server.");
 			syncWasCompleted = false;
+			updateCollectionToken(null);
 			return false;
 		}
 /**
@@ -488,6 +489,7 @@ public class SyncCollectionContents extends ServiceJob {
 						+ "<prop>"
 							+ "<getetag/>"
 							+ "<CS:getctag/>"
+							+ "<sync-token/>"
 						+ "</prop>"
 					+ "</propfind>"
 				);
