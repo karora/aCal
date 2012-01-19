@@ -68,7 +68,7 @@ public class TestPort {
 		this.hostName = requestor.getHostName();
 		this.port = requestor.getPort();
 		this.useSSL = requestor.getProtocol().equals("https");
-		connectTimeOut = 200 + (useSSL ? 300 : 0);
+		connectTimeOut = 500 + (useSSL ? 300 : 0);
 	}
 
 
@@ -369,6 +369,7 @@ public class TestPort {
 					// doPrincipalPropertyReport(principalCollectionHref);
 				}
 			}
+			if ( hasPrincipalURL == null ) hasPrincipalURL = true; 
 			
 		}
 		return hasPrincipalURL;
