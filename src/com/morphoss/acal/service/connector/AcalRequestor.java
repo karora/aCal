@@ -41,6 +41,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
@@ -332,17 +333,21 @@ public class AcalRequestor {
 				Log.println(Constants.LOGV,TAG,"Interpreting Element: '"+he.toString()+"' ("+he.getName()+":"+he.getValue()+")");
 			name = he.getName();
 
-			if ( name.equalsIgnoreCase("Basic realm") ) { 
+			if ( name.length() > 7 && name.substring(0, 7).equalsIgnoreCase("Digest ") ) { 
+				authType = Servers.AUTH_DIGEST;
+				qop = "auth";
+				algorithm = "md5";
+				name = name.substring(7);
+				if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
+					Log.println(Constants.LOGV,TAG,"Found '"+getAuthTypeName(authType)+"' auth, realm: "+authRealm);
+			}
+			else if ( name.length() > 6 && name.substring(0, 6).equalsIgnoreCase("Basic ") ) { 
 				authType = Servers.AUTH_BASIC;
 				name = name.substring(6);
 			}
-			else if ( name.equalsIgnoreCase("Digest realm") ) { 
-				authType = Servers.AUTH_DIGEST;
-				qop = "auth";
-				algorithm = "MD5";
+
+			if ( name.equalsIgnoreCase("realm") ) {
 				authRealm = he.getValue();
-				if ( Constants.LOG_VERBOSE && Constants.debugDavCommunication )
-					Log.println(Constants.LOGV,TAG,"Found '"+getAuthTypeName(authType)+"' auth, realm: "+authRealm);
 			}
 			else if ( name.equalsIgnoreCase("nonce") ) {
 				nonce = he.getValue();
@@ -748,6 +753,7 @@ public class AcalRequestor {
 		}
 		catch (SocketException e) {
 			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
+			return null;
 		}
 		catch (ConnectionPoolTimeoutException e)		{
 			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
@@ -755,15 +761,15 @@ public class AcalRequestor {
 		}
 		catch (SocketTimeoutException e)		{
 			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
-			throw new ConnectionFailedException( e.getClass().getSimpleName() + ": " + fullUrl() );
+			return null;
 		}
 		catch (ConnectTimeoutException e)		{
 			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
-			throw new ConnectionFailedException( e.getClass().getSimpleName() + ": " + fullUrl() );
+			return null;
 		}
 		catch ( UnknownHostException e ) {
 			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
-			throw new ConnectionFailedException( e.getClass().getSimpleName() + ": " + fullUrl() );
+			return null;
 		}
 		catch (Exception e) {
 			Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
