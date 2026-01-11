@@ -314,14 +314,14 @@ public class JournalListView extends AcalActivity implements OnClickListener {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle item selection
-		switch (item.getItemId()) {
-		case R.id.settingsMenuItem:
+		int id = item.getItemId();
+		if (id == R.id.settingsMenuItem) {
 			startSettings();
 			return true;
-		case R.id.eventsMenuItem:
+		} else if (id == R.id.eventsMenuItem) {
 			startMonthView();
 			return true;
-		default:
+		} else {
 			return super.onOptionsItemSelected(item);
 		}
 	}

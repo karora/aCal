@@ -397,14 +397,14 @@ public class WeekViewActivity extends AcalActivity implements OnGestureListener,
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle item selection
-		switch (item.getItemId()) {
-		case R.id.settingsMenuItem:
+		int id = item.getItemId();
+		if (id == R.id.settingsMenuItem) {
 			startSettings();
 			return true;
-		case R.id.tasksMenuItem:
+		} else if (id == R.id.tasksMenuItem) {
 			startTodoList();
 			return true;
-		default:
+		} else {
 			return super.onOptionsItemSelected(item);
 		}
 	}

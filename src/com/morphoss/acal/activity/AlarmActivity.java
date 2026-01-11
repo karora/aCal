@@ -381,20 +381,27 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 		}
 	}
 
-	/** 
+	/**
 	 * Trigger a notification in the notification bar.
 	 * @param text	The text to display in the notification bar.
 	 */
+	@SuppressWarnings("deprecation")
 	private void createNotification(String text) {
 
 		int icon = R.drawable.icon;
-		long when = System.currentTimeMillis();
-		Notification notification = new Notification(icon, text, when);
 		CharSequence contentTitle = "aCal Alarm";
 		CharSequence contentText = text;
 		Intent notificationIntent = new Intent(this, AlarmActivity.class);
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-		notification.setLatestEventInfo(this, contentTitle, contentText, contentIntent);
+
+		Notification notification = new Notification.Builder(this)
+			.setSmallIcon(icon)
+			.setTicker(text)
+			.setContentTitle(contentTitle)
+			.setContentText(contentText)
+			.setContentIntent(contentIntent)
+			.setWhen(System.currentTimeMillis())
+			.build();
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
 	}
 

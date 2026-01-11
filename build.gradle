@@ -1,24 +1,45 @@
 buildscript {
     repositories {
+        google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.4'
+        classpath 'com.android.tools.build:gradle:8.2.2'
     }
 }
-apply plugin: 'android'
 
-dependencies {
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
 }
+
+apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 17
-    buildToolsVersion "17"
+    namespace 'com.morphoss.acal'
+    compileSdk 28
+
+    useLibrary 'org.apache.http.legacy'
+
+    buildFeatures {
+        aidl true
+    }
 
     defaultConfig {
-        minSdkVersion 4
-        targetSdkVersion 10
+        applicationId "com.morphoss.acal"
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 63
+        versionName "1.63"
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -29,7 +50,14 @@ android {
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
         }
-
-        instrumentTest.setRoot('tests')
     }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 }

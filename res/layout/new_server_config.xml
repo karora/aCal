@@ -118,6 +118,28 @@
 				android:layout_height="wrap_content"
 				android:background="@color/themed_button_colour" >
 				<Button
+					android:id="@+id/restore_button"
+					style="@style/themed_bottom_button"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_gravity="center"
+					android:height="38sp"
+					android:text="@string/Add_Server"
+					android:width="180sp" />
+			</LinearLayout>
+		</LinearLayout>
+		<LinearLayout
+			android:layout_width="30sp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:background="#00000000"
+			android:gravity="center"
+			android:padding="6sp" >
+			<LinearLayout
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:background="@color/themed_button_colour" >
+				<Button
 					android:id="@+id/skip_button"
 					style="@style/themed_bottom_button"
 					android:layout_width="fill_parent"

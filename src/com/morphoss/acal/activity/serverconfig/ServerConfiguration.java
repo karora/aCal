@@ -526,15 +526,15 @@ public class ServerConfiguration extends PreferenceActivity implements OnPrefere
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle item selection
-		switch ( item.getItemId() ) {
-			case R.id.advancedMenuItem:
-				if ( this.iface == INTERFACE_SIMPLE ) {
-					this.iface = INTERFACE_ADVANCED;
-					updateSummaries();
-				}
-				return true;
-			default:
-				return super.onOptionsItemSelected(item);
+		int id = item.getItemId();
+		if (id == R.id.advancedMenuItem) {
+			if ( this.iface == INTERFACE_SIMPLE ) {
+				this.iface = INTERFACE_ADVANCED;
+				updateSummaries();
+			}
+			return true;
+		} else {
+			return super.onOptionsItemSelected(item);
 		}
 	}
 
