@@ -18,13 +18,13 @@ allprojects {
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.morphoss.acal'
+    namespace = 'com.morphoss.acal'
     compileSdk 28
 
     useLibrary 'org.apache.http.legacy'
 
     buildFeatures {
-        aidl true
+        aidl = true
     }
 
     defaultConfig {
@@ -54,8 +54,8 @@ android {
     }
 
     lint {
-        abortOnError false
-        checkReleaseBuilds false
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 }
 
