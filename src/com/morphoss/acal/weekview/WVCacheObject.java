@@ -20,7 +20,7 @@ public class WVCacheObject extends CacheObject {
 	}
 
 	public int calulateMaxWidth(int screenWidth, int HSPP) {
-		this.actualWidth = (int)(getEnd()-getStart())/HSPP;
+		this.actualWidth = (int)((getEnd()-getStart())/1000)/HSPP;
 		maxWidth = (actualWidth>screenWidth ? screenWidth : actualWidth);
 		return maxWidth;
 	}
