@@ -78,7 +78,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
 			updateIntent.putExtra(SHOW_UPCOMING_WIDGET_IDS_KEY, appWidgetIds);
 
-			PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+			PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 			
 			if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
 					"Processing for widget id: "+widgetId);
@@ -106,7 +106,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 
 			//set up on click intent
 			Intent startApp = new Intent(context, aCal.class);
-			PendingIntent onClickIntent = PendingIntent.getActivity(context, 0, startApp, PendingIntent.FLAG_UPDATE_CURRENT);
+			PendingIntent onClickIntent = PendingIntent.getActivity(context, 0, startApp, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 				
 			//Get Data
 			ArrayList<CacheObject> data = getCurrentData(context);

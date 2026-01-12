@@ -173,7 +173,7 @@ public class aCalService extends IntentService {
 		Intent serviceIntent = new Intent(this, aCalService.class);
 		serviceIntent.putExtra("RESTARTED", System.currentTimeMillis());
 
-		PendingIntent ourFutureSelf = PendingIntent.getService(getApplicationContext(), 0, serviceIntent, 0);
+		PendingIntent ourFutureSelf = PendingIntent.getService(getApplicationContext(), 0, serviceIntent, PendingIntent.FLAG_IMMUTABLE);
 		AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         alarmManager.cancel(ourFutureSelf);
 		alarmManager.set(AlarmManager.RTC_WAKEUP, restartTime, ourFutureSelf);

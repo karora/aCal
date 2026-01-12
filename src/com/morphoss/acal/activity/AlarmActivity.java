@@ -392,7 +392,7 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 		CharSequence contentTitle = "aCal Alarm";
 		CharSequence contentText = text;
 		Intent notificationIntent = new Intent(this, AlarmActivity.class);
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
 		Notification notification = new Notification.Builder(this)
 			.setSmallIcon(icon)
