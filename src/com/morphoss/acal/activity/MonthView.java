@@ -148,6 +148,7 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 	public static final int WEEK = 1;
 	public static final int YEAR = 2;
 	public static final int ADD = 3;
+	public static final int SETTINGS = 4;
 
 	/* Fields Relating to Gesture Detection */
 	private GestureDetector gestureDetector;
@@ -232,6 +233,7 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 		this.setupButton(R.id.month_week_button, WEEK, getString(R.string.Week));
 		this.setupButton(R.id.month_year_button, YEAR, getString(R.string.Year));
 		this.setupButton(R.id.month_add_button, ADD, "+");
+		this.setupButton(R.id.month_settings_button, SETTINGS, getString(R.string.Settings));
 
 		selectedDate = new AcalDateTime().applyLocalTimeZone();
 		displayedMonth = new AcalDateTime().applyLocalTimeZone();
@@ -1024,6 +1026,9 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 				Intent yearIntent = new Intent(this, YearView.class);
 				yearIntent.putExtras(bundle);
 				this.startActivityForResult(yearIntent, PICK_MONTH_FROM_YEAR_VIEW);
+				break;
+			case SETTINGS:
+				startSettings();
 				break;
 			default:
 				Log.w(TAG, "Unrecognised button was pushed in MonthView.");
