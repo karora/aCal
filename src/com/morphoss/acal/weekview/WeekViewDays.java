@@ -145,8 +145,11 @@ public class WeekViewDays extends ImageView implements OnTouchListener {
      * @return The position closest to that which is reasonable.
      */
     int checkScrollY(int y) {
-        if (y < -PxH) return -PxH;
+        int min = -PxH;
         int max = ((AcalDateTime.SECONDS_IN_DAY / WeekViewActivity.SECONDS_PER_PIXEL) - TpX) + 5;
+        // When full day fits on screen (max <= min), no scrolling needed
+        if (max <= min) return 0;
+        if (y < min) return min;
         if (y > max) return max;
         return y;
     }
