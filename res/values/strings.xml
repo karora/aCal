@@ -389,4 +389,7 @@
 	<string name="ErrorDeletingTask">Error deleting task data - please try again.</string>
 	<string name="ErrorCompletingTask">Error setting task as completed - please try again.</string>
 	<string name="Restore">Restore</string>
+	<string name="permission_required_title">Permissions Required</string>
+	<string name="permission_denied_title">Permissions Denied</string>
+	<string name="permission_denied_message">aCal cannot function without the required permissions. Please grant calendar, contacts, and storage permissions in your device settings to use this app.</string>
 </resources>

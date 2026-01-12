@@ -40,17 +40,31 @@ import com.morphoss.acal.service.aCalService;
 import com.morphoss.acal.weekview.WeekViewActivity;
 
 public class aCal extends AcalActivity {
-	
-	final public static String TAG = "aCal"; 
+
+	final public static String TAG = "aCal";
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
+		// Check for required permissions before proceeding
+		if (!checkPermissions()) {
+			// Permission request in progress, wait for callback
+			return;
+		}
+
+		// Permissions granted, proceed with initialization
+		initializeApp();
+	}
+
+	/**
+	 * Initialize the app after permissions are granted.
+	 */
+	private void initializeApp() {
 		// make sure aCalService is running
 		Intent serviceIntent = new Intent(this, aCalService.class);
 		serviceIntent.putExtra("UISTARTED", System.currentTimeMillis());
 		this.startService(serviceIntent);
-		
+
 		// Set all default preferences to reasonable values
 		PreferenceManager.setDefaultValues(this, R.xml.main_preferences, false);
 
@@ -65,7 +79,7 @@ public class aCal extends AcalActivity {
 				}
 				startActivity(new Intent(this, ShowUpgradeChanges.class));
 			}
-			else { 
+			else {
 				startPreferredView(prefs, this, true);
 			}
 		}
@@ -73,10 +87,27 @@ public class aCal extends AcalActivity {
 		this.finish();
 	}
 
-	
+	@Override
+	protected void onPermissionsGranted() {
+		// Permissions were granted via the dialog, now initialize
+		initializeApp();
+	}
+
+
 	@Override
 	protected void onResume() {
 		super.onResume();
+
+		// Don't sync if we're waiting for permissions
+		if (waitingForPermissions) {
+			return;
+		}
+
+		// Only sync if we have permissions
+		if (!PermissionHelper.hasAllPermissions(this)) {
+			return;
+		}
+
 		ServiceManager serviceManager = new ServiceManager(this);
 		ServiceRequest sr = serviceManager.getServiceRequest();
 		for( Entry<Long, Collection> c : Collection.getAllCollections(this).entrySet() ) {
@@ -89,11 +120,11 @@ public class aCal extends AcalActivity {
 		}
 	}
 
-	
+
 	public static void startPreferredView( SharedPreferences sPrefs, Activity c, boolean mayStartServerConfig ) {
 		Bundle bundle = new Bundle();
 		Intent startIntent = null;
-		
+
 		if ( mayStartServerConfig && prefs.getInt(PrefNames.serverIsConfigured, 0) == 0 ) {
 			startIntent = new Intent(c, NewServerConfiguration.class);
 		}

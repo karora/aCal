@@ -25,25 +25,35 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.format.DateFormat;
 
+import com.morphoss.acal.activity.AcalActivity;
 import com.morphoss.acal.activity.JournalListView;
 import com.morphoss.acal.service.aCalService;
 
-public class aCalNotes extends Activity {
-	
-	final public static String TAG = "aCalNotes"; 
+public class aCalNotes extends AcalActivity {
 
-	private SharedPreferences prefs;	
+	final public static String TAG = "aCalNotes";
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		// Check for required permissions before proceeding
+		if (!checkPermissions()) {
+			// Permission request in progress, wait for callback
+			return;
+		}
+
+		// Permissions granted, proceed with initialization
+		initializeApp();
+	}
+
+	/**
+	 * Initialize the app after permissions are granted.
+	 */
+	private void initializeApp() {
 		// make sure aCalService is running
 		Intent serviceIntent = new Intent(this, aCalService.class);
 		serviceIntent.putExtra("UISTARTED", System.currentTimeMillis());
 		this.startService(serviceIntent);
-
-		// Read our preference for which view should be the default
-		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
 		// Set all default preferences to reasonable values
 		PreferenceManager.setDefaultValues(this, R.xml.main_preferences, false);
@@ -54,17 +64,14 @@ public class aCalNotes extends Activity {
 			prefs.edit().putBoolean(getString(R.string.prefTwelveTwentyfour), DateFormat.is24HourFormat(this)).commit();
 		}
 
-//		try {
-//			int thisRevision = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-//			if ( lastRevision < thisRevision ) {
-//				startActivity(new Intent(this, ShowUpgradeChanges.class));
-//			}
-//			else { 
-				startPreferredView(prefs,this);
-//			}
-//		}
-//		catch (NameNotFoundException e) { }
+		startPreferredView(prefs, this);
 		this.finish();
+	}
+
+	@Override
+	protected void onPermissionsGranted() {
+		// Permissions were granted via the dialog, now initialize
+		initializeApp();
 	}
 
 	@Override
@@ -72,16 +79,10 @@ public class aCalNotes extends Activity {
 		super.onResume();
 	}
 
-	
+
 	public static void startPreferredView( SharedPreferences sPrefs, Activity c ) {
 		Bundle bundle = new Bundle();
-		Intent startIntent = null;
-//		if ( sPrefs.getBoolean(c.getString(R.string.prefTasksView), false) ) {
-//			startIntent = new Intent(c, TodoListView.class);
-//		}
-//		else {
-			startIntent = new Intent(c, JournalListView.class);
-//		}
+		Intent startIntent = new Intent(c, JournalListView.class);
 		startIntent.putExtras(bundle);
 		c.startActivity(startIntent);
 	}
