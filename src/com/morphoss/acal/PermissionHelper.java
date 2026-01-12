@@ -40,13 +40,30 @@ public class PermissionHelper {
      * The core permissions required for aCal to function.
      * These are "dangerous" permissions that require runtime consent on API 23+.
      */
-    public static final String[] REQUIRED_PERMISSIONS = {
+    private static final String[] REQUIRED_PERMISSIONS_BASE = {
         Manifest.permission.READ_CALENDAR,
         Manifest.permission.WRITE_CALENDAR,
         Manifest.permission.READ_CONTACTS,
-        Manifest.permission.WRITE_CONTACTS,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
+        Manifest.permission.WRITE_CONTACTS
     };
+
+    /**
+     * Get the required permissions for the current API level.
+     * Storage permission is only needed on API 28 and below; scoped storage
+     * on API 29+ means WRITE_EXTERNAL_STORAGE has no effect.
+     */
+    public static String[] getRequiredPermissions() {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            return new String[] {
+                Manifest.permission.READ_CALENDAR,
+                Manifest.permission.WRITE_CALENDAR,
+                Manifest.permission.READ_CONTACTS,
+                Manifest.permission.WRITE_CONTACTS,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            };
+        }
+        return REQUIRED_PERMISSIONS_BASE;
+    }
 
     /**
      * Check if runtime permission handling is needed (API 23+).
@@ -66,7 +83,7 @@ public class PermissionHelper {
             return true;
         }
 
-        for (String permission : REQUIRED_PERMISSIONS) {
+        for (String permission : getRequiredPermissions()) {
             if (activity.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
@@ -86,7 +103,7 @@ public class PermissionHelper {
         }
 
         List<String> missing = new ArrayList<>();
-        for (String permission : REQUIRED_PERMISSIONS) {
+        for (String permission : getRequiredPermissions()) {
             if (activity.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 missing.add(permission);
             }
@@ -149,7 +166,7 @@ public class PermissionHelper {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String permission : REQUIRED_PERMISSIONS) {
+            for (String permission : getRequiredPermissions()) {
                 if (activity.shouldShowRequestPermissionRationale(permission)) {
                     return true;
                 }
@@ -164,7 +181,6 @@ public class PermissionHelper {
      * @return A string explaining why the app needs these permissions
      */
     public static String getPermissionRationale() {
-        return "aCal needs access to your calendar and contacts to sync with your CalDAV/CardDAV server. " +
-               "Storage access is needed to import and export calendar files.";
+        return "aCal needs access to your calendar and contacts to sync with your CalDAV/CardDAV server.";
     }
 }

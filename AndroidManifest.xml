@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.PERSISTENT_ACTIVITY" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
@@ -52,7 +52,8 @@
 
         <activity
             android:name="aCal"
-            android:label="@string/appName">
+            android:label="@string/appName"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -62,7 +63,8 @@
             android:name="aCalTasks"
             android:description="@string/appDescriptionTasks"
             android:icon="@drawable/ic_launcher_tasks"
-            android:label="@string/appNameTasks">
+            android:label="@string/appNameTasks"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -72,7 +74,8 @@
             android:name="aCalNotes"
             android:description="@string/appDescriptionNotes"
             android:icon="@drawable/ic_launcher_journals"
-            android:label="@string/appNameNotes">
+            android:label="@string/appNameNotes"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -353,7 +356,9 @@
                 android:resource="@xml/authenticator" />
         </service>
 
-        <receiver android:name="com.morphoss.acal.receivers.StartUpIntentReceiver">
+        <receiver
+            android:name="com.morphoss.acal.receivers.StartUpIntentReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <category android:name="android.intent.category.HOME" />
@@ -371,14 +376,16 @@
         </receiver>
         <receiver
             android:name=".receivers.TimezoneChangedReceiver"
-            android:enabled="true">
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
         </receiver>
         <receiver
             android:name=".receivers.iMIPReceiver"
-            android:enabled="true">
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
