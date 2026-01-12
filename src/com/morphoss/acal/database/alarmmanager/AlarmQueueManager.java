@@ -482,6 +482,7 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
 
 		/**
 		 * Schedule the next alarm intent - Should be called whenever there is a change to the db.
+		 * Uses setAlarmClock() for exact timing and status bar visibility.
 		 */
 		public void scheduleAlarmIntent() {
 			AlarmRow next = getNextAlarmFuture();
@@ -495,7 +496,11 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
 			Log.i(TAG, "Scheduling Alarm wakeup for "+ ((ttf - System.currentTimeMillis())/1000)+" seconds from now at "+ttfHuman.toString());
 			Intent intent = new Intent(context, AlarmActivity.class);
 			PendingIntent alarmIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
-			alarmManager.set(AlarmManager.RTC_WAKEUP, ttf, alarmIntent);
+
+			// Use setAlarmClock for exact alarm timing - works reliably even in Doze mode
+			// and shows the alarm in the status bar
+			AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(ttf, alarmIntent);
+			alarmManager.setAlarmClock(alarmClockInfo, alarmIntent);
 		}
 
 		public void logAlarmQueue() {

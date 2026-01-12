@@ -28,6 +28,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
@@ -394,7 +395,12 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 		Intent notificationIntent = new Intent(this, AlarmActivity.class);
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
-		Notification notification = new Notification.Builder(this)
+		Notification.Builder builder = new Notification.Builder(this);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			builder.setChannelId(Constants.ALARM_NOTIFICATION_CHANNEL_ID);
+		}
+
+		Notification notification = builder
 			.setSmallIcon(icon)
 			.setTicker(text)
 			.setContentTitle(contentTitle)

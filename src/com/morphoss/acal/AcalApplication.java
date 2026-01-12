@@ -3,6 +3,9 @@ package com.morphoss.acal;
 import java.util.HashMap;
 
 import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -26,6 +29,27 @@ public class AcalApplication extends Application {
 
     	s_instance = this;
 
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        createNotificationChannel();
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                Constants.ALARM_NOTIFICATION_CHANNEL_ID,
+                "Calendar Alarms",
+                NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Notifications for calendar event alarms");
+            channel.enableVibration(true);
+            channel.enableLights(true);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+        }
     }
 
     private static Context getContext(){
