@@ -8,6 +8,7 @@ import java.util.concurrent.Semaphore;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.os.Build;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -482,7 +483,7 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
 
 		/**
 		 * Schedule the next alarm intent - Should be called whenever there is a change to the db.
-		 * Uses setAlarmClock() for exact timing and status bar visibility.
+		 * Uses setAlarmClock() for exact timing and status bar visibility when permitted.
 		 */
 		public void scheduleAlarmIntent() {
 			AlarmRow next = getNextAlarmFuture();
@@ -497,10 +498,15 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
 			Intent intent = new Intent(context, AlarmActivity.class);
 			PendingIntent alarmIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
-			// Use setAlarmClock for exact alarm timing - works reliably even in Doze mode
-			// and shows the alarm in the status bar
-			AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(ttf, alarmIntent);
-			alarmManager.setAlarmClock(alarmClockInfo, alarmIntent);
+			// Use setAlarmClock for exact alarm timing when permitted
+			// Falls back to inexact set() if exact alarm permission not granted
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+				Log.w(TAG, "Exact alarm permission not granted, using inexact alarm");
+				alarmManager.set(AlarmManager.RTC_WAKEUP, ttf, alarmIntent);
+			} else {
+				AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(ttf, alarmIntent);
+				alarmManager.setAlarmClock(alarmClockInfo, alarmIntent);
+			}
 		}
 
 		public void logAlarmQueue() {
