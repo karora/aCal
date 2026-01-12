@@ -1,4 +1,6 @@
-aCal is licensed under the GNU GPL.
+aCal is an Android calendar application that syncs with CalDAV/CardDAV servers. It supports events, tasks, and notes with full iCalendar (RFC 5545) and WebDAV (RFC 4918) protocol implementation.
+
+aCal is licensed under the GNU GPLv3.
 
 aCal also uses the dnsjava library for doing DNS lookups for SRV records.  This library
 which is licensed under the BSD license is available at http://www.xbill.org/dnsjava/
