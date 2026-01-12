@@ -20,8 +20,13 @@ package com.morphoss.acal;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.provider.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -182,5 +187,104 @@ public class PermissionHelper {
      */
     public static String getPermissionRationale() {
         return "aCal needs access to your calendar and contacts to sync with your CalDAV/CardDAV server.";
+    }
+
+    // ========== Alarm-related permissions ==========
+
+    public static final int ALARM_PERMISSION_REQUEST_CODE = 1002;
+
+    /**
+     * Check if POST_NOTIFICATIONS permission is needed and not granted.
+     * Required on Android 13+ (API 33) to show any notifications.
+     */
+    public static boolean needsNotificationPermission(Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED;
+        }
+        return false;
+    }
+
+    /**
+     * Request the POST_NOTIFICATIONS permission.
+     */
+    public static void requestNotificationPermission(Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            activity.requestPermissions(
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                ALARM_PERMISSION_REQUEST_CODE
+            );
+        }
+    }
+
+    /**
+     * Check if exact alarm permission is needed and not granted.
+     * Required on Android 12+ (API 31) for exact alarms.
+     */
+    public static boolean needsExactAlarmPermission(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            return !alarmManager.canScheduleExactAlarms();
+        }
+        return false;
+    }
+
+    /**
+     * Get the intent to open exact alarm settings.
+     */
+    public static Intent getExactAlarmSettingsIntent(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+        }
+        return null;
+    }
+
+    /**
+     * Check if full-screen intent permission is needed and not granted.
+     * Required on Android 14+ (API 34) for full-screen alarm notifications.
+     */
+    public static boolean needsFullScreenIntentPermission(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            return !nm.canUseFullScreenIntent();
+        }
+        return false;
+    }
+
+    /**
+     * Get the intent to open app notification settings where full-screen intent can be enabled.
+     */
+    public static Intent getFullScreenIntentSettingsIntent(Context context) {
+        Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+        intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName());
+        return intent;
+    }
+
+    /**
+     * Check if any alarm-related permissions are missing.
+     */
+    public static boolean hasAlarmPermissionIssues(Activity activity) {
+        return needsNotificationPermission(activity)
+            || needsExactAlarmPermission(activity)
+            || needsFullScreenIntentPermission(activity);
+    }
+
+    /**
+     * Get a description of what alarm permissions are missing.
+     */
+    public static String getAlarmPermissionStatus(Activity activity) {
+        StringBuilder sb = new StringBuilder();
+
+        if (needsNotificationPermission(activity)) {
+            sb.append("- Notification permission required\n");
+        }
+        if (needsExactAlarmPermission(activity)) {
+            sb.append("- Exact alarm permission required (for precise alarm timing)\n");
+        }
+        if (needsFullScreenIntentPermission(activity)) {
+            sb.append("- Full-screen notification permission required (for alarm display)\n");
+        }
+
+        return sb.toString();
     }
 }

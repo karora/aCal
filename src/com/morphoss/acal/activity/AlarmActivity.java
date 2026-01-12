@@ -34,8 +34,6 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
-import android.telephony.PhoneStateListener;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -88,12 +86,10 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 	private Vibrator vibrator;
 	private final long[] pattern = { 0,1000, 2000,1000, 2000,1000, 2000,1000, 2000,1000, 2000,1000, 2000,1000, 2000,1000, 2000,1000, 2000,1000, 2000};
 
-	//Phone State
-	TelephonyManager telephonyManager;
+	//Audio State
 	private boolean audioPlaying = false;
 	private boolean audioInterupted = false;
 	private boolean vibrateMode = false;
-	private boolean inCall = false;
 	private boolean shortPausing = false;
 
 	//Other vars
@@ -125,17 +121,8 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 		audioManager = (AudioManager)this.getSystemService(AUDIO_SERVICE);
 		vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		telephonyManager = (TelephonyManager)this.getSystemService(TELEPHONY_SERVICE);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		
-		//Before continuing - check to see if we are already in a call
-		switch (telephonyManager.getCallState()) {
-			case TelephonyManager.CALL_STATE_OFFHOOK:
-			case TelephonyManager.CALL_STATE_RINGING:
-				shortPause();
-				return;
-		}
-		
+
 		//Configure Power
 		wl = pm.newWakeLock(
 				PowerManager.FULL_WAKE_LOCK
@@ -165,10 +152,6 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 			this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		}
 
-		//Configure Telephony Manager
-		 telephonyManager.listen(new MyPhoneStateListener(), PhoneStateListener.LISTEN_CALL_STATE);
-
-		
 		//prepare gui elements
 		header = (TextView) this.findViewById(R.id.AlarmTitle);
 		title = (TextView) this.findViewById(R.id.AlarmContentTitleTextView);
@@ -361,23 +344,17 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 			//If MediaPlayer is null, then something is wrong with sound - set up vibrator instead
 			if ( mediaPlayer == null ) vibrateMode = true;
 
-			//Finally, trigger media player or vibrator if we are NOT in a call
+			//Finally, trigger media player or vibrator
 			if (vibrateMode) {
-				if (!inCall) vibrator.vibrate(pattern, -1);
+				vibrator.vibrate(pattern, -1);
 			}
 			else {
 				for( int i=0; i<(PAUSE_BEFORE_AUDIO / 20); i++ ) {
 					try { Thread.sleep(20); } catch ( InterruptedException e ) { }
 				}
-				if (!inCall) {
-					this.audioPlaying = true;
-					this.audioInterupted = false;
-					mediaPlayer.start();			
-				}
-				else {
-					this.audioPlaying = false;
-					this.audioInterupted = true;
-				}
+				this.audioPlaying = true;
+				this.audioInterupted = false;
+				mediaPlayer.start();
 			} 
 		}
 	}
@@ -427,58 +404,4 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 		this.shortPausing = true;
 		this.finish();
 	}
-
-	/********************************************************
-	 *						PHONE STATE						*
-	 *	Update media and Vibration when phone state changes *
-	 ********************************************************/
-
-	public class MyPhoneStateListener extends PhoneStateListener {
-	
-		@Override
-		public void onCallStateChanged(int state, String incomingNumber) {
-			if (Constants.LOG_DEBUG) {
-				Log.d(TAG, "Phone State has changed");
-			}
-			switch (state) {
-				case TelephonyManager.CALL_STATE_RINGING: ringing();
-					break;
-				case TelephonyManager.CALL_STATE_OFFHOOK: inCall();	
-					break;
-				case TelephonyManager.CALL_STATE_IDLE:	idle();
-					break;
-			}
-		}
-		
-		private void ringing() {
-			inCall = true;
-			if (audioPlaying && !audioInterupted) {
-				if (Constants.LOG_DEBUG) {
-					Log.d(TAG, "Phone is ringing, Interupting audio playback");
-				}
-				audioInterupted = true;
-				mediaPlayer.pause();
-			}
-		}
-		private void inCall() {
-			if (Constants.LOG_DEBUG) {
-				Log.d(TAG, "Phone is off hook");
-			}
-			ringing();
-		}
-		private void idle() {
-			if (Constants.LOG_DEBUG) {
-				Log.d(TAG, "Phone is idle.");
-			}
-			inCall = false;
-			if (audioInterupted && mediaPlayer != null) {
-				if (Constants.LOG_DEBUG) {
-					Log.d(TAG, "Restarting interupted audio");
-				}
-				audioInterupted = false;
-				audioPlaying = true;
-				mediaPlayer.start();
-			}
-		}
-	};
 }

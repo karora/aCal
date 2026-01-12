@@ -23,7 +23,7 @@ import android.util.Log;
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.acaltime.AcalDateRange;
 import com.morphoss.acal.acaltime.AcalDateTime;
-import com.morphoss.acal.activity.AlarmActivity;
+import com.morphoss.acal.activity.AlarmReceiver;
 import com.morphoss.acal.database.DMAction;
 import com.morphoss.acal.database.DMInsertQuery;
 import com.morphoss.acal.database.DMQueryList;
@@ -484,6 +484,7 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
 		/**
 		 * Schedule the next alarm intent - Should be called whenever there is a change to the db.
 		 * Uses setAlarmClock() for exact timing and status bar visibility when permitted.
+		 * Targets AlarmReceiver which posts a full-screen notification (required for Android 10+).
 		 */
 		public void scheduleAlarmIntent() {
 			AlarmRow next = getNextAlarmFuture();
@@ -495,8 +496,11 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
 			long ttf = next.getTimeToFire();
 			AcalDateTime ttfHuman = AcalDateTime.getInstance().setMillis(ttf);
 			Log.i(TAG, "Scheduling Alarm wakeup for "+ ((ttf - System.currentTimeMillis())/1000)+" seconds from now at "+ttfHuman.toString());
-			Intent intent = new Intent(context, AlarmActivity.class);
-			PendingIntent alarmIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+
+			// Target AlarmReceiver instead of AlarmActivity directly
+			// The receiver posts a full-screen notification to bypass BAL restrictions
+			Intent intent = new Intent(context, AlarmReceiver.class);
+			PendingIntent alarmIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
 			// Use setAlarmClock for exact alarm timing when permitted
 			// Falls back to inexact set() if exact alarm permission not granted

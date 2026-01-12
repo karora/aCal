@@ -5,6 +5,9 @@ import java.util.HashMap;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -39,6 +42,12 @@ public class AcalApplication extends Application {
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager = getSystemService(NotificationManager.class);
+
+            // Delete old channel to ensure settings are updated
+            // (Android caches channel settings and won't update them otherwise)
+            manager.deleteNotificationChannel(Constants.ALARM_NOTIFICATION_CHANNEL_ID);
+
             NotificationChannel channel = new NotificationChannel(
                 Constants.ALARM_NOTIFICATION_CHANNEL_ID,
                 "Calendar Alarms",
@@ -46,8 +55,24 @@ public class AcalApplication extends Application {
             );
             channel.setDescription("Notifications for calendar event alarms");
             channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 1000, 500, 1000, 500, 1000});
             channel.enableLights(true);
-            NotificationManager manager = getSystemService(NotificationManager.class);
+            channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+
+            // Set alarm sound with proper audio attributes
+            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmSound == null) {
+                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            }
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+            channel.setSound(alarmSound, audioAttributes);
+
+            // Allow this channel to bypass Do Not Disturb
+            channel.setBypassDnd(true);
+
             manager.createNotificationChannel(channel);
         }
     }

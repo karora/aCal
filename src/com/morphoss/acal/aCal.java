@@ -60,6 +60,20 @@ public class aCal extends AcalActivity {
 	 * Initialize the app after permissions are granted.
 	 */
 	private void initializeApp() {
+		// Check alarm permissions (notification, exact alarm, full-screen)
+		// If permissions are missing, dialogs will be shown and we wait for callback
+		if (!checkAlarmPermissions()) {
+			return; // Wait for permission flow to complete
+		}
+
+		// All permissions granted, continue with startup
+		completeStartup();
+	}
+
+	/**
+	 * Complete the startup process after all permissions are granted.
+	 */
+	private void completeStartup() {
 		// make sure aCalService is running
 		Intent serviceIntent = new Intent(this, aCalService.class);
 		serviceIntent.putExtra("UISTARTED", System.currentTimeMillis());
@@ -93,6 +107,12 @@ public class aCal extends AcalActivity {
 		initializeApp();
 	}
 
+	@Override
+	protected void onAlarmPermissionsChecked() {
+		// Alarm permission flow complete, continue with startup
+		completeStartup();
+	}
+
 
 	@Override
 	protected void onResume() {
@@ -110,6 +130,10 @@ public class aCal extends AcalActivity {
 
 		ServiceManager serviceManager = new ServiceManager(this);
 		ServiceRequest sr = serviceManager.getServiceRequest();
+		if (sr == null) {
+			Log.w(TAG, "ServiceRequest is null, service may not be bound yet");
+			return;
+		}
 		for( Entry<Long, Collection> c : Collection.getAllCollections(this).entrySet() ) {
 			try {
 				sr.syncCollectionNow(c.getKey());
