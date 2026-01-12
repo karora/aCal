@@ -31,13 +31,14 @@ android {
         applicationId "com.morphoss.acal"
         minSdkVersion 14
         targetSdkVersion 28
+        compileSdkVersion 36
         versionCode 63
         versionName "1.63"
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     sourceSets {
