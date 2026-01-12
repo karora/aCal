@@ -18,6 +18,7 @@
 
 package com.morphoss.acal.davacal;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -333,9 +334,8 @@ public class AcalProperty {
 		Matcher m = propertiesUnescaped.matcher(name);
 		String escaped_value = (m.matches() ? value : value.replaceAll("([,\\\\])", "\\\\$1").replaceAll("\n", "\\\\N"));
 
-		System.setProperty("file.encoding", "UTF-8");
-		int paramLength = paramBuilder.toString().getBytes().length;
-		int valueLength = escaped_value.getBytes().length;
+		int paramLength = paramBuilder.toString().getBytes(StandardCharsets.UTF_8).length;
+		int valueLength = escaped_value.getBytes(StandardCharsets.UTF_8).length;
 
 		paramBuilder.append(':');
 		if ( paramLength + valueLength >= 72 ) {
