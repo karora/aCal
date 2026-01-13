@@ -7,7 +7,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.PERSISTENT_ACTIVITY" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
@@ -46,7 +48,7 @@
         android:name="com.morphoss.acal.AcalApplication"
         android:allowBackup="false"
         android:description="@string/appDescription"
-        android:icon="@drawable/ic_launcher_events"
+        android:icon="@drawable/ic_launcher_calendar"
         android:label="@string/appName"
         android:theme="@android:style/Theme.NoTitleBar"
         android:usesCleartextTraffic="true">
@@ -56,8 +58,8 @@
 
         <activity
             android:name="aCal"
-            android:label="@string/appName"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/appName">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -66,9 +68,9 @@
         <activity
             android:name="aCalTasks"
             android:description="@string/appDescriptionTasks"
+            android:exported="true"
             android:icon="@drawable/ic_launcher_tasks"
-            android:label="@string/appNameTasks"
-            android:exported="true">
+            android:label="@string/appNameTasks">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -77,9 +79,9 @@
         <activity
             android:name="aCalNotes"
             android:description="@string/appDescriptionNotes"
+            android:exported="true"
             android:icon="@drawable/ic_launcher_journals"
-            android:label="@string/appNameNotes"
-            android:exported="true">
+            android:label="@string/appNameNotes">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
