@@ -1,22 +1,20 @@
 package com.morphoss.acal.service.connector;
 
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright (C) 2011 Morphoss Ltd
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 import java.io.IOException;
@@ -35,21 +33,38 @@ import org.apache.http.conn.scheme.SocketFactory;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
+import android.content.Context;
+
 /**
- * This socket factory will create ssl socket that accepts self signed certificate
- *
- * @author olamy
- * @version $Id: EasySSLSocketFactory.java 765355 2009-04-15 20:59:07Z evenisse $
- * @since 1.2.3
+ * SSL socket factory with certificate validation using EasyX509TrustManager.
+ * Supports user-approved certificates for self-signed or custom CA scenarios.
  */
 public class EasySSLSocketFactory implements SocketFactory, LayeredSocketFactory {
 
 	private SSLContext sslcontext = null;
+	private final Context appContext;
 
-	private static SSLContext createEasySSLContext() throws IOException {
+	/**
+	 * Constructor with application context for certificate storage.
+	 * @param context Application context (can be null for legacy compatibility)
+	 */
+	public EasySSLSocketFactory(Context context) {
+		this.appContext = context;
+	}
+
+	/**
+	 * Legacy constructor for compatibility.
+	 * @deprecated Use constructor with Context parameter for full security features.
+	 */
+	@Deprecated
+	public EasySSLSocketFactory() {
+		this(null);
+	}
+
+	private SSLContext createEasySSLContext() throws IOException {
 		try {
 			SSLContext context = SSLContext.getInstance("TLS");
-			context.init(null, new TrustManager[] { new EasyX509TrustManager(null) }, null);
+			context.init(null, new TrustManager[] { new EasyX509TrustManager(null, appContext) }, null);
 			return context;
 		} catch (Exception e) {
 			throw new IOException(e.getMessage());

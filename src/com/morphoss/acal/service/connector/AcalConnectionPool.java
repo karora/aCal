@@ -16,19 +16,30 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
+import android.content.Context;
 import android.os.Build;
 
 import com.morphoss.acal.service.aCalService;
 
 public class AcalConnectionPool {
-	
+
 	public static final int	DEFAULT_BUFFER_SIZE	= 4096;
-	
+
 	private static HttpParams httpParams = null;
 	private static SchemeRegistry schemeRegistry = null;
 	private static ThreadSafeClientConnManager connectionPool = null;
-	
-	private static String userAgent = null; 
+	private static Context appContext = null;
+
+	private static String userAgent = null;
+
+	/**
+	 * Initialize the connection pool with application context.
+	 * Should be called once during app initialization.
+	 * @param context Application context for certificate storage
+	 */
+	public static void initialize(Context context) {
+		appContext = context.getApplicationContext();
+	} 
 	
 	public static HttpParams defaultHttpParams(int socketTimeOut, int connectionTimeOut) {
 		if ( httpParams == null ) {
@@ -70,7 +81,7 @@ public class AcalConnectionPool {
 		if ( connectionPool == null ) {
 			schemeRegistry = new SchemeRegistry();
 			schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
-			Scheme httpsScheme = new Scheme("https",  new EasySSLSocketFactory(), 443);
+			Scheme httpsScheme = new Scheme("https", new EasySSLSocketFactory(appContext), 443);
 			schemeRegistry.register(httpsScheme);
 			connectionPool = new ThreadSafeClientConnManager(httpParams, schemeRegistry);
 		}

@@ -19,6 +19,7 @@ import android.util.Log;
 
 import com.morphoss.acal.dataservice.Resource;
 import com.morphoss.acal.providers.Timezones;
+import com.morphoss.acal.service.connector.AcalConnectionPool;
 
 public class AcalApplication extends Application {
 
@@ -38,6 +39,8 @@ public class AcalApplication extends Application {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
+        // Initialize connection pool with app context for certificate storage
+        AcalConnectionPool.initialize(this);
     }
 
     private void createNotificationChannel() {
