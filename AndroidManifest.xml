@@ -46,10 +46,10 @@
         android:smallScreens="true" />
     <application
         android:name="com.morphoss.acal.AcalApplication"
-        android:allowBackup="false"
         android:description="@string/appDescription"
-        android:icon="@drawable/ic_launcher_calendar"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/appName"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@android:style/Theme.NoTitleBar"
         android:usesCleartextTraffic="true">
         <uses-library
