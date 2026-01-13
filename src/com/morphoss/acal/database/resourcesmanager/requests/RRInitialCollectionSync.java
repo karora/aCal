@@ -124,13 +124,13 @@ public class RRInitialCollectionSync implements ResourceRequest {
 		ContentValues serverData;
 		try {
 			// get serverData
-			
+
 			serverData = processor.getServerRow(serverId);
 			if (serverData == null) {
 				setProcessed();
 				throw new ResourceProcessingException("No record for ID " + serverId);
 			}
-			requestor = AcalRequestor.fromServerValues(serverData);
+			requestor = AcalRequestor.fromServerValues(serverData, processor.getContext());
 			requestor.interpretUriString(collectionPath);
 		}
 		catch (Exception e) {

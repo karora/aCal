@@ -75,7 +75,7 @@ public class HomeSetDiscovery extends ServiceJob {
 		DavNode root = null;
 		try {
 			ContentValues serverData = Servers.getRow(serverId, cr);
-			requestor = AcalRequestor.fromServerValues(serverData);
+			requestor = AcalRequestor.fromServerValues(serverData, context);
 			root = requestor.doXmlRequest("PROPFIND", null, pHomeHeaders, pHomeData);
 		}
 		catch (Exception e) {

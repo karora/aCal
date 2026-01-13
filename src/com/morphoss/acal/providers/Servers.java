@@ -40,6 +40,7 @@ import com.morphoss.acal.database.AcalDBHelper;
 import com.morphoss.acal.database.resourcesmanager.ResourceManager;
 import com.morphoss.acal.database.resourcesmanager.requests.RRDeleteByCollectionId;
 import com.morphoss.acal.dataservice.Collection;
+import com.morphoss.acal.security.CredentialManager;
 
 /**
  * <P>This ContentProvider interfaces with the dav_server table in the database.</P>
@@ -163,6 +164,9 @@ public class Servers extends ContentProvider {
 	 */
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
+		// Encrypt password before storing
+		encryptPassword(values);
+
 		//---add a new server---
 		long rowID = AcalDB.insert(
 				DATABASE_TABLE, "", values);
@@ -216,6 +220,9 @@ public class Servers extends ContentProvider {
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		int count = 0;
+
+		// Encrypt password before storing
+		encryptPassword(values);
 
 		try {
 			switch (uriMatcher.match(uri)) {
@@ -345,6 +352,57 @@ public class Servers extends ContentProvider {
 		}
 		finally {
 			c.close();
+		}
+		return serverData;
+	}
+
+	/**
+	 * Encrypt password in ContentValues if present.
+	 */
+	private void encryptPassword(ContentValues values) {
+		if (values != null && values.containsKey(PASSWORD)) {
+			String password = values.getAsString(PASSWORD);
+			if (password != null && !password.isEmpty()) {
+				CredentialManager cm = CredentialManager.getInstance(getContext());
+				// Only encrypt if not already encrypted
+				if (!cm.isEncrypted(password)) {
+					String encrypted = cm.encrypt(password);
+					if (encrypted != null) {
+						values.put(PASSWORD, encrypted);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Decrypt password in ContentValues if present.
+	 */
+	public static void decryptPassword(Context context, ContentValues values) {
+		if (values != null && values.containsKey(PASSWORD)) {
+			String password = values.getAsString(PASSWORD);
+			if (password != null && !password.isEmpty()) {
+				CredentialManager cm = CredentialManager.getInstance(context);
+				if (cm.isEncrypted(password)) {
+					String decrypted = cm.decrypt(password);
+					if (decrypted != null) {
+						values.put(PASSWORD, decrypted);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Static method to retrieve a particular database row with decrypted password.
+	 * @param serverId
+	 * @param context
+	 * @return A ContentValues which is the server row with decrypted password, or null
+	 */
+	public static ContentValues getRowDecrypted(int serverId, Context context) {
+		ContentValues serverData = getRow(serverId, context.getContentResolver());
+		if (serverData != null) {
+			decryptPassword(context, serverData);
 		}
 		return serverData;
 	}

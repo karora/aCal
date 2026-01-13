@@ -49,6 +49,7 @@ import com.morphoss.acal.database.resourcesmanager.ResourceManager.WriteableReso
 import com.morphoss.acal.database.resourcesmanager.ResourceProcessingException;
 import com.morphoss.acal.database.resourcesmanager.requesttypes.BlockingResourceRequest;
 import com.morphoss.acal.providers.DavCollections;
+import com.morphoss.acal.providers.Servers;
 import com.morphoss.acal.service.connector.AcalRequestor;
 import com.morphoss.acal.service.connector.ConnectionFailedException;
 import com.morphoss.acal.service.connector.SendRequestFailedException;
@@ -192,6 +193,7 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 			processor.deleteInvalidCollectionRecord(collectionId);
 			return;
 		}
+		Servers.decryptPassword(processor.getContext(), serverData);
 		requestor.applyFromServer(serverData);
 
 		String collectionPath = collectionData.getAsString(DavCollections.COLLECTION_PATH);
@@ -430,6 +432,7 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 
 		try {
 			ContentValues serverData = processor.getServerRow(collectionData.getAsInteger(DavCollections.SERVER_ID));
+			Servers.decryptPassword(processor.getContext(), serverData);
 			requestor.applyFromServer(serverData);
 			requestor.doRequest("PROPPATCH", collectionData.getAsString(DavCollections.COLLECTION_PATH),
 						proppatchHeaders, proppatchRequest);

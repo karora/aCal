@@ -1051,7 +1051,7 @@ public class SyncCollectionContents extends ServiceJob {
 			// get serverData
 			serverData = Servers.getRow(serverId, context.getContentResolver());
 			if (serverData == null) throw new Exception("No record for ID " + serverId);
-			requestor = AcalRequestor.fromServerValues(serverData);
+			requestor = AcalRequestor.fromServerValues(serverData, context);
 			requestor.setPath(collectionPath);
 		}
 		catch (Exception e) {

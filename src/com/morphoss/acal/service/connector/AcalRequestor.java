@@ -54,6 +54,7 @@ import org.apache.http.params.HttpParams;
 import org.json.JSONObject;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
@@ -166,8 +167,27 @@ public class AcalRequestor {
 	 * so you may need to specify a different path on the actual request(s).
 	 * @param cvServerData
 	 * @return
+	 * @deprecated Use fromServerValues(ContentValues, Context) to ensure password decryption
 	 */
+	@Deprecated
 	public static AcalRequestor fromServerValues( ContentValues cvServerData ) {
+		AcalRequestor result = new AcalRequestor();
+		result.applyFromServer(cvServerData, false);
+		return result;
+	}
+
+	/**
+	 * Construct a new AcalRequestor from the values in a ContentValues which has been read
+	 * from a Server row in the database.  The path will be set to the principal-path value
+	 * so you may need to specify a different path on the actual request(s).
+	 * Decrypts the password if encrypted.
+	 * @param cvServerData
+	 * @param context For password decryption
+	 * @return
+	 */
+	public static AcalRequestor fromServerValues( ContentValues cvServerData, Context context ) {
+		// Decrypt password before using
+		Servers.decryptPassword(context, cvServerData);
 		AcalRequestor result = new AcalRequestor();
 		result.applyFromServer(cvServerData, false);
 		return result;

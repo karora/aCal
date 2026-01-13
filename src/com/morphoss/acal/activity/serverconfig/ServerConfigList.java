@@ -47,6 +47,7 @@ import com.morphoss.acal.Constants;
 import com.morphoss.acal.R;
 import com.morphoss.acal.ServiceManager;
 import com.morphoss.acal.providers.Servers;
+import com.morphoss.acal.security.CredentialManager;
 import com.morphoss.acal.service.ServiceRequest;
 
 /**
@@ -123,6 +124,11 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 		this.serverData = cqm.getRows();
 		mCursor.close();
 		cqm.close();
+
+		// Decrypt passwords for each server
+		for (ContentValues cv : this.serverData.values()) {
+			Servers.decryptPassword(this, cv);
+		}
 
 		// Store data in useful structures
 		this.serverNames = new String[this.serverData.size()];

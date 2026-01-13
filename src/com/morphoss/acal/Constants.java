@@ -41,6 +41,11 @@ public class Constants {
     public static final long SERVICE_WORKER_GRACE_PERIOD = 1000 * 60 * 60 * 1;        //Amount of time we will allow worker to be 'late' before assuming its hung
 
     /**
+     * Notification channel ID for calendar alarms (Android O+)
+     */
+    public static final String ALARM_NOTIFICATION_CHANNEL_ID = "acal_alarms";
+
+    /**
      * Generally useful patterns
      */
     public static final Pattern lineSplitter = Pattern.compile("\\r?\\n");

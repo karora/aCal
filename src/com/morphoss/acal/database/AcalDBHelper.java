@@ -28,6 +28,7 @@ import android.util.Log;
 
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.providers.Servers;
+import com.morphoss.acal.security.CredentialManager;
 
 /**
  * <p>
@@ -52,7 +53,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	/**
 	 * The version of this database. Used to determine if an upgrade is required.
 	 */
-	public static final int DB_VERSION = 21;
+	public static final int DB_VERSION = 22;
 
 
 
@@ -422,6 +423,17 @@ public class AcalDBHelper extends SQLiteOpenHelper {
                 db.execSQL(ALARM_TABLE_SQL);
                 db.execSQL(SET_ALARM_TABLE_DIRTY_SQL);
             }
+			if (oldVersion == 20) {
+				Log.i(TAG,"Updating database from version " + oldVersion);
+				oldVersion++;
+				// Version 21 was a no-op structural change
+			}
+			if (oldVersion == 21) {
+				Log.i(TAG,"Updating database from version " + oldVersion);
+				oldVersion++;
+				// Migrate plaintext passwords to encrypted storage
+				migratePasswordsToEncrypted(db);
+			}
 		}
 		catch( Exception e ) {
 			Log.e(TAG,"Failed to upgrade database carefully.", e);
@@ -572,6 +584,47 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 		}
 		catch( Exception e ) {
 			Log.e(TAG, "Database error recreating database", e);
+		}
+	}
+
+	/**
+	 * Migrate existing plaintext passwords to encrypted storage.
+	 * Called during database upgrade to version 22.
+	 */
+	private void migratePasswordsToEncrypted(SQLiteDatabase db) {
+		Log.i(TAG, "Migrating passwords to encrypted storage");
+		android.database.Cursor cursor = null;
+		try {
+			CredentialManager cm = CredentialManager.getInstance(context);
+
+			cursor = db.query(Servers.DATABASE_TABLE,
+					new String[]{Servers._ID, Servers.PASSWORD},
+					null, null, null, null, null);
+
+			if (cursor != null && cursor.moveToFirst()) {
+				do {
+					long id = cursor.getLong(0);
+					String password = cursor.getString(1);
+
+					if (password != null && !password.isEmpty() && !cm.isEncrypted(password)) {
+						String encrypted = cm.encrypt(password);
+						if (encrypted != null) {
+							android.content.ContentValues values = new android.content.ContentValues();
+							values.put(Servers.PASSWORD, encrypted);
+							db.update(Servers.DATABASE_TABLE, values,
+									Servers._ID + " = ?", new String[]{String.valueOf(id)});
+							Log.i(TAG, "Encrypted password for server ID: " + id);
+						}
+					}
+				} while (cursor.moveToNext());
+			}
+			Log.i(TAG, "Password migration completed");
+		} catch (Exception e) {
+			Log.e(TAG, "Error migrating passwords", e);
+		} finally {
+			if (cursor != null) {
+				cursor.close();
+			}
 		}
 	}
 }
