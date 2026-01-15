@@ -19,7 +19,6 @@
 package com.morphoss.acal.security;
 
 import android.content.Context;
-import android.os.Build;
 import android.provider.Settings;
 import android.security.KeyPairGeneratorSpec;
 import android.util.Base64;
@@ -150,13 +149,8 @@ public class CredentialManager {
     }
 
     private void initializeKey() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            // API 18+: Use Android Keystore
-            initializeKeystore();
-        } else {
-            // API 14-17: Use device-derived key
-            initializeFallbackKey();
-        }
+        // Use Android Keystore (available since API 18, minSdk is 23)
+        initializeKeystore();
     }
 
     private void initializeKeystore() {

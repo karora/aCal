@@ -4,7 +4,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
-import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -13,11 +12,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.ViewGroup;
 import android.widget.RemoteViews;
 
 import com.morphoss.acal.AcalDebug;
@@ -65,13 +62,11 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 	}
 
 	
-	@TargetApi(10)
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
 		if (Constants.LOG_DEBUG && Constants.debugWidget) Log.println(Constants.LOGD, TAG,
 				"onUpdate Called...");
 		if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Widget onUpdate started");
-		LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		for (int widgetId : appWidgetIds) {
 
 			Intent updateIntent = new Intent();	
@@ -87,18 +82,7 @@ public class ShowUpcomingWidgetProvider extends AppWidgetProvider {
 			
 			
 			RemoteViews views = new RemoteViews(context.getPackageName(),R.layout.show_upcoming_widget_layout);
-			if ( Build.VERSION.SDK_INT >= 7 ) {
-				try {
-					views.removeAllViews(R.id.upcoming_container);
-				}
-				catch( Exception e ) {
-					Log.i(TAG,"Probably running an old version of Android :-(",e);
-				}
-			}
-			else {
-				ViewGroup upcomingContainerGroup = (ViewGroup) inflater.inflate(R.layout.show_upcoming_widget_layout, null);
-				upcomingContainerGroup.removeAllViews();
-			}
+			views.removeAllViews(R.id.upcoming_container);
 			
 			//Used to calculate when we should trigger an update.
 			long timeOfNextEventEnd = Long.MAX_VALUE;

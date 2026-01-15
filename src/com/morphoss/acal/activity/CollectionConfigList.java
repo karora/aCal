@@ -374,7 +374,7 @@ public class CollectionConfigList extends PreferenceActivity
 	public boolean onPreferenceClick(Preference id) {
 		int collectionId = Integer.parseInt(id.getKey());
 		Intent i = this.getIntent();
-		if ( android.os.Build.VERSION.SDK_INT >= 7 && i != null && ACTION_CHOOSE_ADDRESSBOOK.equals(i.getAction()) ) {
+		if ( i != null && ACTION_CHOOSE_ADDRESSBOOK.equals(i.getAction()) ) {
 			createAuthenticatedAccount(collectionId);
 		}
 		else {

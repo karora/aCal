@@ -33,7 +33,7 @@ import java.util.List;
 
 /**
  * Helper class for handling runtime permissions on Android 6.0+ (API 23+).
- *
+ * <p>
  * Prior to API 23, permissions were granted at install time. Starting with
  * API 23, dangerous permissions must be requested at runtime.
  */
@@ -46,10 +46,10 @@ public class PermissionHelper {
      * These are "dangerous" permissions that require runtime consent on API 23+.
      */
     private static final String[] REQUIRED_PERMISSIONS_BASE = {
-        Manifest.permission.READ_CALENDAR,
-        Manifest.permission.WRITE_CALENDAR,
-        Manifest.permission.READ_CONTACTS,
-        Manifest.permission.WRITE_CONTACTS
+            Manifest.permission.READ_CALENDAR,
+            Manifest.permission.WRITE_CALENDAR,
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS
     };
 
     /**
@@ -59,22 +59,15 @@ public class PermissionHelper {
      */
     public static String[] getRequiredPermissions() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            return new String[] {
-                Manifest.permission.READ_CALENDAR,
-                Manifest.permission.WRITE_CALENDAR,
-                Manifest.permission.READ_CONTACTS,
-                Manifest.permission.WRITE_CONTACTS,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            return new String[]{
+                    Manifest.permission.READ_CALENDAR,
+                    Manifest.permission.WRITE_CALENDAR,
+                    Manifest.permission.READ_CONTACTS,
+                    Manifest.permission.WRITE_CONTACTS,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
             };
         }
         return REQUIRED_PERMISSIONS_BASE;
-    }
-
-    /**
-     * Check if runtime permission handling is needed (API 23+).
-     */
-    public static boolean needsRuntimePermissions() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
     }
 
     /**
@@ -84,10 +77,6 @@ public class PermissionHelper {
      * @return true if all permissions are granted, false otherwise
      */
     public static boolean hasAllPermissions(Activity activity) {
-        if (!needsRuntimePermissions()) {
-            return true;
-        }
-
         for (String permission : getRequiredPermissions()) {
             if (activity.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
@@ -103,10 +92,6 @@ public class PermissionHelper {
      * @return Array of permission strings that need to be requested
      */
     public static String[] getMissingPermissions(Activity activity) {
-        if (!needsRuntimePermissions()) {
-            return new String[0];
-        }
-
         List<String> missing = new ArrayList<>();
         for (String permission : getRequiredPermissions()) {
             if (activity.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
@@ -128,16 +113,14 @@ public class PermissionHelper {
             return false;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            activity.requestPermissions(missing, PERMISSION_REQUEST_CODE);
-        }
+        activity.requestPermissions(missing, PERMISSION_REQUEST_CODE);
         return true;
     }
 
     /**
      * Check if the permission request result indicates all permissions were granted.
      *
-     * @param requestCode The request code from onRequestPermissionsResult
+     * @param requestCode  The request code from onRequestPermissionsResult
      * @param grantResults The grant results array
      * @return true if this was our request and all permissions were granted
      */
@@ -166,15 +149,9 @@ public class PermissionHelper {
      * @return true if rationale should be shown for at least one permission
      */
     public static boolean shouldShowRationale(Activity activity) {
-        if (!needsRuntimePermissions()) {
-            return false;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String permission : getRequiredPermissions()) {
-                if (activity.shouldShowRequestPermissionRationale(permission)) {
-                    return true;
-                }
+        for (String permission : getRequiredPermissions()) {
+            if (activity.shouldShowRequestPermissionRationale(permission)) {
+                return true;
             }
         }
         return false;
@@ -200,7 +177,7 @@ public class PermissionHelper {
     public static boolean needsNotificationPermission(Activity activity) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             return activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED;
+                    != PackageManager.PERMISSION_GRANTED;
         }
         return false;
     }
@@ -211,8 +188,8 @@ public class PermissionHelper {
     public static void requestNotificationPermission(Activity activity) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             activity.requestPermissions(
-                new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                ALARM_PERMISSION_REQUEST_CODE
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    ALARM_PERMISSION_REQUEST_CODE
             );
         }
     }
@@ -265,8 +242,8 @@ public class PermissionHelper {
      */
     public static boolean hasAlarmPermissionIssues(Activity activity) {
         return needsNotificationPermission(activity)
-            || needsExactAlarmPermission(activity)
-            || needsFullScreenIntentPermission(activity);
+                || needsExactAlarmPermission(activity)
+                || needsFullScreenIntentPermission(activity);
     }
 
     /**
