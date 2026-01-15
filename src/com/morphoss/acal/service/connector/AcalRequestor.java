@@ -31,6 +31,8 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,23 +42,21 @@ import javax.net.ssl.SSLProtocolException;
 
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.ConnectionPoolTimeoutException;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.message.BasicHeader;
-import org.apache.http.params.HttpParams;
+import org.apache.http.message.BasicHeaderValueParser;
 import org.json.JSONObject;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import com.morphoss.acal.AcalDebug;
 import com.morphoss.acal.Constants;
@@ -84,7 +84,6 @@ public class AcalRequestor {
 	// Authentication crap.
 	private boolean authRequired = false;
 	private int authType  = Servers.AUTH_NONE;
-//	private Header wwwAuthenticate = null;
 	private String authRealm = null;
 	private String nonce = null;
 	private String opaque = null;
@@ -96,9 +95,7 @@ public class AcalRequestor {
 	private String username = null;
 	private String password = null;
 
-	private HttpParams httpParams;
-	private HttpClient httpClient;
-	private ThreadSafeClientConnManager connManager;
+	private OkHttpClient httpClient;
 	private Header responseHeaders[];
 	private int statusCode = -1;
 	private int connectionTimeOut = 30000;
@@ -106,8 +103,10 @@ public class AcalRequestor {
 	private final int redirectLimit = 5;
 	private int redirectCount = 0;
 
-	private DavRequest		request  = null;
-	private HttpResponse	response = null;
+	// For debug logging
+	private Request lastRequest = null;
+	private Response lastResponse = null;
+	private String lastResponseBody = null;
 
 	private boolean	debugThisRequest = false;
 
@@ -247,10 +246,8 @@ public class AcalRequestor {
 
 
 	private void initialise() {
-		httpParams = AcalConnectionPool.defaultHttpParams(socketTimeOut, connectionTimeOut);
-		connManager = AcalConnectionPool.getHttpConnectionPool();
-		httpClient = new DefaultHttpClient(connManager, httpParams);
-
+		AcalConnectionPool.setTimeOuts(socketTimeOut, connectionTimeOut);
+		httpClient = AcalConnectionPool.getHttpClient();
 		initialised = true;
 	}
 
@@ -446,7 +443,8 @@ public class AcalRequestor {
 
 
 	private Header basicAuthHeader() {
-		String authValue = String.format("Basic %s", Base64Coder.encodeString(username+":"+password));
+		String authValue = String.format("Basic %s", android.util.Base64.encodeToString(
+			(username+":"+password).getBytes(), android.util.Base64.NO_WRAP));
 		if ( Constants.LOG_VERBOSE )
 					Log.println(Constants.LOGV,TAG, "BasicAuthDebugging: '"+authValue+"'" );
 		return new BasicHeader("Authorization", authValue );
@@ -543,7 +541,7 @@ public class AcalRequestor {
 		connectionTimeOut = newConnectionTimeOut;
 		if ( !initialised ) return;
 		AcalConnectionPool.setTimeOuts(socketTimeOut,connectionTimeOut);
-		httpClient = new DefaultHttpClient(connManager, httpParams);
+		httpClient = AcalConnectionPool.getHttpClient();
 	}
 
 
@@ -653,27 +651,6 @@ public class AcalRequestor {
 		return selectedAuthHeader;
 	}
 
-	private String entityToString(HttpEntity entity) {
-		InputStream in;
-		StringBuilder total = new StringBuilder();
-		try {
-			in = entity.getContent();
-			BufferedReader r = new BufferedReader(new InputStreamReader(in),AcalConnectionPool.DEFAULT_BUFFER_SIZE);
-			String line;
-			while ( (line = r.readLine()) != null ) {
-			    total.append(line).append("\n");
-			}
-			in.close();
-		}
-		catch ( IllegalStateException e ) {
-			Log.w(TAG,"Auto-generated catch block", e);
-		}
-		catch ( IOException e ) {
-			Log.w(TAG,"Auto-generated catch block", e);
-		}
-		return total.toString();
-	}
-
 
 	private void logEntityLines(int logLevel, String prefix, String entityString) {
 		for( String line : entityString.toString().split("\n") ) {
@@ -699,47 +676,56 @@ public class AcalRequestor {
 	 */
 	public void logRequest(int logLevel) {
 		Log.println(logLevel,TAG, method+" "+this.fullUrl());
-		if ( request == null ) {
+		if ( lastRequest == null ) {
 			Log.w(TAG,"Attempting to log request entity but request is null!");
 			return;
 		}
 
-		for ( Header h : request.getAllHeaders() ) {
-			Log.println(logLevel,TAG,"H>  "+h.getName()+":"+h.getValue() );
+		for ( String name : lastRequest.headers().names() ) {
+			Log.println(logLevel,TAG,"H>  "+name+":"+lastRequest.header(name) );
 		}
-		if ( request.getEntity() == null ) return;
 
-		String entityString = entityToString(request.getEntity());
-		if (entityString != null) {
-			Log.println(logLevel,TAG, "----------------------- vvv Request Body vvv -----------------------" );
-			logEntityLines(logLevel, "R>  ", entityString);
-			Log.println(logLevel,TAG, "----------------------- ^^^ Request Body ^^^ -----------------------" );
-		}
+		RequestBody body = lastRequest.body();
+		if ( body == null ) return;
+
+		// Note: OkHttp doesn't easily expose request body content for logging
+		// The body has already been consumed by the time we get here
+		Log.println(logLevel,TAG, "Request body present but not logged (OkHttp limitation)" );
 	}
 
 	public InputStream logResponse(int logLevel) {
-		if ( response == null ) {
+		if ( lastResponse == null ) {
 			Log.w(TAG,"Attempting to log response entity but response is null!");
 			return null;
 		}
-		Log.println(logLevel,TAG, "RESPONSE: "+response.getStatusLine().getProtocolVersion()+" "+response.getStatusLine().getStatusCode()+" "+response.getStatusLine().getReasonPhrase() );
+		Log.println(logLevel,TAG, "RESPONSE: HTTP/1.1 "+lastResponse.code()+" "+lastResponse.message() );
 
 		for (Header h : responseHeaders) {
 			Log.println(logLevel,TAG,"H<  "+h.getName()+": "+h.getValue() );
 		}
 
-		if ( response.getEntity() == null ) {
-			Log.println(logLevel,TAG,"Attempting to log response entity but response.getEntity() is null :-(");
+		if ( lastResponseBody == null ) {
+			Log.println(logLevel,TAG,"Attempting to log response entity but response body is null :-(");
 			return null;
 		}
 
-		String entityString = entityToString(response.getEntity());
-		if (entityString != null) {
-			Log.println(logLevel,TAG, "----------------------- vvv Response Body vvv -----------------------" );
-			logEntityLines(logLevel, "R<  ", entityString);
-			Log.println(logLevel,TAG, "----------------------- ^^^ Response Body ^^^ -----------------------" );
+		Log.println(logLevel,TAG, "----------------------- vvv Response Body vvv -----------------------" );
+		logEntityLines(logLevel, "R<  ", lastResponseBody);
+		Log.println(logLevel,TAG, "----------------------- ^^^ Response Body ^^^ -----------------------" );
+
+		return new ByteArrayInputStream( lastResponseBody.getBytes() );
+	}
+
+	/**
+	 * Convert OkHttp headers to Apache Header array for compatibility.
+	 */
+	private Header[] convertHeaders(okhttp3.Headers headers) {
+		if (headers == null) return new Header[0];
+		List<Header> result = new ArrayList<>();
+		for (int i = 0; i < headers.size(); i++) {
+			result.add(new BasicHeader(headers.name(i), headers.value(i)));
 		}
-		return new ByteArrayInputStream( entityString.getBytes() );
+		return result.toArray(new Header[0]);
 	}
 
 	/**
@@ -751,35 +737,60 @@ public class AcalRequestor {
 	 * @throws SSLException
 	 * @throws AuthenticationFailure
 	 * @throws ConnectionFailedException
-	 * @throws ConnectionPoolTimeoutException
 	 */
 	private synchronized InputStream sendRequest( Header[] headers, String entityString )
 									throws SendRequestFailedException, SSLException, AuthenticationFailure,
-									ConnectionFailedException, ConnectionPoolTimeoutException {
+									ConnectionFailedException {
 		long down = 0;
 		long up = 0;
 		long start = System.currentTimeMillis();
 
 		if ( !initialised ) throw new IllegalStateException("AcalRequestor has not been initialised!");
 		statusCode = -1;
-		try {
-			// Create request and add headers and entity
-			request = new DavRequest(method, this.fullUrl());
-//			request.addHeader(new BasicHeader("User-Agent", AcalConnectionPool.getUserAgent()));
-			if ( headers != null ) for (Header h : headers) request.addHeader(h);
 
-			if ( authRequired && authType != Servers.AUTH_NONE)
-				request.addHeader(buildAuthHeader());
+		try {
+			// Build the request
+			Request.Builder requestBuilder = new Request.Builder()
+				.url(this.fullUrl())
+				.header("User-Agent", AcalConnectionPool.getUserAgent());
+
+			// Add custom headers
+			if ( headers != null ) {
+				for (Header h : headers) {
+					requestBuilder.header(h.getName(), h.getValue());
+				}
+			}
+
+			// Add authentication header
+			if ( authRequired && authType != Servers.AUTH_NONE) {
+				Header authHeader = buildAuthHeader();
+				requestBuilder.header(authHeader.getName(), authHeader.getValue());
+			}
 			else if ( authRequired ) {
 				// Assume basicAuth
-				request.addHeader(basicAuthHeader());
+				Header authHeader = basicAuthHeader();
+				requestBuilder.header(authHeader.getName(), authHeader.getValue());
 			}
 
+			// Set method and body
+			RequestBody body = null;
 			if (entityString != null) {
-				request.setEntity(new StringEntity(entityString.toString(),"UTF-8"));
-				up = request.getEntity().getContentLength();
+				body = RequestBody.create(entityString, MediaType.parse("text/xml; charset=utf-8"));
+				up = entityString.length();
 			}
 
+			// OkHttp requires explicit method setting
+			// For methods that don't normally have bodies (GET, DELETE, HEAD), body must be null
+			// For methods that can have bodies (POST, PUT, PATCH), body can be null or set
+			// For custom methods (PROPFIND, REPORT, etc.), we need to use method(name, body)
+			if ("GET".equals(method) || "HEAD".equals(method)) {
+				requestBuilder.method(method, null);
+			} else if ("DELETE".equals(method)) {
+				requestBuilder.method(method, body); // DELETE can optionally have a body
+			} else {
+				// POST, PUT, PROPFIND, REPORT, PROPPATCH, OPTIONS, etc.
+				requestBuilder.method(method, body);
+			}
 
 			// This trick greatly reduces the occurrence of host not found errors.
 			try { InetAddress.getByName(this.hostName); } catch (UnknownHostException e1) {
@@ -789,42 +800,29 @@ public class AcalRequestor {
 				}
 			}
 
-			int requestPort = -1;
-			if ( this.protocol == null ) this.protocol = PROTOCOL_HTTP;
-			String requestProtocol = this.protocol;
-			if ( (this.protocol.equals(PROTOCOL_HTTP) && this.port != 80 )
-						|| ( this.protocol.equals(PROTOCOL_HTTPS) && this.port != 443 )
-				) {
-				requestPort = this.port;
-			}
-
 			if ( Constants.LOG_DEBUG || debugThisRequest ) {
 				Log.println(Constants.LOGD,TAG, String.format("Method: %s, Protocol: %s, Hostname: %s, Port: %d, Path: %s",
-							method, requestProtocol, hostName, requestPort, path) );
+							method, protocol, hostName, port, path) );
 			}
-			HttpHost host = new HttpHost(this.hostName, requestPort, requestProtocol);
+
+			Request request = requestBuilder.build();
+			lastRequest = request;
 
 			if ( debugThisRequest ) logRequest(Constants.LOGV);
 
 			// Send request and get response
-			response = null;
-
 			if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Making HTTP request");
-			try {
-				response = httpClient.execute(host,request);
-			}
-			catch (ConnectionPoolTimeoutException e)		{
-				Log.println(Constants.LOGI,TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
-				Log.println(Constants.LOGI,TAG, "Retrying...");
-				response = httpClient.execute(host,request);
-			}
+
+			Response response = httpClient.newCall(request).execute();
+			lastResponse = response;
+
 			if ( Constants.debugHeap ) AcalDebug.heapDebug(TAG, "Finished HTTP request");
 
-			this.responseHeaders = response.getAllHeaders();
-			this.statusCode = response.getStatusLine().getStatusCode();
+			this.responseHeaders = convertHeaders(response.headers());
+			this.statusCode = response.code();
 
-			HttpEntity entity = response.getEntity();
-			down = (entity == null ? 0 : entity.getContentLength());
+			ResponseBody responseBody = response.body();
+			down = (responseBody == null ? 0 : responseBody.contentLength());
 
 			long finish = System.currentTimeMillis();
 			double timeTaken = (finish-start)/1000.0;
@@ -832,22 +830,19 @@ public class AcalRequestor {
 			if ( Constants.LOG_DEBUG || debugThisRequest )
 				Log.println(Constants.LOGD,TAG, "Response: "+statusCode+", Sent: "+up+", Received: "+down+", Took: "+timeTaken+" seconds");
 
-			if ( debugThisRequest ) {
-				return logResponse(Constants.LOGV);
-			}
-			else if (entity != null) {
-				if ( entity.getContentLength() > 0 ) return entity.getContent();
+			if (responseBody != null) {
+				// Read the response body into a string for potential logging and return as stream
+				byte[] bodyBytes = responseBody.bytes();
+				response.close();
 
-				// Kind of admitting defeat here, but I can't track down why we seem
-				// to end up in never-never land if we just return entity.getContent()
-				// directly when entity.getContentLength() is -1 ('unknown', apparently).
-				// Horribly inefficient too.
-				//
-				// @todo: Check whether this problem was caused by failing to close the InputStream
-				// and this hack can be removed...  Need to find a server which does not send Content-Length headers.
-				//
-				String tmpEntity = entityToString(entity);
-				return new ByteArrayInputStream( tmpEntity.getBytes() );
+				lastResponseBody = new String(bodyBytes, "UTF-8");
+
+				if ( debugThisRequest ) {
+					return logResponse(Constants.LOGV);
+				}
+				else if ( bodyBytes.length > 0 ) {
+					return new ByteArrayInputStream(bodyBytes);
+				}
 			}
 
 		}
@@ -869,15 +864,7 @@ public class AcalRequestor {
 				Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
 			throw e;
 		}
-		catch (ConnectionPoolTimeoutException e)		{
-			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
-			throw e;
-		}
 		catch (SocketTimeoutException e)		{
-			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
-			return null;
-		}
-		catch (ConnectTimeoutException e)		{
 			Log.i(TAG, e.getClass().getSimpleName() + ": " + e.getMessage() + " to " + fullUrl() );
 			return null;
 		}

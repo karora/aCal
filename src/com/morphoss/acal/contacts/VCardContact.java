@@ -35,7 +35,7 @@ import com.morphoss.acal.davacal.PropertyName;
 import com.morphoss.acal.davacal.VCard;
 import com.morphoss.acal.davacal.VComponent;
 import com.morphoss.acal.davacal.VComponentCreationException;
-import com.morphoss.acal.service.connector.Base64Coder;
+import android.util.Base64;
 
 public class VCardContact {
 	
@@ -354,7 +354,7 @@ public class VCardContact {
 
 
 	private void doPhoto(boolean isInsert, int rawContactId, AcalProperty prop) {
-		byte[] decodedString = Base64Coder.decode(prop.getValue().replaceAll(" ",""));
+		byte[] decodedString = Base64.decode(prop.getValue().replaceAll(" ",""), Base64.DEFAULT);
 		ContentProviderOperation.Builder op = beginOp( isInsert, rawContactId, CommonDataKinds.Photo.CONTENT_ITEM_TYPE,
 				null, null);
 		op.withValue(ContactsContract.CommonDataKinds.Photo.PHOTO,decodedString);
