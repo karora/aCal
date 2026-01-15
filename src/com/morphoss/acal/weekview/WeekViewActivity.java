@@ -320,8 +320,8 @@ public class WeekViewActivity extends AcalActivity implements OnGestureListener,
 	public void onPause() {
 		super.onPause();
 		days.close();		//important - otherwise days will never be dereferenced causing memory hole.
-		prefs.edit().putLong(getString(R.string.prefSelectedDate), selectedDate.getMillis()).commit();
-		prefs.edit().putLong(getString(R.string.prefSavedSelectedDate), System.currentTimeMillis()).commit();
+		prefs.edit().putLong(getString(R.string.prefSelectedDate), selectedDate.getMillis()).apply();
+		prefs.edit().putLong(getString(R.string.prefSavedSelectedDate), System.currentTimeMillis()).apply();
 	}
 
 	@Override

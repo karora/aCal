@@ -270,9 +270,9 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 
 	private void saveState() {
 		// Save state
-		prefs.edit().putLong(getString(R.string.prefSavedSelectedDate), System.currentTimeMillis()).commit();
-		prefs.edit().putLong(getString(R.string.prefSelectedDate), selectedDate.getMillis()).commit();
-		prefs.edit().putLong(getString(R.string.prefDisplayedMonth), displayedMonth.getMillis()).commit();
+		prefs.edit().putLong(getString(R.string.prefSavedSelectedDate), System.currentTimeMillis()).apply();
+		prefs.edit().putLong(getString(R.string.prefSelectedDate), selectedDate.getMillis()).apply();
+		prefs.edit().putLong(getString(R.string.prefDisplayedMonth), displayedMonth.getMillis()).apply();
 	}
 
 	private void rememberCurrentPosition() {

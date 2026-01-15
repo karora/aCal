@@ -318,7 +318,7 @@ public class ServerConfiguration extends PreferenceActivity implements OnPrefere
 
 			//Update that we have a configured server now.
 			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-			prefs.edit().putInt(PrefNames.serverIsConfigured, 1).commit();
+			prefs.edit().putInt(PrefNames.serverIsConfigured, 1).apply();
 			
 		} catch (Exception e) {
 			//error updating

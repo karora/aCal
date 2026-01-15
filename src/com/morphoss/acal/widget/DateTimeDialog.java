@@ -188,7 +188,7 @@ public class DateTimeDialog extends Dialog
 						j++;
 					}
 				}
-				e.commit();
+				e.apply();
 			}
 		}
 

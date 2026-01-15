@@ -97,7 +97,7 @@ public class AcalApplication extends Application {
 	public static void setPreferenceString(String key, String value) {
     	if ( prefs == null )
     		prefs = PreferenceManager.getDefaultSharedPreferences(s_instance);
-    	prefs.edit().putString(key, value).commit();
+    	prefs.edit().putString(key, value).apply();
 	}
 
 	public static boolean getPreferenceBoolean(String key, boolean defValue) {

@@ -109,7 +109,7 @@ public class NewServerConfiguration extends AcalActivity implements ServerConfig
 		finally {
 			if ( result != null && !result.isClosed() ) result.close();
 		}
-		prefs.edit().putInt(PrefNames.serverIsConfigured, 1).commit();
+		prefs.edit().putInt(PrefNames.serverIsConfigured, 1).apply();
 		return true;
 	}
 
@@ -226,7 +226,7 @@ public class NewServerConfiguration extends AcalActivity implements ServerConfig
 			int id = Integer.parseInt(result.getPathSegments().get(0));
 			if (id < 0) throw new Exception("Failed to add server");
 			serverData.put(Servers._ID, id);
-			prefs.edit().putInt(PrefNames.serverIsConfigured, 1).commit();
+			prefs.edit().putInt(PrefNames.serverIsConfigured, 1).apply();
 
 		} catch (Exception e) {
 			//error updating

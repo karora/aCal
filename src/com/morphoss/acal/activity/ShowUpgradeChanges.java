@@ -188,7 +188,7 @@ public class ShowUpgradeChanges extends AcalActivity implements OnClickListener 
 
 		if ( !isRedisplay ) {
 			// Save the new version preference
-			prefs.edit().putInt(PrefNames.lastRevision, thisRevision).commit();
+			prefs.edit().putInt(PrefNames.lastRevision, thisRevision).apply();
 
 			aCal.startPreferredView(prefs,this,true);
 		}

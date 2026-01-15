@@ -61,7 +61,7 @@ public class aCalNotes extends AcalActivity {
 		int lastRevision = prefs.getInt(PrefNames.lastRevision, 0);
 		if ( lastRevision == 0 ) {
 			// Default our 24hr pref to the system one.
-			prefs.edit().putBoolean(getString(R.string.prefTwelveTwentyfour), DateFormat.is24HourFormat(this)).commit();
+			prefs.edit().putBoolean(getString(R.string.prefTwelveTwentyfour), DateFormat.is24HourFormat(this)).apply();
 		}
 
 		startPreferredView(prefs, this);
