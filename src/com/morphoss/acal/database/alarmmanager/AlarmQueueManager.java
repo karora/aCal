@@ -44,6 +44,7 @@ import com.morphoss.acal.dataservice.Resource;
 import com.morphoss.acal.davacal.VCalendar;
 import com.morphoss.acal.davacal.VComponent;
 import com.morphoss.acal.davacal.VComponentCreationException;
+import com.morphoss.acal.di.ServiceRegistry;
 import com.morphoss.acal.providers.AlarmDataProvider;
 import com.morphoss.acal.providers.CacheDataProvider;
 
@@ -54,7 +55,7 @@ import com.morphoss.acal.providers.CacheDataProvider;
  * @author Chris Noldus
  *
  */
-public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
+public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAlarmQueueManager {
 
 	//The current instance
 	private static AlarmQueueManager instance = null;
@@ -120,6 +121,8 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
 		workerThread = new Thread(this);
 		workerThread.start();
 
+		// Register with ServiceRegistry for DI
+		ServiceRegistry.register(IAlarmQueueManager.class, this);
 	}
 
 	/**
@@ -248,6 +251,8 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener  {
 		}
 		workerThread = null;
 		saveState();
+		// Unregister from ServiceRegistry
+		ServiceRegistry.unregister(IAlarmQueueManager.class);
 	}
 
 	/**

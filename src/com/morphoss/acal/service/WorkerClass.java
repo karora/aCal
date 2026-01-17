@@ -31,6 +31,7 @@ import android.util.Log;
 
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.acaltime.AcalDateTime;
+import com.morphoss.acal.di.ServiceRegistry;
 
 /**
  * This class is designed to have a single worker thread perform jobs supplied
@@ -58,7 +59,7 @@ import com.morphoss.acal.acaltime.AcalDateTime;
  * @author Morphoss Ltd
  * 
  */
-public class WorkerClass implements Runnable {
+public class WorkerClass implements Runnable, IWorkerClass {
 
 	private static WorkerClass			instance			= null;
 
@@ -82,6 +83,8 @@ public class WorkerClass implements Runnable {
 
 	private WorkerClass(aCalService context) {
 		this.context = context;
+		// Register with ServiceRegistry for DI
+		ServiceRegistry.register(IWorkerClass.class, this);
 	}
 
 	public synchronized static WorkerClass getInstance(aCalService context) {
@@ -213,6 +216,18 @@ public class WorkerClass implements Runnable {
 		this.worker = null;
 		cancelScheduledWakeup();
 		runWorker.open();
+		// Unregister from ServiceRegistry
+		ServiceRegistry.unregister(IWorkerClass.class);
+	}
+
+	@Override
+	public long getTimeOfLastAction() {
+		return timeOfLastAction;
+	}
+
+	@Override
+	public long getTimeOfNextAction() {
+		return timeOfNextAction;
 	}
 
 	private void cancelScheduledWakeup() {

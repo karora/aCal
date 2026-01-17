@@ -11,7 +11,7 @@ import android.util.Log;
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.acaltime.AcalDateRange;
 import com.morphoss.acal.acaltime.AcalDateTime;
-import com.morphoss.acal.database.cachemanager.CacheManager.CacheTableManager;
+import com.morphoss.acal.database.cachemanager.CacheTableManager;
 import com.morphoss.acal.dataservice.Resource;
 import com.morphoss.acal.davacal.Masterable;
 import com.morphoss.acal.davacal.PropertyName;

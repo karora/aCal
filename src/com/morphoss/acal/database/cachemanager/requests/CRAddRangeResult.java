@@ -6,7 +6,7 @@ import com.morphoss.acal.Constants;
 import com.morphoss.acal.acaltime.AcalDateRange;
 import com.morphoss.acal.database.DMQueryList;
 import com.morphoss.acal.database.cachemanager.CacheManager;
-import com.morphoss.acal.database.cachemanager.CacheManager.CacheTableManager;
+import com.morphoss.acal.database.cachemanager.CacheTableManager;
 import com.morphoss.acal.database.cachemanager.CacheProcessingException;
 import com.morphoss.acal.database.cachemanager.CacheRequest;
 

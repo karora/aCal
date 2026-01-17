@@ -108,7 +108,7 @@ public class SynchronisationJobs extends ServiceJob {
 	 * @param worker
 	 * @param context
 	 */
-	public static void startCollectionSync(WorkerClass worker, Context context, long startInMillis) {
+	public static void startCollectionSync(IWorkerClass worker, Context context, long startInMillis) {
 		ContentValues[] collectionsList = DavCollections.getCollections(context.getContentResolver(),
 					DavCollections.INCLUDE_ALL_ACTIVE);
 		String lastSyncString;

@@ -24,7 +24,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.IBinder;
 import android.os.Process;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -32,8 +31,12 @@ import com.morphoss.acal.Constants;
 import com.morphoss.acal.R;
 import com.morphoss.acal.acaltime.AcalDateTime;
 import com.morphoss.acal.database.alarmmanager.AlarmQueueManager;
+import com.morphoss.acal.database.alarmmanager.IAlarmQueueManager;
 import com.morphoss.acal.database.cachemanager.CacheManager;
+import com.morphoss.acal.database.cachemanager.ICacheManager;
+import com.morphoss.acal.database.resourcesmanager.IResourceManager;
 import com.morphoss.acal.database.resourcesmanager.ResourceManager;
+import com.morphoss.acal.di.ServiceRegistry;
 
 /**
  * Main service for aCal background operations.
@@ -42,17 +45,16 @@ import com.morphoss.acal.database.resourcesmanager.ResourceManager;
  */
 public class aCalService extends Service {
 
-
-	private final ServiceRequest.Stub serviceRequest = new ServiceRequestHandler();
+	private ServiceRequest.Stub serviceRequest;
 	private WorkerClass worker;
 	public static final String TAG = "aCalService";
 	public static String aCalVersion = "aCal/1.0"; // Updated at start of program.
-	//public static final DatabaseEventDispatcher databaseDispatcher = new DatabaseEventDispatcher();
 
 	private final static long serviceStartedAt = System.currentTimeMillis();
 	private ResourceManager rm;
 	private CacheManager cm;
 	private AlarmQueueManager am;
+	private MemoryMonitor memoryMonitor;
 
 	private static SharedPreferences prefs = null;
 
@@ -81,6 +83,10 @@ public class aCalService extends Service {
 		am = AlarmQueueManager.getInstance(this);
 
 		worker = WorkerClass.getInstance(this);
+		memoryMonitor = new MemoryMonitor();
+
+		// Create the service request handler with extracted implementation
+		serviceRequest = new ServiceRequestHandlerImpl(worker, this);
 
 		// Schedule immediate sync of any changes to the server
 		worker.addJobAndWake(new SyncChangesToServer());
@@ -168,9 +174,8 @@ public class aCalService extends Service {
 	}
 
 	public void addWorkerJob(ServiceJob s) {
-		Runtime r = Runtime.getRuntime();
-		if ( ((r.totalMemory() * 100) / r.maxMemory()) > 115 ) {
-			scheduleServiceRestart(30);
+		if ( memoryMonitor != null && memoryMonitor.shouldRestartService() ) {
+			scheduleServiceRestart(memoryMonitor.getRestartDelaySeconds());
 	        this.stopSelf();
 		}
 		else {
@@ -187,60 +192,6 @@ public class aCalService extends Service {
     	if ( prefs == null )
     		prefs = PreferenceManager.getDefaultSharedPreferences(this);
     	return prefs.getString(key, defValue);
-	}
-
-
-	private class ServiceRequestHandler extends ServiceRequest.Stub {
-
-		@Override
-		public void discoverHomeSets() throws RemoteException {
-			ServiceJob job = new SynchronisationJobs(SynchronisationJobs.HOME_SET_DISCOVERY);
-			job.TIME_TO_EXECUTE = System.currentTimeMillis();
-			worker.addJobAndWake(job);
-		}
-
-		@Override
-		public void updateCollectionsFromHomeSets() throws RemoteException {
-			ServiceJob job = new SynchronisationJobs(SynchronisationJobs.HOME_SETS_UPDATE);
-			job.TIME_TO_EXECUTE = System.currentTimeMillis();
-			worker.addJobAndWake(job);
-		}
-
-		@Override
-		public void fullResync() throws RemoteException {
-			ServiceJob[] jobs = new ServiceJob[2];
-			jobs[0] = new SynchronisationJobs(SynchronisationJobs.HOME_SET_DISCOVERY);
-			jobs[1] = new SynchronisationJobs(SynchronisationJobs.HOME_SETS_UPDATE);
-			worker.addJobsAndWake(jobs);
-			SynchronisationJobs.startCollectionSync(worker, aCalService.this, 15000L);
-		}
-
-		@Override
-		public void revertDatabase() throws RemoteException {
-			worker.addJobAndWake(new DebugDatabase(DebugDatabase.REVERT));
-		}
-
-		public void saveDatabase() throws RemoteException {
-			worker.addJobAndWake(new DebugDatabase(DebugDatabase.SAVE));
-		}
-
-		@Override
-		public void homeSetDiscovery(int server) throws RemoteException {
-			HomeSetDiscovery job = new HomeSetDiscovery(server);
-			worker.addJobAndWake(job);
-		}
-
-		@Override
-		public void syncCollectionNow(long collectionId) throws RemoteException {
-			SyncCollectionContents job = new SyncCollectionContents(collectionId, true);
-			worker.addJobAndWake(job);
-		}
-
-		@Override
-		public void fullCollectionResync(long collectionId) throws RemoteException {
-			InitialCollectionSync job = new InitialCollectionSync(collectionId);
-			worker.addJobAndWake(job);
-		}
 	}
 }
 

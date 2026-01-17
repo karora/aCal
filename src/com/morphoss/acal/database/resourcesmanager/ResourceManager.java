@@ -40,6 +40,7 @@ import com.morphoss.acal.database.resourcesmanager.requesttypes.ResourceRequest;
 import com.morphoss.acal.dataservice.Resource;
 import com.morphoss.acal.davacal.VCalendar;
 import com.morphoss.acal.davacal.VComponent;
+import com.morphoss.acal.di.ServiceRegistry;
 import com.morphoss.acal.providers.DavCollections;
 import com.morphoss.acal.providers.Servers;
 import com.morphoss.acal.service.CallbackExecutor;
@@ -47,7 +48,7 @@ import com.morphoss.acal.service.ServiceJob;
 import com.morphoss.acal.service.SyncChangesToServer;
 import com.morphoss.acal.service.WorkerClass;
 
-public class ResourceManager implements Runnable {
+public class ResourceManager implements Runnable, IResourceManager {
 	// The current instance
 	private static ResourceManager instance = null;
 
@@ -109,6 +110,9 @@ public class ResourceManager implements Runnable {
 		threadHolder.close();
 		workerThread = new Thread(this);
 		workerThread.start();
+
+		// Register with ServiceRegistry for DI
+		ServiceRegistry.register(IResourceManager.class, this);
 	}
 
 	public void addListener(ResourceChangedListener ccl) {
@@ -220,6 +224,8 @@ public class ResourceManager implements Runnable {
 			} catch (Exception e) {
 			}
 		}
+		// Unregister from ServiceRegistry
+		ServiceRegistry.unregister(IResourceManager.class);
 		instance = null;
 	}
 

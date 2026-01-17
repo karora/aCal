@@ -36,6 +36,7 @@ import android.util.Log;
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.database.AcalDBHelper;
 import com.morphoss.acal.database.cachemanager.CacheManager;
+import com.morphoss.acal.database.cachemanager.CacheTableManager;
 import com.morphoss.acal.database.resourcesmanager.ResourceManager;
 
 /**
@@ -194,7 +195,7 @@ CREATE TABLE dav_collection (
 		String[] riTables = {
 				ResourceManager.ResourceTableManager.PENDING_DATABASE_TABLE,
 				ResourceManager.ResourceTableManager.RESOURCE_DATABASE_TABLE,
-				CacheManager.CacheTableManager.TABLE,
+				CacheTableManager.TABLE,
 		};
 		for( String table : riTables ) {
 			AcalDB.delete(table, "NOT EXISTS(SELECT 1 FROM "+DATABASE_TABLE+" WHERE "+_ID+"="+table+".collection_id)", null);

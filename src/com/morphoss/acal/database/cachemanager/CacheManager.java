@@ -12,13 +12,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
-import android.net.Uri;
 import android.os.ConditionVariable;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.morphoss.acal.Constants;
-import com.morphoss.acal.StaticHelpers;
 import com.morphoss.acal.acaltime.AcalDateRange;
 import com.morphoss.acal.acaltime.AcalDateTime;
 import com.morphoss.acal.database.CacheModifier;
@@ -27,7 +25,6 @@ import com.morphoss.acal.database.DMDeleteQuery;
 import com.morphoss.acal.database.DMQueryBuilder;
 import com.morphoss.acal.database.DMQueryList;
 import com.morphoss.acal.database.DataChangeEvent;
-import com.morphoss.acal.database.ProviderTableManager;
 import com.morphoss.acal.database.TableManager.QUERY_ACTION;
 import com.morphoss.acal.database.cachemanager.requests.CRAddRangeResult;
 import com.morphoss.acal.database.cachemanager.requests.CRObjectsInRange;
@@ -45,6 +42,7 @@ import com.morphoss.acal.davacal.VCalendar;
 import com.morphoss.acal.davacal.VComponent;
 import com.morphoss.acal.davacal.VComponentCreationException;
 import com.morphoss.acal.desktop.ShowUpcomingWidgetProvider;
+import com.morphoss.acal.di.ServiceRegistry;
 import com.morphoss.acal.providers.CacheDataProvider;
 
 /**
@@ -62,7 +60,7 @@ import com.morphoss.acal.providers.CacheDataProvider;
  * @author Chris Noldus
  *
  */
-public class CacheManager implements Runnable, ResourceChangedListener,  ResourceResponseListener<ArrayList<Resource>>, CacheModifier {
+public class CacheManager implements Runnable, ResourceChangedListener, ResourceResponseListener<ArrayList<Resource>>, CacheModifier, ICacheManager, CacheTableManager.CacheManagerCallback {
 
 	//The current instance
 	private static CacheManager instance = null;
@@ -132,8 +130,59 @@ public class CacheManager implements Runnable, ResourceChangedListener,  Resourc
 	}
 
 	private CacheTableManager getCTMInstance() {
-		if (CTMinstance == null) CTMinstance = new CacheTableManager();
+		if (CTMinstance == null) CTMinstance = new CacheTableManager(context, this, listeners);
 		return CTMinstance;
+	}
+
+	// CacheManagerCallback implementation
+	@Override
+	public CacheWindow getWindow() {
+		return window;
+	}
+
+	@Override
+	public void setWindow(CacheWindow newWindow) {
+		this.window = newWindow;
+	}
+
+	@Override
+	public long getLookForward() {
+		return lookForward;
+	}
+
+	@Override
+	public long getLookBack() {
+		return lookBack;
+	}
+
+	@Override
+	public long getMaxSize() {
+		return maxSize;
+	}
+
+	@Override
+	public long getMinPaddingBack() {
+		return minPaddingBack;
+	}
+
+	@Override
+	public long getMinPaddingForward() {
+		return minPaddingForward;
+	}
+
+	@Override
+	public long getIncrement() {
+		return increment;
+	}
+
+	@Override
+	public int getDefMonthsBefore() {
+		return DEF_MONTHS_BEFORE;
+	}
+
+	@Override
+	public int getDefMonthsAfter() {
+		return DEF_MONTHS_AFTER;
 	}
 
 	/**
@@ -151,9 +200,12 @@ public class CacheManager implements Runnable, ResourceChangedListener,  Resourc
 		workerThread = new Thread(this);
 		workerThread.start();
 
+		// Register with ServiceRegistry for DI
+		ServiceRegistry.register(ICacheManager.class, this);
 	}
 
-	private void checkDefaultWindow() {
+	@Override
+	public void checkDefaultWindow() {
 		//ensure window contains the minimum range
 		AcalDateTime st  = new AcalDateTime();
 		st.setDaySecond(0).setMonthDay(1);
@@ -270,6 +322,8 @@ public class CacheManager implements Runnable, ResourceChangedListener,  Resourc
 			try { Thread.sleep(100); } catch (Exception e) { }
 		}
 		saveState();
+		// Unregister from ServiceRegistry
+		ServiceRegistry.unregister(ICacheManager.class);
 		workerThread = null;
 	}
 
@@ -452,7 +506,8 @@ public class CacheManager implements Runnable, ResourceChangedListener,  Resourc
 	}
 
 	//Request events (FROM RESOURCES) that
-	private void retrieveRange() {
+	@Override
+	public void retrieveRange() {
 		if (window.getRequestedWindow() == null) return;
 		if ( DEBUG && Constants.LOG_DEBUG ) Log.println(Constants.LOGD,TAG,"Sending RRGetCacheEventsInRange Request");
 		ResourceManager.getInstance(context).sendRequest(new RRGetCacheEventsInRange(window, this));
@@ -561,194 +616,6 @@ public class CacheManager implements Runnable, ResourceChangedListener,  Resourc
     }
 
 
-
-	/**
-	 * Static class to encapsulate all database operations
-	 * @author Chris Noldus
-	 *
-	 */
-	public final class CacheTableManager extends ProviderTableManager {
-
-		public static final String TAG = "acal EventCacheProcessor";
-
-		public static final String TABLE = "event_cache";
-		public static final String	FIELD_ID				= "_id";
-		public static final String	FIELD_RESOURCE_ID		= "resource_id";
-		public static final String	FIELD_RESOURCE_TYPE		= "resource_type";
-		public static final String	FIELD_RECURRENCE_ID		= "recurrence_id";
-		public static final String	FIELD_CID				= "collection_id";
-		public static final String	FIELD_SUMMARY			= "summary";
-		public static final String	FIELD_LOCATION			= "location";
-		public static final String	FIELD_DTSTART			= "dtstart";
-		public static final String	FIELD_DTEND				= "dtend";
-		public static final String	FIELD_COMPLETED			= "completed";
-		public static final String	FIELD_DTSTART_FLOAT		= "dtstartfloat";
-		public static final String	FIELD_DTEND_FLOAT		= "dtendfloat";
-		public static final String	FIELD_COMPLETE_FLOAT	= "completedfloat";
-		public static final String	FIELD_FLAGS				= "flags";
-
-		public static final String	RESOURCE_TYPE_VEVENT	= "VEVENT";
-		public static final String	RESOURCE_TYPE_VTODO		= "VTODO";
-		public static final String	RESOURCE_TYPE_VJOURNAL	= "VJOURNAL";
-
-		private boolean windowOnly = false;
-
-		/**
-		 * The current request being processed. Presently not used but may become useful.
-		 */
-		//private CacheRequest currentRequest;
-
-		/**
-		 * Generate a new instance of this processor.
-		 * WARNING: Only 1 instance of this class should ever exist. If multiple instances are created bizarre
-		 * side affects may occur, including Database corruption and program instability
-		 */
-		private CacheTableManager() {
-			super(CacheManager.this.context);
-		}
-
-		@Override
-		protected Uri getCallUri() {
-			return CacheDataProvider.CONTENT_URI;
-		}
-
-        @Override
-        protected Uri getQueryUri() {
-            return CacheDataProvider.CONTENT_URI;
-        }
-
-		/**
-		 * Process a CacheRequest. This class will provide an interface to the CacheRequest giving it access to the Cache Table.
-		 * Will warn if given request has misused the DB, but will not cause program to exit. Will ensure that database state is kept
-		 * consistant.
-		 * @param r
-		 */
-		public synchronized void process(CacheRequest r) {
-			//currentRequest = r;
-			this.windowOnly = false;
-			try {
-				r.process(this);
-				if (this.inTx) {
-					this.endTx();
-					throw new CacheProcessingException("Process started a transaction without ending it!\n    Request: "+r.getClass().getSimpleName());
-				}
-			} catch (CacheProcessingException e) {
-				Log.e(TAG, "Error Procssing Cache Request: "+Log.getStackTraceString(e));
-			} catch (Exception e) {
-				Log.e(TAG, "INVALID TERMINATION while processing Cache Request: "+Log.getStackTraceString(e));
-			}
-			//currentRequest = null;
-		}
-
-		public void setWindowOnlyTrue() {
-			this.windowOnly = true;
-		}
-
-		/**
-		 * Called when table is deemed to have been corrupted.
-		 */
-		private void clearCache() {
-			this.beginTx();
-			this.delete(null, null);
-			this.setTxSuccessful();
-			this.endTx();
-			window = new CacheWindow(lookForward, lookBack, maxSize, minPaddingBack,
-					minPaddingForward, increment, CacheManager.this, new AcalDateTime());
-			Log.println(Constants.LOGW,TAG,"Cache cleared of possibly corrupt data.");
-		}
-
-		public void rebuildCache() {
-			clearCache();
-			checkDefaultWindow();
-		}
-
-
-		/**
-		 * One specific common query for the cache is to fetch rows for a particular range of dates.
-		 *
-		 * @param range Must not be null, or have either end null
-		 * @return
-		 */
-		public ArrayList<ContentValues> queryInRange( AcalDateRange range, String cacheObjectType ) {
-
-			if ( CacheManager.DEBUG && Constants.LOG_DEBUG )
-				Log.println(Constants.LOGD, CacheManager.TAG,
-					"Selecting cache objects in "+range+": \nSELECT * FROM event_cache WHERE "+whereClauseForRange(range,cacheObjectType)  );
-
-			return this.query(null, whereClauseForRange(range,cacheObjectType), null, CacheTableManager.FIELD_DTSTART+" ASC");
-		}
-
-
-		/**
-		 * Checks that the window has been populated with the requested range
-		 * range can be NULL in which case the default range is used.
-		 * If the range is NOT covered, a request is made to resource
-		 * manager to get the required data.
-		 * Returns weather or not the cache fully covers a specified (or default) range
-		 */
-		public boolean checkWindow(AcalDateRange requestedRange) {
-			if ( DEBUG && Constants.LOG_DEBUG ) {
-				Log.println(Constants.LOGD,TAG,"Checking Cache Window: Request "+requestedRange);
-				Log.println(Constants.LOGD,TAG,"Checking Cache Window: Current Window:"+ window);
-			}
-			boolean ret = false;
-			if (window == null) clearCache();
-			if (window.isWithinWindow(requestedRange))
-				ret = true;
-
-			//we might as well look a bit beyond the requested range just to be safe.
-			AcalDateRange preCache = new AcalDateRange(
-					requestedRange.start.clone().addMonths(DEF_MONTHS_BEFORE),
-					requestedRange.end.clone().addMonths(DEF_MONTHS_AFTER)
-			);
-
-			window.addToRequestedRange(preCache);
-
-			//expand as needed
-			retrieveRange();
-
-			return ret;
-		}
-
-		//Never ever ever ever call cacheChanged on listeners anywhere else.
-		@Override
-		public void dataChanged(ArrayList<DataChangeEvent> changes) {
-			if (changes.isEmpty()) return;
-			synchronized (listeners) {
-				for (CacheChangedListener listener: listeners) {
-					CacheChangedEvent cce = new CacheChangedEvent(new ArrayList<DataChangeEvent>(changes),windowOnly);
-					listener.cacheChanged(cce);
-				}
-			}
-			//update widgets
-			StaticHelpers.updateWidgets(context, ShowUpcomingWidgetProvider.class);
-
-		}
-
-		public void resourceDeleted(long rid) {
-			this.delete(FIELD_RESOURCE_ID+" = ?", new String[]{rid+""});
-		}
-
-		public void updateWindowToInclude(AcalDateRange range) {
-			window.expandWindow(range);
-
-		}
-
-		public void removeRangeFromWindow(AcalDateRange range) {
-			window.reduceWindow(range);
-		}
-
-		/**
-		 * Begin std DB Operations
-		 *
-		 * ALL db operations need to start with a beginQuery call and end with an endQuery call.
-		 * DO NOT Open/Close DB directly as db my be in a Transaction. The parent class is responsible for maintaining state.
-		 *
-		 *	If writing to DB without using parent methods, don't forget to kick of db change events!
-		 */
-
-
-	}
 
 
 

@@ -1,6 +1,6 @@
 package com.morphoss.acal.database.cachemanager;
 
-import com.morphoss.acal.database.cachemanager.CacheManager.CacheTableManager;
+import com.morphoss.acal.database.cachemanager.CacheTableManager;
 
 /**
  * This is the generic interface for CacheRequests. Implement this interface if your CacheRequest does not return data.
