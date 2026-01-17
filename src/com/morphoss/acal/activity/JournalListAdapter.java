@@ -17,6 +17,7 @@
  */
 
 package com.morphoss.acal.activity;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 
@@ -26,6 +27,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -114,7 +116,7 @@ public class JournalListAdapter extends BaseAdapter
 		cacheManager.sendRequest(new CRJournalsByType(this));
 	}
 
-	private Handler mHandler = new Handler() {
+	private Handler mHandler = new Handler(Looper.getMainLooper()) {
 			
 		@SuppressWarnings("unchecked")
 		@Override
@@ -203,10 +205,10 @@ public class JournalListAdapter extends BaseAdapter
 		time.setText(AcalDateTimeFormatter.getTodoTimeText(context, journal.getStartDateTime(), journal.getEndDateTime(), journal.getCompletedDateTime(),
 				prefs.getBoolean(context.getString(R.string.prefTwelveTwentyfour),true)));
 		if ( journal.isCompleted() ) {
-			time.setTextColor(context.getResources().getColor(R.color.CompletedTask));
+			time.setTextColor(ContextCompat.getColor(context, R.color.CompletedTask));
 		}
 		else if ( journal.isOverdue() ) {
-			time.setTextColor(context.getResources().getColor(R.color.OverdueTask));
+			time.setTextColor(ContextCompat.getColor(context, R.color.OverdueTask));
 		}
 		
 		

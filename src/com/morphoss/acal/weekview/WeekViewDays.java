@@ -17,6 +17,7 @@
  */
 
 package com.morphoss.acal.weekview;
+import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -185,7 +186,7 @@ public class WeekViewDays extends ImageView implements OnTouchListener {
 
         workPaint = new Paint();
         workPaint.setStyle(Paint.Style.FILL);
-        workPaint.setColor(context.getResources().getColor(R.color.WeekViewDayGridWorkTimeBG));
+        workPaint.setColor(ContextCompat.getColor(context, R.color.WeekViewDayGridWorkTimeBG));
 
         this.dimensionCalculated = true;
         context.refresh();
@@ -304,7 +305,7 @@ public class WeekViewDays extends ImageView implements OnTouchListener {
 
         //draw day boxes
         p.setStyle(Paint.Style.STROKE);
-        p.setColor(context.getResources().getColor(R.color.WeekViewDayGridBorder));
+        p.setColor(ContextCompat.getColor(context, R.color.WeekViewDayGridBorder));
         canvas.drawRect(0, 0, viewWidth, PxH, p);
         for (int curx = -(WeekViewActivity.DAY_WIDTH - scrollx); curx <= viewWidth; curx += WeekViewActivity.DAY_WIDTH) {
             canvas.drawRect(curx, 0, curx + WeekViewActivity.DAY_WIDTH, PxH, p);

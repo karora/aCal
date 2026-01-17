@@ -18,6 +18,7 @@ package com.morphoss.acal.widget;
 
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Spanned;
@@ -117,7 +118,7 @@ public class NumberPicker extends LinearLayout implements OnClickListener,
         setOrientation(VERTICAL);
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.number_picker, this, true);
-        mHandler = new Handler();
+        mHandler = new Handler(Looper.getMainLooper());
         InputFilter inputFilter = new NumberPickerInputFilter();
         mNumberInputFilter = new NumberRangeKeyListener();
         

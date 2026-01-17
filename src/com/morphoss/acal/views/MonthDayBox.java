@@ -17,6 +17,7 @@
  */
 
 package com.morphoss.acal.views;
+import androidx.core.content.ContextCompat;
 
 import java.util.List;
 
@@ -79,8 +80,8 @@ public class MonthDayBox extends TextView {
 			if ( x < y ) x =y;
 			if ( y < x ) y =x;
 			p.setColor( ( isSelectedDay
-						? context.getResources().getColor(R.color.MonthDayHighlightBox)
-						: context.getResources().getColor(R.color.MonthDayTodayBox)
+						? ContextCompat.getColor(context, R.color.MonthDayHighlightBox)
+						: ContextCompat.getColor(context, R.color.MonthDayTodayBox)
 					));
 			
 			arg0.drawRect(0, 0, width, y, p);

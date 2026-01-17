@@ -31,6 +31,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
@@ -123,22 +124,26 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-		//Configure Power
+		//Configure Power - use PARTIAL_WAKE_LOCK to keep CPU awake
+		//Screen wakeup is handled by window flags below
 		wl = pm.newWakeLock(
-				PowerManager.FULL_WAKE_LOCK
-				| PowerManager.ACQUIRE_CAUSES_WAKEUP
-				| PowerManager.ON_AFTER_RELEASE
-				, "aCal Alarm"
+				PowerManager.PARTIAL_WAKE_LOCK,
+				"aCal:AlarmWakeLock"
 		);
 
-		wl.acquire();	
+		// Acquire with timeout (10 minutes max) for safety
+		wl.acquire(10 * 60 * 1000L);	
 
 
-		getWindow().addFlags( WINDOW_FLAG_SHOW_WHEN_LOCKED
-				//					| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-				//					| WINDOW_FLAG_DISMISS_KEYGUARD
-				| WINDOW_FLAG_TURN_SCREEN_ON
-		);
+		// Configure window to show over lock screen and turn on display
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+			setShowWhenLocked(true);
+			setTurnScreenOn(true);
+		} else {
+			getWindow().addFlags( WINDOW_FLAG_SHOW_WHEN_LOCKED
+					| WINDOW_FLAG_TURN_SCREEN_ON
+			);
+		}
 
 		this.setContentView(R.layout.alarm_activity);
 
@@ -393,7 +398,7 @@ public class AlarmActivity extends AcalActivity implements OnClickListener  {
 	 * We will pause the Activity, and try to restart it in SHORT_PAUSE_DURATION seconds;
 	 */
 	private void shortPause() {
-		new Handler().postDelayed(new Runnable() {
+		new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
 
 			@Override
 			public void run() {

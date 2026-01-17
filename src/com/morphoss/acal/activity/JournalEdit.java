@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -133,7 +134,7 @@ public class JournalEdit extends AcalActivity
 	private boolean isLoading = false;
 	private static JournalEdit handlerContext = null;
 	
-	private static Handler mHandler = new Handler() {
+	private static Handler mHandler = new Handler(Looper.getMainLooper()) {
 		public void handleMessage(Message m) {
 			if ( handlerContext != null ) handlerContext.handleMessage(m);
 		}

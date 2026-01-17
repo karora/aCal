@@ -21,6 +21,7 @@ package com.morphoss.acal.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.GestureDetector.OnGestureListener;
@@ -76,7 +77,7 @@ public class JournalView extends AcalActivity
 	private static final int FAIL = 1;
 	public static final String KEY_CACHE_OBJECT = "cache_object";
 	
-	private Handler mHandler = new Handler() {
+	private Handler mHandler = new Handler(Looper.getMainLooper()) {
 		public void handleMessage(Message msg) {
 			if (msg.what == REFRESH) {
 				populateLayout();

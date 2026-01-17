@@ -27,6 +27,7 @@ import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -151,7 +152,7 @@ public class WeekViewActivity extends AcalActivity implements OnGestureListener,
 
     private static final int HANDLER_NEW_LIST = 0;
 
-    private final Handler mHandler = new Handler() {
+    private final Handler mHandler = new Handler(Looper.getMainLooper()) {
 
         @SuppressWarnings("unchecked")
         @Override

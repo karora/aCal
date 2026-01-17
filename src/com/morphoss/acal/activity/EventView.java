@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Parcelable;
 import android.util.Log;
@@ -112,7 +113,7 @@ public class EventView extends AcalActivity implements  OnClickListener, Resourc
 	private static final int REFRESH = 0;
 	private static final int FAIL = 1;
 
-	private final Handler mHandler = new Handler() {
+	private final Handler mHandler = new Handler(Looper.getMainLooper()) {
 		public void handleMessage(Message msg) {
 			if (msg.what == REFRESH) {
 				populateLayout();

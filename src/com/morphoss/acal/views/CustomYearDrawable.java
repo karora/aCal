@@ -17,6 +17,7 @@
  */
 
 package com.morphoss.acal.views;
+import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -141,7 +142,7 @@ public class CustomYearDrawable extends ImageView  {
 		super.onDraw(canvas);
 		if (this.isInEditMode()) return;
 		//draw background first
-		Drawable bg = (Drawable)this.context.getResources().getDrawable(R.drawable.morphossbg);
+		Drawable bg = (Drawable)ContextCompat.getDrawable(this.context, R.drawable.morphossbg);
 		bg.setBounds(0, 0, this.getRight(),this.getBottom());
 		bg.draw(canvas);
 	

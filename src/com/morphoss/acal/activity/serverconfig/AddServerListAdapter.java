@@ -17,6 +17,7 @@
  */
 
 package com.morphoss.acal.activity.serverconfig;
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -182,7 +183,7 @@ public class AddServerListAdapter extends BaseAdapter {
 		
 		//Icon
 		if (!preconfig) {
-			icon.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.icon));
+			icon.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.icon));
 			title.setText(item.getAsString(Servers.FRIENDLY_NAME));
 			StringBuilder blurbString = new StringBuilder("");
 			if ( item.getAsString(Servers.HOSTNAME) != null && !item.getAsString(Servers.HOSTNAME).equals("null")) {
@@ -198,14 +199,14 @@ public class AddServerListAdapter extends BaseAdapter {
 		else {
 			if ( item.getAsInteger(ServerConfiguration.KEY_IMAGE) != null ) {
 				Log.w(TAG, "Special lastSavedConfig image for '"+item.getAsString(Servers.FRIENDLY_NAME)+"'");
-				thisRow.setBackgroundColor(context.getResources().getColor(android.R.color.white));
+				thisRow.setBackgroundColor(ContextCompat.getColor(context, android.R.color.white));
 				thisRow.setBackgroundResource(item.getAsInteger(ServerConfiguration.KEY_IMAGE));
 				icon.setBackgroundColor(0);
 				title.setText(item.getAsString(""));
 				blurb.setText(item.getAsString(""));
 			}
 			else {
-				icon.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.question_icon));
+				icon.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.question_icon));
 				title.setText(item.getAsString(Servers.FRIENDLY_NAME));
 				blurb.setText(item.getAsString("INFO"));
 			}

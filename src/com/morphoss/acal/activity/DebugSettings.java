@@ -18,7 +18,6 @@
 
 package com.morphoss.acal.activity;
 
-import android.app.ListActivity;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
@@ -29,6 +28,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.morphoss.acal.R;
 import com.morphoss.acal.ServiceManager;
 import com.morphoss.acal.database.alarmmanager.AlarmQueueManager;
 import com.morphoss.acal.database.cachemanager.CacheManager;
@@ -36,7 +38,7 @@ import com.morphoss.acal.database.cachemanager.requests.CRClearCacheRequest;
 import com.morphoss.acal.service.SyncChangesToServer;
 import com.morphoss.acal.service.WorkerClass;
 
-public class DebugSettings extends ListActivity {
+public class DebugSettings extends AppCompatActivity {
 public static final String TAG = "aCal Settings";
 
 	/** A list of setting that can be configured in DEBUG mode */
@@ -65,8 +67,10 @@ public static final String TAG = "aCal Settings";
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, TASKS));
-		ListView lv = getListView();
+		setContentView(R.layout.activity_simple_list);
+
+		ListView lv = findViewById(android.R.id.list);
+		lv.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, TASKS));
 		lv.setTextFilterEnabled(true);
 		lv.setOnItemClickListener(new SettingsListClickListener());
 	}

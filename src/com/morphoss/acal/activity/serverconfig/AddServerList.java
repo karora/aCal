@@ -18,7 +18,6 @@
 
 package com.morphoss.acal.activity.serverconfig;
 
-import android.app.ListActivity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
@@ -26,11 +25,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ListView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.morphoss.acal.AcalTheme;
 import com.morphoss.acal.R;
 
-public class AddServerList extends ListActivity implements OnClickListener {
+public class AddServerList extends AppCompatActivity implements OnClickListener {
 
 	public static final String TAG = "acal AddServerList";
 
@@ -54,10 +56,11 @@ public class AddServerList extends ListActivity implements OnClickListener {
 	
 	private void updateListView() {
 		// Bind to new adapter.
-		setListAdapter(new AddServerListAdapter(this));
+		ListView listView = findViewById(android.R.id.list);
+		listView.setAdapter(new AddServerListAdapter(this));
 
 		// make sure the display is refreshed
-		this.getListView().refreshDrawableState();		
+		listView.refreshDrawableState();
 	}
 
 	@Override

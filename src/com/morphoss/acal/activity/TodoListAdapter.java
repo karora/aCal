@@ -17,6 +17,7 @@
  */
 
 package com.morphoss.acal.activity;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 
@@ -26,6 +27,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -116,7 +118,7 @@ public class TodoListAdapter extends BaseAdapter
 		cacheManager.sendRequest(new CRTodosByType(showCompleted, showFuture, this));
 	}
 
-	private Handler mHandler = new Handler() {
+	private Handler mHandler = new Handler(Looper.getMainLooper()) {
 			
 		@SuppressWarnings("unchecked")
 		@Override
@@ -207,10 +209,10 @@ public class TodoListAdapter extends BaseAdapter
 		time.setText(AcalDateTimeFormatter.getTodoTimeText(context, todo.getStartDateTime(), todo.getEndDateTime(), todo.getCompletedDateTime(),
 				prefs.getBoolean(context.getString(R.string.prefTwelveTwentyfour),true)));
 		if ( todo.isCompleted() ) {
-			time.setTextColor(context.getResources().getColor(R.color.CompletedTask));
+			time.setTextColor(ContextCompat.getColor(context, R.color.CompletedTask));
 		}
 		else if ( todo.isOverdue() ) {
-			time.setTextColor(context.getResources().getColor(R.color.OverdueTask));
+			time.setTextColor(ContextCompat.getColor(context, R.color.OverdueTask));
 		}
 		
 		

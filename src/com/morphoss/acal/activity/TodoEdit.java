@@ -29,6 +29,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -197,7 +198,7 @@ public class TodoEdit extends AcalActivity
 
 	private static TodoEdit handlerContext = null;
 	
-	private static Handler mHandler = new Handler() {
+	private static Handler mHandler = new Handler(Looper.getMainLooper()) {
 		public void handleMessage(Message msg) {
 			if ( handlerContext != null ) handlerContext.messageHandler(msg);
 		}

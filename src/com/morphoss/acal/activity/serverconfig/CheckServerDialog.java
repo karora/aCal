@@ -27,10 +27,13 @@ import java.util.concurrent.Future;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.view.Gravity;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.database.sqlite.SQLiteConstraintException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -65,7 +68,8 @@ public class CheckServerDialog {
 	private final ContentValues serverData;
 	private final ServerConfigurator sc;
 	private AcalRequestor requestor;
-	private ProgressDialog dialog;
+	private AlertDialog dialog;
+	private TextView progressMessageView;
 
 	private static final int SHOW_FAIL_DIALOG = 0;
 	private static final int CHECK_COMPLETE = 1;
@@ -79,16 +83,16 @@ public class CheckServerDialog {
 
 	//dialog types
 	
-	private Handler handler = new Handler() {
+	private Handler handler = new Handler(Looper.getMainLooper()) {
 		@Override
 		public void handleMessage(Message msg) {
 			Bundle b = msg.getData();
 			int type = b.getInt(TYPE);
 			try {
     			switch (type) {
-    				case REFRESH_PROGRESS: 	
-    					if (dialog != null)
-    						dialog.setMessage(b.getString(REFRESH));
+    				case REFRESH_PROGRESS:
+    					if (progressMessageView != null)
+    						progressMessageView.setText(b.getString(REFRESH));
     					break;
     
     				case SHOW_FAIL_DIALOG: 	
@@ -324,26 +328,40 @@ public class CheckServerDialog {
 
 	private void createProgressDialog(String title, String message, String buttonText)
 	{
-		dialog = new ProgressDialog((Context) sc);
-	    dialog.setTitle(title);
-	    dialog.setMessage(message);
-	    dialog.setButton(buttonText, new DialogInterface.OnClickListener()
-	    {
-	        public void onClick(DialogInterface dialog, int which)
-	        {
-	            // Cancel the running tests
-	            testsCancelled = true;
-	            if (testRunnerFuture != null) {
-	                testRunnerFuture.cancel(true);
-	            }
-	        }
-	    });
-	    dialog.show();
+		// Create a layout with ProgressBar and TextView
+		LinearLayout layout = new LinearLayout((Context) sc);
+		layout.setOrientation(LinearLayout.HORIZONTAL);
+		layout.setPadding(50, 40, 50, 40);
+		layout.setGravity(Gravity.CENTER_VERTICAL);
+
+		ProgressBar progressBar = new ProgressBar((Context) sc);
+		progressBar.setIndeterminate(true);
+		layout.addView(progressBar);
+
+		progressMessageView = new TextView((Context) sc);
+		progressMessageView.setText(message);
+		progressMessageView.setPadding(30, 0, 0, 0);
+		layout.addView(progressMessageView);
+
+		AlertDialog.Builder builder = new AlertDialog.Builder((Context) sc);
+		builder.setTitle(title);
+		builder.setView(layout);
+		builder.setNegativeButton(buttonText, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				// Cancel the running tests
+				testsCancelled = true;
+				if (testRunnerFuture != null) {
+					testRunnerFuture.cancel(true);
+				}
+			}
+		});
+		builder.setCancelable(false);
+		dialog = builder.create();
+		dialog.show();
 	}
 
 	public void start() {
 		createProgressDialog( context.getString(R.string.checkServer), context.getString(R.string.checkServer_Connecting), context.getString(R.string.cancel));
-		dialog.setIndeterminate(true);
 
 		testsCancelled = false;
 		testRunnerFuture = executor.submit(new RunAllTests());

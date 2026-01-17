@@ -18,167 +18,26 @@
 
 package com.morphoss.acal.activity;
 
-import android.content.ContentValues;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.database.Cursor;
-import android.media.RingtoneManager;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceCategory;
-import android.preference.PreferenceManager;
-import android.preference.PreferenceScreen;
-import android.provider.MediaStore;
-import android.util.Log;
 
-import com.morphoss.acal.Constants;
-import com.morphoss.acal.PrefNames;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.morphoss.acal.R;
-import com.morphoss.acal.providers.DavCollections;
 
-public class AcalPreferences extends PreferenceActivity implements OnSharedPreferenceChangeListener {
+public class AcalPreferences extends AppCompatActivity {
 
 	public static final String TAG = "AcalPreferences";
 
-	@Override 
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		try {
-			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.main_preferences);
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_preferences);
 
-			Log.println(Constants.LOGD, TAG, "Showing preference activity with "
-					+ getPreferenceScreen().getPreferenceCount() + " preferences.");
-
-		    PreferenceManager pm = this.getPreferenceScreen().getPreferenceManager();
-			this.addDefaultCollectionPreference((ListPreference)pm.findPreference(PrefNames.defaultEventsCollection), DavCollections.INCLUDE_EVENTS );
-			this.addDefaultCollectionPreference((ListPreference)pm.findPreference(PrefNames.defaultTasksCollection), DavCollections.INCLUDE_TASKS );
-			this.addDefaultCollectionPreference((ListPreference)pm.findPreference(PrefNames.defaultNotesCollection), DavCollections.INCLUDE_JOURNAL );
-			this.addDefaultAlarmTonePreference(pm);
-
-			for (int i = 0; i < getPreferenceScreen().getPreferenceCount(); i++) {
-				initSummary(getPreferenceScreen().getPreference(i));
-			}
-		}
-		catch ( Exception e ) {
-			Log.d(TAG, Log.getStackTraceString(e));
+		if (savedInstanceState == null) {
+			getSupportFragmentManager()
+					.beginTransaction()
+					.replace(R.id.preferences_container, new AcalPreferencesFragment())
+					.commit();
 		}
 	}
-
-	/**
-	 * This is a good example of how to programatically alter a preference.
-	 * All preferences should be at least partly defined in the XML.
-	 */
-	private void addDefaultCollectionPreference( ListPreference defaultCollection, short includeWhich ) {
-		ContentValues[] collections = DavCollections.getCollections(getContentResolver(), includeWhich );
-		if ( collections.length == 0 ) return;
-	     
-    	//auth
-		String names[] = new String[collections.length];
-		String ids[] = new String[collections.length];
-		int count = 0;
-		for (ContentValues cv : collections) {
-			names[count] = cv.getAsString(DavCollections.DISPLAYNAME);
-			ids[count++] = cv.getAsString(DavCollections._ID);
-		}
-    	defaultCollection.setEntries(names);
-    	defaultCollection.setEntryValues(ids);
-   		defaultCollection.setDefaultValue(ids[0]);
-   		defaultCollection.setSelectable(true);
-   		defaultCollection.setEnabled(true);
-	}
-
-	
-	//Alarm Tones
-	private void addDefaultAlarmTonePreference(PreferenceManager pm) {
-		//List<ContentValues> alarmTones = getSelectableAlarmTones();
-		//if (alarmTones == null || alarmTones.isEmpty()) return;
-	    ListPreference defaultAlarm = (ListPreference)pm.findPreference(getString(R.string.DefaultAlarmTone_PrefKey));
-	    RingtoneManager rm = new RingtoneManager(this);
-		Cursor cursor = rm.getCursor();
-		int count = cursor.getCount();
-		if (count < 1) {
-			return;
-		}
-		int titleColumn =  cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
-		if ( titleColumn < 0 ) {
-			titleColumn =  cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
-			if ( titleColumn < 0 ) {
-				return;
-			}
-		}
-		String names[] = new String[count+2];
-		String uris[] = new String[count+2];
-		names[0] = getString(R.string.DefaultAlarmTone);
-		uris[0] = "null";
-		names[1] = getString(R.string.SystemDefaultAlarmTone);
-		uris[1] = "";
-		cursor.moveToFirst();
-		for (int i = 0; i < count; i++) {
-			names[i+2] = cursor.getString(titleColumn);
-			uris[i+2] = rm.getRingtoneUri(i).toString();
-			cursor.moveToNext();
-		}
-    	defaultAlarm.setEntries(names);
-    	defaultAlarm.setEntryValues(uris);
-   		defaultAlarm.setDefaultValue(uris[0]);
-   		defaultAlarm.setSelectable(true);
-   		defaultAlarm.setEnabled(true);
-	}
-	
-	
-	
-	@Override
-	public void onResume() {
-		super.onResume();
-
-		// Set up a listener whenever a key changes
-		getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-	}
-
-	@Override
-	public void onPause() {
-		getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
-		super.onPause();
-	}
-
-	@Override
-	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-		updatePrefSummary(findPreference(key));
-	}
-
-	private void initSummary(Preference p) {
-		if ( p instanceof PreferenceCategory ) {
-			PreferenceCategory pCat = (PreferenceCategory) p;
-			for (int i = 0; i < pCat.getPreferenceCount(); i++) {
-				initSummary(pCat.getPreference(i));
-			}
-		}
-		else if ( p instanceof PreferenceScreen ) {
-			PreferenceScreen pScreen = (PreferenceScreen) p;
-			for (int i = 0; i < pScreen.getPreferenceCount(); i++) {
-				initSummary(pScreen.getPreference(i));
-			}
-		}
-		else {
-			updatePrefSummary(p);
-		}
-	}
-
-	private void updatePrefSummary(Preference p) {
-		if ( p instanceof ListPreference ) {
-			ListPreference listPref = (ListPreference) p;
-			p.setSummary(listPref.getEntry());
-			Log.println(Constants.LOGD, TAG, "Setting summary for list preference to '" + listPref.getEntry() + "'");
-		}
-		else if ( p instanceof EditTextPreference ) {
-			EditTextPreference editTextPref = (EditTextPreference) p;
-			p.setSummary(editTextPref.getText());
-			Log.println(Constants.LOGD, TAG, "Setting summary for list preference to '" + editTextPref.getText() + "'");
-		}
-
-	}
-	
 }

@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -707,7 +708,7 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 	}
 
 	private Dialog	deletingDialog;
-	private final Handler mHandler = new Handler() {
+	private final Handler mHandler = new Handler(Looper.getMainLooper()) {
 		private boolean	deleteSucceeded = false;
 
 		public void handleMessage(Message msg) {

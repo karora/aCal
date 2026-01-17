@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import android.app.ListActivity;
 import android.content.ContentQueryMap;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -40,7 +39,10 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.morphoss.acal.AcalTheme;
 import com.morphoss.acal.Constants;
@@ -63,7 +65,9 @@ import com.morphoss.acal.service.ServiceRequest;
  * @author Morphoss Ltd
  *
  */
-public class ServerConfigList extends ListActivity implements OnClickListener {
+public class ServerConfigList extends AppCompatActivity implements OnClickListener {
+
+	private ListView listView;
 
 	public static final String TAG = "acal ServerConfigList";
 
@@ -95,9 +99,10 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.servers_list);
+		listView = findViewById(android.R.id.list);
 		updateListView();
-		getListView().setOnItemClickListener(new ServerListClickListener());
-		registerForContextMenu(getListView());
+		listView.setOnItemClickListener(new ServerListClickListener());
+		registerForContextMenu(listView);
 
 		addServer = (Button) findViewById(R.id.AddServerButton);
 		addServer.setOnClickListener(this);
@@ -139,13 +144,13 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 		ArrayAdapter<String> mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, serverNames);
 
 		// Bind to our new adapter.
-		setListAdapter(mAdapter);
+		listView.setAdapter(mAdapter);
 
 		// Set the context menu
-		getListView().setOnCreateContextMenuListener( new ServerListCreateContextListener());
+		listView.setOnCreateContextMenuListener( new ServerListCreateContextListener());
 
 		// make sure the display is refreshed
-		getListView().refreshDrawableState();
+		listView.refreshDrawableState();
 	}
 
 	/**
@@ -211,7 +216,7 @@ public class ServerConfigList extends ListActivity implements OnClickListener {
 		try {
 			AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item
 					.getMenuInfo();
-			long id = getListAdapter().getItemId(info.position);
+			long id = listView.getAdapter().getItemId(info.position);
 			switch (item.getItemId()) {
 			case CONTEXT_DELETE:
 				deleteServer((int) id);

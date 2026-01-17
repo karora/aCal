@@ -16,6 +16,7 @@
  *
  */
 package com.morphoss.acal.weekview;
+import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -77,14 +78,14 @@ public class WeekViewSideBar extends ImageView {
 		if (this.getHeight() == 0) return;
 		Paint p = new Paint();
 		p.setStyle(Paint.Style.FILL);
-		p.setColor(context.getResources().getColor(R.color.WeekViewSidebarBG));
+		p.setColor(ContextCompat.getColor(context, R.color.WeekViewSidebarBG));
 		canvas.drawRect(0, 0, this.getWidth(), this.getHeight(), p);
 		
 		float offset = -context.getScrollY();
 		
 		canvas.drawBitmap(context.getImageCache().getSideBar(this.getWidth()), 0,offset, p);
 		p.setStyle(Paint.Style.STROKE);
-		p.setColor(context.getResources().getColor(R.color.WeekViewSidebarBorder));
+		p.setColor(ContextCompat.getColor(context, R.color.WeekViewSidebarBorder));
 		canvas.drawRect(0, 0, this.getWidth(), this.getHeight(), p);
 	}
 }

@@ -16,6 +16,7 @@
  *
  */
 package com.morphoss.acal.weekview;
+import androidx.core.content.ContextCompat;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -68,11 +69,11 @@ public class WeekViewImageCache {
 			canvas = new Canvas(returnedBitmap);
 			p = new Paint();
 			p.setStyle(Paint.Style.STROKE);
-			p.setColor(c.getResources().getColor(R.color.WeekViewDayGridBorder));
+			p.setColor(ContextCompat.getColor(c, R.color.WeekViewDayGridBorder));
 			canvas.drawRect(0,0,dayWidth,(int)(halfHeight*2),p);
 
 			p.setStyle(Paint.Style.STROKE);
-			p.setColor(c.getResources().getColor(R.color.WeekViewDayGridBorder));
+			p.setColor(ContextCompat.getColor(c, R.color.WeekViewDayGridBorder));
 			//draw dotted center line
 			DashPathEffect dashes = new DashPathEffect(WeekViewActivity.DASHED_LINE_PARAMS,0);
 			p.setPathEffect(dashes);

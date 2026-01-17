@@ -18,7 +18,6 @@
 
 package com.morphoss.acal.activity;
 
-import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -27,18 +26,18 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.R;
 import com.morphoss.acal.StaticHelpers;
 
 /**
  * The main settings list. A list of settings that can be configured.
- * 
- * TODO Make this better able to be localised
- * 
+ *
  * @author Morphoss Ltd
  */
-public class Settings extends ListActivity {
+public class Settings extends AppCompatActivity {
 	
 	public static final String TAG = "aCal Settings";
 
@@ -59,18 +58,19 @@ public class Settings extends ListActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		setContentView(R.layout.activity_simple_list);
+
 		TASKS = new String[] { getString(R.string.appActivityServerConfigList),
 					getString(R.string.appActivityCollectionConfigList),
 					getString(R.string.showUpdateInformation),
 					getString(R.string.appActivityPreference)};
-		
+
 		if (Constants.DEBUG_SETTINGS) {
 			taskList = StaticHelpers.mergeArrays(TASKS, DEBUG_TASKS);
 		} else taskList = TASKS;
-		
-		setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, taskList));
-		ListView lv = getListView();
+
+		ListView lv = findViewById(android.R.id.list);
+		lv.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, taskList));
 		lv.setTextFilterEnabled(true);
 		lv.setOnItemClickListener(new SettingsListClickListener());
 	}

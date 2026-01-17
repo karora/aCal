@@ -17,6 +17,7 @@
  */
 
 package com.morphoss.acal.activity;
+import androidx.core.content.ContextCompat;
 
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -81,7 +83,7 @@ public class MonthAdapter extends BaseAdapter implements CacheChangedListener, C
 	
 	private volatile long wait = 0;
 	private static final int HANDLER_NEW_DATA = 0;
-	private Handler mHandler = new Handler() {
+	private Handler mHandler = new Handler(Looper.getMainLooper()) {
 			
 	
 		@SuppressWarnings("unchecked")
@@ -224,7 +226,7 @@ public class MonthAdapter extends BaseAdapter implements CacheChangedListener, C
 			ViewParent vp = dayColumnHeader.getParent();
 			if ( vp instanceof View ) {
 				((View) vp).setBackgroundColor(AcalTheme.getElementColour(AcalTheme.BUTTON));
-				dayColumnHeader.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.dayheadings_fg));
+				dayColumnHeader.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.dayheadings_fg));
 				dayColumnHeader.setTextColor(AcalTheme.pickForegroundForBackground(AcalTheme.getElementColour(AcalTheme.BUTTON)));
 			}
 			

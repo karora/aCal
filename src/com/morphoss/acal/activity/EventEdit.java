@@ -30,6 +30,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -176,7 +177,7 @@ public class EventEdit extends AcalActivity implements  OnClickListener, OnCheck
 	private Dialog loadingDialog = null;
 	private Dialog savingDialog = null;
 
-	private final Handler mHandler = new Handler() {
+	private final Handler mHandler = new Handler(Looper.getMainLooper()) {
 		public void handleMessage(Message msg) {
 
 			switch (msg.what) {

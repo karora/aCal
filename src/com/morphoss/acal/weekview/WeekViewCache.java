@@ -6,6 +6,7 @@ import java.util.Collections;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.SparseArray;
 
@@ -64,7 +65,7 @@ public class WeekViewCache implements CacheChangedListener, CacheResponseListene
 	/**
 	 * Handler for processing cache responses in GUI Thread
 	 */
-	private static Handler mHandler = new Handler() {
+	private static Handler mHandler = new Handler(Looper.getMainLooper()) {
 		@SuppressWarnings("unchecked")
 		@Override
 		public void handleMessage(Message msg) {
