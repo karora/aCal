@@ -22,13 +22,23 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.morphoss.acal.service.SyncWorkScheduler;
+
+/**
+ * Receiver for BOOT_COMPLETED broadcast.
+ * Schedules periodic sync work using WorkManager instead of directly starting
+ * a service, which is required on modern Android versions.
+ */
 public class StartUpIntentReceiver extends BroadcastReceiver {
 
 	@Override
-	public void onReceive(Context arg0, Intent arg1) {
-		Intent serviceIntent = new Intent();
-		serviceIntent.setAction("com.morphoss.acal.service.aCalService");
-		arg0.startService(serviceIntent);
+	public void onReceive(Context context, Intent intent) {
+		// Schedule periodic sync work using WorkManager
+		// This is the modern approach that works with background execution limits
+		SyncWorkScheduler.schedulePeriodicSync(context);
+
+		// Also schedule an immediate sync to start syncing after boot
+		SyncWorkScheduler.scheduleImmediateSync(context);
 	}
 
 }

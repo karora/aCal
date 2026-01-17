@@ -19,6 +19,7 @@ import android.util.Log;
 
 import com.morphoss.acal.dataservice.Resource;
 import com.morphoss.acal.providers.Timezones;
+import com.morphoss.acal.service.SyncWorkScheduler;
 import com.morphoss.acal.service.connector.AcalConnectionPool;
 
 public class AcalApplication extends Application {
@@ -41,6 +42,8 @@ public class AcalApplication extends Application {
         createNotificationChannel();
         // Initialize connection pool with app context for certificate storage
         AcalConnectionPool.initialize(this);
+        // Schedule periodic sync work using WorkManager
+        SyncWorkScheduler.schedulePeriodicSync(this);
     }
 
     private void createNotificationChannel() {

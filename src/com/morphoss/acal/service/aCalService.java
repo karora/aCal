@@ -18,11 +18,7 @@
 
 package com.morphoss.acal.service;
 
-import android.app.AlarmManager;
-import android.app.IntentService;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -39,7 +35,12 @@ import com.morphoss.acal.database.alarmmanager.AlarmQueueManager;
 import com.morphoss.acal.database.cachemanager.CacheManager;
 import com.morphoss.acal.database.resourcesmanager.ResourceManager;
 
-public class aCalService extends IntentService {
+/**
+ * Main service for aCal background operations.
+ * Handles AIDL binding for IPC and manages the WorkerClass for job processing.
+ * Uses WorkManager for periodic sync scheduling instead of the deprecated IntentService.
+ */
+public class aCalService extends Service {
 
 
 	private final ServiceRequest.Stub serviceRequest = new ServiceRequestHandler();
@@ -54,10 +55,6 @@ public class aCalService extends IntentService {
 	private AlarmQueueManager am;
 
 	private static SharedPreferences prefs = null;
-
-	public aCalService() {
-		super(TAG);
-	}
 
 
 	public void onCreate() {
@@ -98,13 +95,6 @@ public class aCalService extends IntentService {
 	}
 
 
-	// This is the old onStart method that will be called on the pre-2.0
-	// platform.  On 2.0 or later we override onStartCommand() so this
-	// method will not be called.
-	@Override
-	public void onStart(Intent intent, int startId) {
-		handleCommand(intent);
-	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
@@ -114,8 +104,6 @@ public class aCalService extends IntentService {
 		return Service.START_STICKY;
 	}
 
-	// The actual start command, regardless of whether we're running under
-	// 1.x or 2.x
 	private void handleCommand( Intent inRequest ) {
 
         // Always schedule a service Restart in two hours time.  This will only
@@ -168,16 +156,9 @@ public class aCalService extends IntentService {
 
 
 	private synchronized void scheduleServiceRestart(long secsInFuture) {
-		long restartTime = System.currentTimeMillis() + (secsInFuture * 1000);
-
-		Intent serviceIntent = new Intent(this, aCalService.class);
-		serviceIntent.putExtra("RESTARTED", System.currentTimeMillis());
-
-		PendingIntent ourFutureSelf = PendingIntent.getService(getApplicationContext(), 0, serviceIntent, PendingIntent.FLAG_IMMUTABLE);
-		AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        alarmManager.cancel(ourFutureSelf);
-		alarmManager.set(AlarmManager.RTC_WAKEUP, restartTime, ourFutureSelf);
-		Log.i(TAG, AcalDateTime.getInstance().fmtIcal() + ": Scheduling aCalService restart in "+secsInFuture+" seconds.");
+		// Use WorkManager for reliable background scheduling instead of AlarmManager
+		SyncWorkScheduler.scheduleDelayedSync(getApplicationContext(), secsInFuture);
+		Log.i(TAG, AcalDateTime.getInstance().fmtIcal() + ": Scheduling aCalService restart in "+secsInFuture+" seconds via WorkManager.");
 	}
 
 
@@ -261,14 +242,5 @@ public class aCalService extends IntentService {
 			worker.addJobAndWake(job);
 		}
 	}
-
-
-	@Override
-	protected void onHandleIntent(Intent intent) {
-        if (Constants.LOG_DEBUG) Log.println(Constants.LOGD, TAG, "Service starting via onHandleIntent()");
-        startService();
-	}
-
-
 }
 
