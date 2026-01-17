@@ -1,5 +1,6 @@
 package com.morphoss.acal.database.alarmmanager.requesttypes;
 
+import com.morphoss.acal.service.CallbackExecutor;
 
 public abstract class AlarmRequestWithResponse<E> implements AlarmRequest {
 
@@ -23,13 +24,7 @@ public abstract class AlarmRequestWithResponse<E> implements AlarmRequest {
 	 */
 	protected void postResponse(final  AlarmResponse<E> response) {
 		if (callBack == null) return;
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				callBack.alarmResponse(response);
-			}
-		}).start();
+		CallbackExecutor.execute(() -> callBack.alarmResponse(response));
 	}
 	
 	

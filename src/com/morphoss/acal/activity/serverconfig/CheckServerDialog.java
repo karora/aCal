@@ -21,6 +21,9 @@ package com.morphoss.acal.activity.serverconfig;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -31,9 +34,9 @@ import android.content.DialogInterface;
 import android.database.sqlite.SQLiteConstraintException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
@@ -107,7 +110,9 @@ public class CheckServerDialog {
 			catch( Exception e ) {}
 		}
 	};
-	private RunAllTests	testRunner;
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private Future<?> testRunnerFuture;
+	private volatile boolean testsCancelled = false;
 	
 	
 	public CheckServerDialog(ServerConfigurator serverConfiguration, ContentValues serverData, Context cx, ServiceManager sm) {
@@ -122,13 +127,14 @@ public class CheckServerDialog {
 	}
 
 
-	private class RunAllTests extends AsyncTask<Boolean, Integer, Void> {
-		
-		private class TestsCancelledException extends Exception {
-			private static final long	serialVersionUID	= 1L;
-		};
-		
-		protected Void doInBackground(Boolean... params) {
+	private class TestsCancelledException extends Exception {
+		private static final long	serialVersionUID	= 1L;
+	}
+
+	private class RunAllTests implements Runnable {
+
+		@Override
+		public void run() {
 			if ( advancedMode )
 				requestor = AcalRequestor.fromServerValues(serverData);
 			else {
@@ -141,15 +147,8 @@ public class CheckServerDialog {
 			catch( Exception e ) {
 			    Log.i(TAG,"Oh dear!", e);
 			}
-			return null;
 		}
-		
-		protected void onProgressUpdate(Integer... progress) {
-		}
-		
-	    protected void onPostExecute(Void result) {
-	    }
-		
+
 		/**
 		 * <p>
 		 * Checks the server they have entered for validity. Endeavouring to profile it in some ways that we can
@@ -309,10 +308,10 @@ public class CheckServerDialog {
 		/**
 		 * Update the progress dialog with a friendly string.
 		 * @param newMessage
-		 * @throws TestsCancelledException 
+		 * @throws TestsCancelledException
 		 */
 		private void updateProgress( String newMessage ) throws TestsCancelledException {
-			if ( this.isCancelled() ) throw new TestsCancelledException();
+			if ( testsCancelled ) throw new TestsCancelledException();
 			Message m = Message.obtain();
 			Bundle b = new Bundle();
 			b.putInt(TYPE, REFRESH_PROGRESS);
@@ -328,13 +327,15 @@ public class CheckServerDialog {
 		dialog = new ProgressDialog((Context) sc);
 	    dialog.setTitle(title);
 	    dialog.setMessage(message);
-	    dialog.setButton(buttonText, new DialogInterface.OnClickListener() 
+	    dialog.setButton(buttonText, new DialogInterface.OnClickListener()
 	    {
-	        public void onClick(DialogInterface dialog, int which) 
+	        public void onClick(DialogInterface dialog, int which)
 	        {
-	            // Use either finish() or return() to either close the activity or just the dialog
-	        	testRunner.cancel(true);
-	            return;
+	            // Cancel the running tests
+	            testsCancelled = true;
+	            if (testRunnerFuture != null) {
+	                testRunnerFuture.cancel(true);
+	            }
 	        }
 	    });
 	    dialog.show();
@@ -343,9 +344,9 @@ public class CheckServerDialog {
 	public void start() {
 		createProgressDialog( context.getString(R.string.checkServer), context.getString(R.string.checkServer_Connecting), context.getString(R.string.cancel));
 		dialog.setIndeterminate(true);
-		
-		testRunner = new RunAllTests();
-		testRunner.execute();
+
+		testsCancelled = false;
+		testRunnerFuture = executor.submit(new RunAllTests());
 	}
 	
 

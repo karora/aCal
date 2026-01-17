@@ -2,6 +2,7 @@ package com.morphoss.acal.database.resourcesmanager.requesttypes;
 
 import com.morphoss.acal.database.resourcesmanager.ResourceResponse;
 import com.morphoss.acal.database.resourcesmanager.ResourceResponseListener;
+import com.morphoss.acal.service.CallbackExecutor;
 
 
 public abstract class ResourceRequestWithResponse<E> implements ResourceRequest {
@@ -33,13 +34,7 @@ public abstract class ResourceRequestWithResponse<E> implements ResourceRequest 
 	 */
 	protected void postResponse(final ResourceResponse<E> response) {
 		if (callBack == null) return;
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				callBack.resourceResponse(response);
-			}
-		}).start();
+		CallbackExecutor.execute(() -> callBack.resourceResponse(response));
 	}
 	
 	

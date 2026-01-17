@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.morphoss.acal.database.resourcesmanager.ResourceResponse;
 import com.morphoss.acal.database.resourcesmanager.ResourceResponseListener;
+import com.morphoss.acal.service.CallbackExecutor;
 
 
 public abstract class ReadOnlyResourceRequestWithResponse<E> implements	ReadOnlyResourceRequest {
@@ -43,22 +44,18 @@ public abstract class ReadOnlyResourceRequestWithResponse<E> implements	ReadOnly
 	 */
 	protected void postResponse(final ResourceResponse<E> response) {
 		if (callBack == null) return;
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				ReadOnlyResourceRequestWithResponse.this.setProcessed();
-				try {
-				    callBack.resourceResponse(response);
-				}
-				catch( Exception e) {
-				    Log.w("aCal ReadOnlyResourceRequestWithResponse",
-				            "Request class is: "+this.getClass().getSimpleName()
-				            +", Response class is: "+response.getClass().getName()
-				            +" Exception:\n"+Log.getStackTraceString(e));
-				}
+		CallbackExecutor.execute(() -> {
+			ReadOnlyResourceRequestWithResponse.this.setProcessed();
+			try {
+			    callBack.resourceResponse(response);
 			}
-		}).start();
+			catch( Exception e) {
+			    Log.w("aCal ReadOnlyResourceRequestWithResponse",
+			            "Request class is: "+this.getClass().getSimpleName()
+			            +", Response class is: "+response.getClass().getName()
+			            +" Exception:\n"+Log.getStackTraceString(e));
+			}
+		});
 	}
 
 	@Override

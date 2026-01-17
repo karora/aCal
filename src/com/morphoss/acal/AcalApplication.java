@@ -1,6 +1,6 @@
 package com.morphoss.acal;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import android.app.Application;
 import android.app.NotificationChannel;
@@ -109,22 +109,25 @@ public class AcalApplication extends Application {
     	return prefs.getBoolean(key, defValue);
 	}
 
-	final private static HashMap<String,String> zoneAliasCache = new HashMap<String,String>();
+	final private static ConcurrentHashMap<String,String> zoneAliasCache = new ConcurrentHashMap<String,String>();
 	public static String getOlsonFromAlias(String alias) {
-	    if ( ! zoneAliasCache.containsKey(alias) ) {
+	    return zoneAliasCache.computeIfAbsent(alias, key -> {
     	    ContentResolver cr = getContext().getContentResolver();
-    	    Uri resolveAliasUri = Uri.withAppendedPath(Uri.withAppendedPath(Timezones.CONTENT_URI, "resolve_alias"), Uri.encode(alias));
+    	    Uri resolveAliasUri = Uri.withAppendedPath(Uri.withAppendedPath(Timezones.CONTENT_URI, "resolve_alias"), Uri.encode(key));
             Log.d(TAG,"Resolving timezone: "+resolveAliasUri.toString());
     	    Cursor c = cr.query( resolveAliasUri, null, null, null, null );
     	    if ( c != null ) {
-    	        if ( c.getCount() > 0 ) {
-    	            c.moveToFirst();
-    	            zoneAliasCache.put(alias,c.getString(0));
+    	        try {
+    	            if ( c.getCount() > 0 ) {
+    	                c.moveToFirst();
+    	                return c.getString(0);
+    	            }
+    	        } finally {
+    	            c.close();
     	        }
-    	        c.close();
     	    }
-	    }
-	    return zoneAliasCache.get(alias);
+    	    return null;
+	    });
 	}
 
     public static Resource getResourceFromDatabase(long resource_id) {

@@ -1,6 +1,7 @@
 package com.morphoss.acal.database.cachemanager;
 
 import com.morphoss.acal.acaltime.AcalDateRange;
+import com.morphoss.acal.service.CallbackExecutor;
 
 
 /**
@@ -32,13 +33,7 @@ public abstract class CacheRequestWithResponse<E> implements CacheRequest {
 	 */
 	protected void postResponse(final CacheResponse<E> response) {
 		if (callBack == null) return;
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				callBack.cacheResponse(response);
-			}
-		}).start();
+		CallbackExecutor.execute(() -> callBack.cacheResponse(response));
 	}
 
     public String whereClauseForRange(AcalDateRange range) {

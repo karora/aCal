@@ -20,8 +20,11 @@ package com.morphoss.acal.service;
 
 import java.util.Collection;
 import java.util.PriorityQueue;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import android.os.ConditionVariable;
 import android.util.Log;
@@ -61,14 +64,14 @@ public class WorkerClass implements Runnable {
 
 	public static final String			TAG					= "aCal WorkerClass";
 
-	private TimerTask					myTimerTask;
+	private ScheduledFuture<?>			scheduledWakeup;
+	private final ScheduledExecutorService scheduler		= Executors.newSingleThreadScheduledExecutor();
 	private Thread						worker				= null;
 	private PriorityQueue<ServiceJob>	jobQueue			= new PriorityQueue<ServiceJob>();
 	private ConditionVariable			runWorker			= new ConditionVariable(true);
-	private Timer						myTimer;
 	private aCalService					context;
 	private volatile boolean			interruptSent		= false;
-	public static boolean				isRunning			= false;
+	public static final AtomicBoolean	isRunning			= new AtomicBoolean(false);
 
 	/** Public vars */
 
@@ -208,38 +211,35 @@ public class WorkerClass implements Runnable {
 		this.interruptSent = true;
 		if ( worker != null ) worker.interrupt();
 		this.worker = null;
+		cancelScheduledWakeup();
 		runWorker.open();
 	}
 
-	private void destroyTimers() {
+	private void cancelScheduledWakeup() {
 	    try {
-		// Destroy all timer activity
-		if ( myTimerTask != null ) {
-			myTimerTask.cancel();
-			myTimerTask = null;
-		}
-		if ( myTimer != null ) {
-			myTimer.cancel();
-			myTimer.purge();
-			myTimer = null;
+		// Cancel any scheduled wakeup
+		if ( scheduledWakeup != null ) {
+			scheduledWakeup.cancel(false);
+			scheduledWakeup = null;
 		}
 		else {
-			if ( Constants.LOG_VERBOSE ) Log.v(TAG, "Asked to destroy timers, but no timers are set!");
+			if ( Constants.LOG_VERBOSE ) Log.v(TAG, "Asked to cancel wakeup, but none is scheduled!");
 		}
 	    }
-	    catch( NullPointerException npe ) {
+	    catch( Exception e ) {
+	        // Ignore cancellation errors
 	    }
 	}
 
 	public void run() {
-		WorkerClass.isRunning = true;
+		WorkerClass.isRunning.set(true);
 		this.interruptSent = false;
 		try {
 			while ( worker == Thread.currentThread() ) {
 				if ( Constants.LOG_VERBOSE ) Log.v(TAG, "Worker thread awake, processing queue of " + jobQueue.size()
 						+ " jobs.");
 				// Remove all timers.
-				this.destroyTimers();
+				this.cancelScheduledWakeup();
 
 				// Iterate through remaining jobs. If we run out our condition
 				// variable is closed automatically.
@@ -272,8 +272,8 @@ public class WorkerClass implements Runnable {
 			}
 		}
 		finally {
-			this.destroyTimers();
-			WorkerClass.isRunning = false;
+			this.cancelScheduledWakeup();
+			WorkerClass.isRunning.set(false);
 		}
 	}
 
@@ -299,28 +299,20 @@ public class WorkerClass implements Runnable {
 
 		runWorker.close();
 
-		// Set 'wake up' timer. Should always be the LAST thing done.
-		myTimer = new Timer("aCal Service Timer", true);
-		myTimerTask = new WakeUpTimer();
-		myTimer.schedule(myTimerTask, timeTillNext);
+		// Schedule wakeup using ScheduledExecutorService. Should always be the LAST thing done.
+		scheduledWakeup = scheduler.schedule(() -> runWorker.open(), timeTillNext, TimeUnit.MILLISECONDS);
 
 	}
 
 	/**
-	 * Return whether there is a job in the queue which is currently waiting to execute. 
+	 * Return whether there is a job in the queue which is currently waiting to execute.
 	 * @return
 	 */
-	public boolean workWaiting() {  
+	public boolean workWaiting() {
         synchronized( jobQueue ) {
             if ( jobQueue.isEmpty() ) return false;
             return ( 0 >= jobQueue.peek().TIME_TO_EXECUTE - System.currentTimeMillis() );
         }
 	}
 
-	private class WakeUpTimer extends TimerTask {
-		public void run() {
-			runWorker.open();
-		}
-	}
-	
 }

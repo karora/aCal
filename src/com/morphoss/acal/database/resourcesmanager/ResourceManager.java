@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import android.content.ContentQueryMap;
 import android.content.ContentValues;
@@ -37,6 +42,7 @@ import com.morphoss.acal.davacal.VCalendar;
 import com.morphoss.acal.davacal.VComponent;
 import com.morphoss.acal.providers.DavCollections;
 import com.morphoss.acal.providers.Servers;
+import com.morphoss.acal.service.CallbackExecutor;
 import com.morphoss.acal.service.ServiceJob;
 import com.morphoss.acal.service.SyncChangesToServer;
 import com.morphoss.acal.service.WorkerClass;
@@ -48,7 +54,8 @@ public class ResourceManager implements Runnable {
 	@SuppressWarnings("unused")
 	public static boolean DEBUG = false && Constants.DEBUG_MODE;
 
-	private volatile int numReadsProcessing = 0;
+	private final AtomicInteger numReadsProcessing = new AtomicInteger(0);
+	private volatile CountDownLatch readCompletionLatch;
 
 	// Get an instance
 	public synchronized static ResourceManager getInstance(Context context) {
@@ -133,30 +140,34 @@ public class ResourceManager implements Runnable {
 				    if ( ResourceManager.DEBUG ) Log.i(TAG, "Begin a set of read queries.");
 					getRPInstance().openReadQuerySet();
 
+					// Count how many reads we need to process
+					int readCount = readQueue.size();
+					readCompletionLatch = new CountDownLatch(readCount);
+					numReadsProcessing.set(readCount);
+
 					//Start all read processes
 					while (!readQueue.isEmpty()) {
 						if ( ResourceManager.DEBUG ) Log.println(Constants.LOGD,TAG,readQueue.size()+" items in read queue.");
 						final ReadOnlyResourceRequest request = readQueue.poll();
 						if ( ResourceManager.DEBUG ) Log.println(Constants.LOGD,TAG,"Processing Read Request: "+request.getClass());
-						this.numReadsProcessing++;
 						try {
-							new Thread(new Runnable() {
-								public void run() {
-									try {
-										getRPInstance().processRead(request);
-									} catch (Exception e) {
-										Log.e(TAG, "Error processing read request: "+Log.getStackTraceString(e));
-									}
+							CallbackExecutor.execute(() -> {
+								try {
+									getRPInstance().processRead(request);
+								} catch (Exception e) {
+									Log.e(TAG, "Error processing read request: "+Log.getStackTraceString(e));
 								}
-							}).start();
+							});
 						} catch (Exception e) {
 							Log.e(TAG, "Error processing read request: "+Log.getStackTraceString(e));
 						}
 					}
 
-					//Wait until all processes have finished
-					while (this.numReadsProcessing > 0) {
-						try { Thread.sleep(10);	} catch (Exception e) {	}
+					//Wait until all processes have finished using CountDownLatch
+					try {
+						readCompletionLatch.await(60, TimeUnit.SECONDS);
+					} catch (InterruptedException e) {
+						Log.w(TAG, "Interrupted while waiting for read operations to complete");
 					}
 
 					//tell processor that we are done
@@ -363,7 +374,10 @@ public class ResourceManager implements Runnable {
 						"INVALID TERMINATION while processing Resource Request: "
 						+ Log.getStackTraceString(e));
 			} finally {
-				numReadsProcessing--;
+				numReadsProcessing.decrementAndGet();
+				if (readCompletionLatch != null) {
+					readCompletionLatch.countDown();
+				}
 			}
 		}
 
