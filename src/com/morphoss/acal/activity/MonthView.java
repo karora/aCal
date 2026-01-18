@@ -31,7 +31,6 @@ import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -101,7 +100,7 @@ import com.morphoss.acal.widget.AcalViewFlipper;
  * @license GPL v3 or later
  *
  */
-public class MonthView extends AcalActivity implements OnGestureListener,
+public class MonthView extends AcalAppCompatActivity implements OnGestureListener,
 		OnTouchListener, OnClickListener, ResourceResponseListener<Long> {
 
 	public static final String TAG = "aCal MonthView";
@@ -149,7 +148,6 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 	public static final int WEEK = 1;
 	public static final int YEAR = 2;
 	public static final int ADD = 3;
-	public static final int SETTINGS = 4;
 
 	/* Fields Relating to Gesture Detection */
 	private GestureDetector gestureDetector;
@@ -195,6 +193,7 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.month_view);
+		setupToolbarAndDrawer(getString(R.string.appName));
 
 		Bundle b = this.getIntent().getExtras();
 		if ( b != null && b.containsKey("InvokedFromView") )
@@ -234,7 +233,6 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 		this.setupButton(R.id.month_week_button, WEEK, getString(R.string.Week));
 		this.setupButton(R.id.month_year_button, YEAR, getString(R.string.Year));
 		this.setupButton(R.id.month_add_button, ADD, "+");
-		this.setupButton(R.id.month_settings_button, SETTINGS, getString(R.string.Settings));
 
 		selectedDate = new AcalDateTime().applyLocalTimeZone();
 		displayedMonth = new AcalDateTime().applyLocalTimeZone();
@@ -802,8 +800,7 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.events_options_menu, menu);
+		// Menu items moved to navigation drawer
 		return true;
 	}
 
@@ -850,17 +847,8 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle item selection
-		int id = item.getItemId();
-		if (id == R.id.settingsMenuItem) {
-			startSettings();
-			return true;
-		} else if (id == R.id.tasksMenuItem) {
-			startTodoList();
-			return true;
-		} else {
-			return super.onOptionsItemSelected(item);
-		}
+		// Menu items moved to navigation drawer
+		return super.onOptionsItemSelected(item);
 	}
 
 	/**
@@ -1027,9 +1015,6 @@ public class MonthView extends AcalActivity implements OnGestureListener,
 				Intent yearIntent = new Intent(this, YearView.class);
 				yearIntent.putExtras(bundle);
 				this.startActivityForResult(yearIntent, PICK_MONTH_FROM_YEAR_VIEW);
-				break;
-			case SETTINGS:
-				startSettings();
 				break;
 			default:
 				Log.w(TAG, "Unrecognised button was pushed in MonthView.");

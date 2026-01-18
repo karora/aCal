@@ -22,13 +22,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.morphoss.acal.AcalTheme;
@@ -80,7 +78,7 @@ import com.morphoss.acal.service.aCalService;
  * @license GPL v3 or later
  * 
  */
-public class TodoListView extends AcalActivity implements OnClickListener {
+public class TodoListView extends AcalAppCompatActivity implements OnClickListener {
 
 	public static final String TAG = "aCal TodoListView";
 	private final static boolean DEBUG = true && Constants.DEBUG_MODE;
@@ -121,6 +119,7 @@ public class TodoListView extends AcalActivity implements OnClickListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.todo_list_view);
+		setupToolbarAndDrawer(getString(R.string.Tasks));
 
 		Bundle b = this.getIntent().getExtras();
 		if ( b != null && b.containsKey("InvokedFromView") )
@@ -207,13 +206,16 @@ public class TodoListView extends AcalActivity implements OnClickListener {
 		this.setupButton(R.id.todo_due_button, DUE, (this.showFuture ? getString(R.string.Due) : getString(R.string.All) ));
 		this.setupButton(R.id.todo_all_button, TODO, (this.showCompleted ? getString(R.string.Todo) : getString(R.string.All)));
 
-		TextView title = (TextView) this.findViewById(R.id.todo_list_title);
-		title.setText( showFuture && showCompleted ? R.string.allTasksTitle
-				: ( showFuture ? R.string.incompleteTasksTitle 
+		// Update toolbar title based on filter state
+		String title = getString( showFuture && showCompleted ? R.string.allTasksTitle
+				: ( showFuture ? R.string.incompleteTasksTitle
 						: (showCompleted ? R.string.dueTasksTitle
 								: R.string.incompleteTasksDue)
 				)
 		);
+		if (getSupportActionBar() != null) {
+			getSupportActionBar().setTitle(title);
+		}
 
 		this.todoListAdapter = null;
 		updateLayout();
@@ -351,13 +353,12 @@ public class TodoListView extends AcalActivity implements OnClickListener {
 	 * <p>
 	 * Responsible for handling the menu button push.
 	 * </p>
-	 * 
+	 *
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.tasks_options_menu, menu);
+		// Menu items moved to navigation drawer
 		return true;
 	}
 
@@ -366,22 +367,13 @@ public class TodoListView extends AcalActivity implements OnClickListener {
 	 * Called when the user selects an option from the options menu. Determines
 	 * what (if any) Activity should start.
 	 * </p>
-	 * 
+	 *
 	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle item selection
-		int id = item.getItemId();
-		if (id == R.id.settingsMenuItem) {
-			startSettings();
-			return true;
-		} else if (id == R.id.eventsMenuItem) {
-			startMonthView();
-			return true;
-		} else {
-			return super.onOptionsItemSelected(item);
-		}
+		// Menu items moved to navigation drawer
+		return super.onOptionsItemSelected(item);
 	}
 
 

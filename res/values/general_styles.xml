@@ -53,4 +53,9 @@
 		<item name="android:background">@drawable/titlebg</item>
 		<item name="android:tileMode">repeat</item>
 	</style>
+	<style name="Theme.aCal.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+		<item name="colorPrimary">@color/themed_button_colour</item>
+		<item name="colorPrimaryDark">#cc9010</item>
+		<item name="colorAccent">@color/themed_button_colour</item>
+	</style>
 </resources>

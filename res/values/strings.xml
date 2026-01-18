@@ -392,4 +392,11 @@
 	<string name="permission_required_title">Permissions Required</string>
 	<string name="permission_denied_title">Permissions Denied</string>
 	<string name="permission_denied_message">aCal cannot function without the required permissions. Please grant calendar and contacts permissions in your device settings to use this app.</string>
+	<string name="nav_drawer_open">Open navigation drawer</string>
+	<string name="nav_drawer_close">Close navigation drawer</string>
+	<string name="nav_calendar">Calendar</string>
+	<string name="nav_tasks">Tasks</string>
+	<string name="nav_notes">Notes</string>
+	<string name="nav_about">About / Changes</string>
+	<string name="nav_other">Other</string>
 </resources>

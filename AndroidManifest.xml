@@ -90,7 +90,8 @@
         <activity
             android:name=".activity.MonthView"
             android:exported="false"
-            android:label="@string/appActivityMonthView">
+            android:label="@string/appActivityMonthView"
+            android:theme="@style/Theme.aCal.NoActionBar">
             <intent-filter>
                 <action android:name="com.morphoss.acal.activity.MonthView" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -215,7 +216,8 @@
         <activity
             android:name=".activity.TodoListView"
             android:exported="false"
-            android:launchMode="standard">
+            android:launchMode="standard"
+            android:theme="@style/Theme.aCal.NoActionBar">
             <intent-filter>
                 <action android:name="com.morphoss.acal.activity.TodoListView" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -224,7 +226,8 @@
         <activity
             android:name=".activity.JournalListView"
             android:exported="false"
-            android:launchMode="standard">
+            android:launchMode="standard"
+            android:theme="@style/Theme.aCal.NoActionBar">
             <intent-filter>
                 <action android:name="com.morphoss.acal.activity.JournalListView" />
                 <category android:name="android.intent.category.DEFAULT" />
