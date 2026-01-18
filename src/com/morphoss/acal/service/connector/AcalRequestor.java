@@ -521,6 +521,7 @@ public class AcalRequestor {
 	 */
 	public void setPortProtocol(Integer newPort, String newProtocol) {
 		protocol = (newProtocol == null ? protocol : (newProtocol.equals(PROTOCOL_HTTPS) ? PROTOCOL_HTTPS : PROTOCOL_HTTP));
+		if (protocol == null) protocol = PROTOCOL_HTTP;
 		if ( newPort == null || newPort < 1 || newPort > 65535 || newPort == 80 || newPort == 443 )
 			port = (protocol.equals(PROTOCOL_HTTP) ? 80 : 443);
 		else
