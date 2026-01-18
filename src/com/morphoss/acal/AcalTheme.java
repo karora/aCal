@@ -56,15 +56,33 @@ public final class AcalTheme {
 
 	/**
 	 * Get the colour used for these theme elements
-	 * 
+	 *
 	 * @param themeElementID
 	 */
 	final public static int getElementColour(int themeElementID) {
 		switch(themeElementID) {
-			case BUTTON:		return themeButtonColour; 
-			case BACKGROUND:	return themeBackgroundColour; 
+			case BUTTON:		return themeButtonColour;
+			case BACKGROUND:	return themeBackgroundColour;
 		}
 		return themeDefaultColour;
+	}
+
+	/**
+	 * Get the toolbar colour - the button colour darkened by 30%
+	 */
+	public static int getToolbarColour() {
+		return darkenColour(themeButtonColour, 0.7f);
+	}
+
+	/**
+	 * Darken a colour by the given factor (0.0 = black, 1.0 = unchanged)
+	 */
+	public static int darkenColour(int colour, float factor) {
+		int a = (colour >> 24) & 0xff;
+		int r = (int) (((colour >> 16) & 0xff) * factor);
+		int g = (int) (((colour >> 8) & 0xff) * factor);
+		int b = (int) ((colour & 0xff) * factor);
+		return (a << 24) | (r << 16) | (g << 8) | b;
 	}
 
 	

@@ -70,6 +70,23 @@ public abstract class AcalAppCompatActivity extends AppCompatActivity
 	protected void onResume() {
 		super.onResume();
 		AcalTheme.initializeTheme(this);
+		updateThemeColors();
+	}
+
+	/**
+	 * Update toolbar and drawer header colors from theme.
+	 * Called on resume to pick up any theme changes from Settings.
+	 */
+	protected void updateThemeColors() {
+		if (toolbar != null) {
+			toolbar.setBackgroundColor(AcalTheme.getToolbarColour());
+		}
+		if (navigationView != null) {
+			View headerView = navigationView.getHeaderView(0);
+			if (headerView != null) {
+				headerView.setBackgroundColor(AcalTheme.getToolbarColour());
+			}
+		}
 	}
 
 	/**
@@ -81,6 +98,8 @@ public abstract class AcalAppCompatActivity extends AppCompatActivity
 	protected void setupToolbarAndDrawer(String title) {
 		toolbar = findViewById(R.id.toolbar);
 		if (toolbar != null) {
+			// Apply theme color (30% darker than button color)
+			toolbar.setBackgroundColor(AcalTheme.getToolbarColour());
 			setSupportActionBar(toolbar);
 			if (getSupportActionBar() != null) {
 				getSupportActionBar().setTitle(title);
@@ -92,6 +111,12 @@ public abstract class AcalAppCompatActivity extends AppCompatActivity
 		navigationView = findViewById(R.id.nav_view);
 
 		if (drawerLayout != null && navigationView != null) {
+			// Apply theme color to nav drawer header
+			View headerView = navigationView.getHeaderView(0);
+			if (headerView != null) {
+				headerView.setBackgroundColor(AcalTheme.getToolbarColour());
+			}
+
 			drawerToggle = new ActionBarDrawerToggle(
 					this,
 					drawerLayout,
