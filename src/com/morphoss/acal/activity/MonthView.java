@@ -1103,10 +1103,11 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 	@Override
 	public void resourceResponse(ResourceResponse<Long> response) {
 		Object result = response.result();
-		if (result != null) {
-			if (result instanceof Long) {
-				mHandler.sendMessage(mHandler.obtainMessage(DELETE_SUCCEEDED, result));
-			}
+		if (result != null && result instanceof Long) {
+			mHandler.sendMessage(mHandler.obtainMessage(DELETE_SUCCEEDED, result));
+		} else {
+			// Ensure dialog is dismissed even on failure
+			mHandler.sendEmptyMessage(DELETE_FAILED);
 		}
 	}
 }
