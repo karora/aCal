@@ -486,35 +486,71 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 		}
 
 
+		private String getAlarmTitle(long resourceId) {
+			try {
+				return ((com.morphoss.acal.davacal.VCalendar) com.morphoss.acal.davacal.VComponent
+						.createComponentFromResource(
+								com.morphoss.acal.AcalApplication.getResourceFromDatabase(resourceId)))
+						.getMasterChild()
+						.getSummary();
+			} catch (Exception e) {
+				return "Calendar Event";
+			}
+		}
+
 		/**
 		 * Schedule the next alarm intent - Should be called whenever there is a change to the db.
-		 * Uses setAlarmClock() for exact timing and status bar visibility when permitted.
-		 * Targets AlarmReceiver which posts a full-screen notification (required for Android 10+).
+		 * Schedules a pre-alarm (5 min before) and a main notification (at fire time).
 		 */
 		public void scheduleAlarmIntent() {
 			AlarmRow next = getNextAlarmFuture();
 			if (next == null) {
 	            if ( Constants.LOG_DEBUG && Constants.debugAlarms )
 	                Log.i(TAG, "No alarms scheduled.");
-			    return; //nothing to schedule.
+			    return;
 			}
 			long ttf = next.getTimeToFire();
 			AcalDateTime ttfHuman = AcalDateTime.getInstance().setMillis(ttf);
 			Log.i(TAG, "Scheduling Alarm wakeup for "+ ((ttf - System.currentTimeMillis())/1000)+" seconds from now at "+ttfHuman.toString());
 
-			// Target AlarmReceiver instead of AlarmActivity directly
-			// The receiver posts a full-screen notification to bypass BAL restrictions
-			Intent intent = new Intent(context, AlarmReceiver.class);
-			PendingIntent alarmIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+			String title = getAlarmTitle(next.resourceId);
 
-			// Use setAlarmClock for exact alarm timing when permitted
-			// Falls back to inexact set() if exact alarm permission not granted
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-				Log.w(TAG, "Exact alarm permission not granted, using inexact alarm");
-				alarmManager.set(AlarmManager.RTC_WAKEUP, ttf, alarmIntent);
+			// Build base intent with all alarm row extras
+			Intent baseIntent = new Intent(context, AlarmReceiver.class);
+			baseIntent.putExtra(Constants.ALARM_EXTRA_ROW_ID,   next.getId());
+			baseIntent.putExtra(Constants.ALARM_EXTRA_TITLE,    title);
+			baseIntent.putExtra(Constants.ALARM_EXTRA_BASE_TTF, next.baseTimeToFire);
+			baseIntent.putExtra(Constants.ALARM_EXTRA_TTF,      ttf);
+			baseIntent.putExtra(Constants.ALARM_EXTRA_RID,      next.resourceId);
+			baseIntent.putExtra(Constants.ALARM_EXTRA_RRID,     next.recurrenceId);
+			baseIntent.putExtra(Constants.ALARM_EXTRA_STATE,    0); // PENDING ordinal
+			baseIntent.putExtra(Constants.ALARM_EXTRA_BLOB,     next.getBlob());
+
+			// Pre-alarm intent (5 minutes before)
+			long preTtf = ttf - Constants.PRE_ALARM_OFFSET_MS;
+			if (preTtf > System.currentTimeMillis()) {
+				Intent preIntent = new Intent(baseIntent);
+				preIntent.setAction(Constants.ALARM_ACTION_PRE);
+				PendingIntent prePI = PendingIntent.getBroadcast(context, 1, preIntent,
+						PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+				scheduleExact(preTtf, prePI);
+			}
+
+			// Main alarm intent (at fire time)
+			Intent mainIntent = new Intent(baseIntent);
+			mainIntent.setAction(Constants.ALARM_ACTION_FIRE);
+			PendingIntent mainPI = PendingIntent.getBroadcast(context, 2, mainIntent,
+					PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+			scheduleExact(ttf, mainPI);
+		}
+
+		private void scheduleExact(long triggerAtMs, PendingIntent pi) {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi);
+			} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+				alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMs, pi);
 			} else {
-				AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(ttf, alarmIntent);
-				alarmManager.setAlarmClock(alarmClockInfo, alarmIntent);
+				alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMs, pi);
 			}
 		}
 

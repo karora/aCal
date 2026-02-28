@@ -44,6 +44,24 @@ public class Constants {
      * Notification channel ID for calendar alarms (Android O+)
      */
     public static final String ALARM_NOTIFICATION_CHANNEL_ID = "acal_alarms";
+    public static final String PRE_ALARM_NOTIFICATION_CHANNEL_ID = "acal_alarms_pre";
+    public static final String ACTIVE_NOTIFICATION_CHANNEL_ID    = "acal_alarms_active";
+
+    public static final String ALARM_ACTION_FIRE    = "com.morphoss.acal.ALARM_FIRE";
+    public static final String ALARM_ACTION_PRE     = "com.morphoss.acal.ALARM_PRE";
+    public static final String ALARM_ACTION_DISMISS = "com.morphoss.acal.ALARM_DISMISS";
+    public static final String ALARM_ACTION_SNOOZE  = "com.morphoss.acal.ALARM_SNOOZE";
+
+    public static final String ALARM_EXTRA_ROW_ID   = "alarm_row_id";
+    public static final String ALARM_EXTRA_TITLE    = "alarm_title";
+    public static final String ALARM_EXTRA_BASE_TTF = "alarm_base_ttf";
+    public static final String ALARM_EXTRA_TTF      = "alarm_ttf";
+    public static final String ALARM_EXTRA_RID      = "alarm_rid";
+    public static final String ALARM_EXTRA_RRID     = "alarm_rrid";
+    public static final String ALARM_EXTRA_STATE    = "alarm_state";
+    public static final String ALARM_EXTRA_BLOB     = "alarm_blob";
+
+    public static final int PRE_ALARM_OFFSET_MS = 5 * 60 * 1000;   // 5 minutes
 
     /**
      * Generally useful patterns

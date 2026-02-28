@@ -50,36 +50,47 @@ public class AcalApplication extends Application {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager manager = getSystemService(NotificationManager.class);
 
-            // Delete old channel to ensure settings are updated
-            // (Android caches channel settings and won't update them otherwise)
+            // Delete old channels to ensure settings are updated
             manager.deleteNotificationChannel(Constants.ALARM_NOTIFICATION_CHANNEL_ID);
+            manager.deleteNotificationChannel(Constants.PRE_ALARM_NOTIFICATION_CHANNEL_ID);
+            manager.deleteNotificationChannel(Constants.ACTIVE_NOTIFICATION_CHANNEL_ID);
 
-            NotificationChannel channel = new NotificationChannel(
+            // Main notification channel: heads-up, notification sound, short vibration
+            NotificationChannel main = new NotificationChannel(
                 Constants.ALARM_NOTIFICATION_CHANNEL_ID,
-                "Calendar Alarms",
+                "Calendar Reminders",
                 NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Notifications for calendar event alarms");
-            channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{0, 1000, 500, 1000, 500, 1000});
-            channel.enableLights(true);
-            channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
-
-            // Set alarm sound with proper audio attributes
-            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alarmSound == null) {
-                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            }
+            Uri notifSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build();
-            channel.setSound(alarmSound, audioAttributes);
+            main.setSound(notifSound, audioAttributes);
+            main.enableVibration(true);
+            main.setVibrationPattern(new long[]{0, 250});
+            main.setBypassDnd(false);
+            manager.createNotificationChannel(main);
 
-            // Allow this channel to bypass Do Not Disturb
-            channel.setBypassDnd(true);
+            // Pre-alarm channel: silent, upcoming event reminder
+            NotificationChannel pre = new NotificationChannel(
+                Constants.PRE_ALARM_NOTIFICATION_CHANNEL_ID,
+                "Upcoming Event Reminders",
+                NotificationManager.IMPORTANCE_LOW
+            );
+            pre.setSound(null, null);
+            pre.enableVibration(false);
+            manager.createNotificationChannel(pre);
 
-            manager.createNotificationChannel(channel);
+            // Active event channel: silent, shown while event is active
+            NotificationChannel active = new NotificationChannel(
+                Constants.ACTIVE_NOTIFICATION_CHANNEL_ID,
+                "Active Events",
+                NotificationManager.IMPORTANCE_LOW
+            );
+            active.setSound(null, null);
+            active.enableVibration(false);
+            manager.createNotificationChannel(active);
         }
     }
 

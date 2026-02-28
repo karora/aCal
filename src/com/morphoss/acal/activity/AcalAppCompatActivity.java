@@ -299,8 +299,7 @@ public abstract class AcalAppCompatActivity extends AppCompatActivity
 			return false;
 		}
 
-		if (PermissionHelper.needsExactAlarmPermission(this) ||
-			PermissionHelper.needsFullScreenIntentPermission(this)) {
+		if (PermissionHelper.needsExactAlarmPermission(this)) {
 			showAlarmSettingsDialog();
 			return false;
 		}
@@ -334,20 +333,13 @@ public abstract class AcalAppCompatActivity extends AppCompatActivity
 		message.append(PermissionHelper.getAlarmPermissionStatus(this));
 		message.append("\nWould you like to open Settings to enable these?");
 
-		final boolean needsExactAlarm = PermissionHelper.needsExactAlarmPermission(this);
-
 		new AlertDialog.Builder(this)
 			.setTitle("Alarm Permissions Required")
 			.setMessage(message.toString())
 			.setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					Intent intent;
-					if (needsExactAlarm) {
-						intent = PermissionHelper.getExactAlarmSettingsIntent(AcalAppCompatActivity.this);
-					} else {
-						intent = PermissionHelper.getFullScreenIntentSettingsIntent(AcalAppCompatActivity.this);
-					}
+					Intent intent = PermissionHelper.getExactAlarmSettingsIntent(AcalAppCompatActivity.this);
 					if (intent != null) {
 						startActivity(intent);
 					}

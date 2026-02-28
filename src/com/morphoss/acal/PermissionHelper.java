@@ -217,33 +217,11 @@ public class PermissionHelper {
     }
 
     /**
-     * Check if full-screen intent permission is needed and not granted.
-     * Required on Android 14+ (API 34) for full-screen alarm notifications.
-     */
-    public static boolean needsFullScreenIntentPermission(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            return !nm.canUseFullScreenIntent();
-        }
-        return false;
-    }
-
-    /**
-     * Get the intent to open app notification settings where full-screen intent can be enabled.
-     */
-    public static Intent getFullScreenIntentSettingsIntent(Context context) {
-        Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
-        intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName());
-        return intent;
-    }
-
-    /**
      * Check if any alarm-related permissions are missing.
      */
     public static boolean hasAlarmPermissionIssues(Activity activity) {
         return needsNotificationPermission(activity)
-                || needsExactAlarmPermission(activity)
-                || needsFullScreenIntentPermission(activity);
+                || needsExactAlarmPermission(activity);
     }
 
     /**
@@ -257,9 +235,6 @@ public class PermissionHelper {
         }
         if (needsExactAlarmPermission(activity)) {
             sb.append("- Exact alarm permission required (for precise alarm timing)\n");
-        }
-        if (needsFullScreenIntentPermission(activity)) {
-            sb.append("- Full-screen notification permission required (for alarm display)\n");
         }
 
         return sb.toString();
