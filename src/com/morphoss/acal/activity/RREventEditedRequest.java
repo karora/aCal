@@ -57,10 +57,14 @@ public class RREventEditedRequest extends ResourceRequestWithResponse<Long> {
 			if ( ResourceManager.DEBUG ) Log.println(Constants.LOGD, TAG,
 					"Adding Pending Table row for collection ID:"+event.getCollectionId()+", resource ID: "+event.getResourceId());
 			long result = processor.addPending(event.getCollectionId(), event.getResourceId(), oldBlob, newBlob, uid);
-			if ( result < 0 )
+			Log.i(TAG, "addPending returned: " + result);
+			if ( result < 0 ) {
+				Log.i(TAG, "Calling fail() due to negative result");
 				this.fail();
-			else
+			} else {
+				Log.i(TAG, "Calling postResponse with result: " + result);
 				this.postResponse(new RREventEditedResponse(result));
+			}
 
 		}
 		catch ( Exception e ) {
@@ -72,6 +76,7 @@ public class RREventEditedRequest extends ResourceRequestWithResponse<Long> {
 	}
 
 	private void fail() {
+		Log.i(TAG, "fail() called, posting null response");
 		this.postResponse(new RREventEditedResponse(null));
 	}
 

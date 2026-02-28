@@ -127,6 +127,13 @@ public class EventListAdapter extends BaseAdapter implements OnClickListener, Li
 	private CacheRequest getCacheRequest() {
 		return new CRObjectsInRange(new AcalDateRange(viewDate,viewDateEnd), this);
 	}
+
+	/**
+	 * Force a refresh of the event list from the cache.
+	 */
+	public void refresh() {
+		cacheManager.sendRequest(getCacheRequest());
+	}
 	
 	/**
 	 * <p>Returns the number of elements in this adapter.</p>

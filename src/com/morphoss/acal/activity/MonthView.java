@@ -163,6 +163,7 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 	protected static final int	SHOW_DELETING	= 0x100;
 	protected static final int	DELETE_SUCCEEDED	= 0x101;
 	protected static final int	DELETE_FAILED	= 0x102;
+	protected static final int	RESET_DELETE_STATE	= 0x103;
 
 	protected static final int	DELETING_DIALOG	= 0x200;
 
@@ -710,21 +711,32 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 		private boolean	deleteSucceeded = false;
 
 		public void handleMessage(Message msg) {
+			Log.i(TAG, "Handler received message: " + msg.what);
 
 			switch (msg.what) {
 
 			case SHOW_DELETING:
-				showDialog(DELETING_DIALOG);
+				if (!deleteSucceeded) {
+					Log.i(TAG, "SHOW_DELETING - showing dialog");
+					showDialog(DELETING_DIALOG);
+				} else {
+					Log.i(TAG, "SHOW_DELETING - skipped, deletion already succeeded");
+				}
 				break;
 
 			case DELETE_SUCCEEDED:
+				Log.i(TAG, "DELETE_SUCCEEDED - dismissing dialog and refreshing event list");
 				//dismiss dialog
 				mHandler.removeMessages(DELETE_FAILED);
+				mHandler.removeMessages(SHOW_DELETING);
 				if (deletingDialog != null) deletingDialog.dismiss();
 				deleteSucceeded = true;
+				// Refresh the event list to reflect the deletion
+				if (eventListAdapter != null) eventListAdapter.refresh();
 				break;
 
 			case DELETE_FAILED:
+				Log.i(TAG, "DELETE_FAILED - dismissing dialog, deleteSucceeded=" + deleteSucceeded);
 				if (deletingDialog != null) deletingDialog.dismiss();
 				if ( deleteSucceeded ) {
 					// Don't know why we get here, but we do! - cancel save failed when save succeeds. we shouldn't see this anymore.
@@ -734,6 +746,11 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 					Toast.makeText(MonthView.this, "Something went wrong trying to save the change.", Toast.LENGTH_LONG).show();
 				}
 				break;
+
+			case RESET_DELETE_STATE:
+				Log.i(TAG, "RESET_DELETE_STATE - resetting deleteSucceeded flag");
+				deleteSucceeded = false;
+				break;
 			}
 
 		}
@@ -742,6 +759,7 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 
 
 	public void deleteEvent(long resourceId, String recurrenceId, int action, int instances ) {
+		Log.i(TAG, "deleteEvent called: resourceId=" + resourceId + ", recurrenceId=" + recurrenceId + ", action=" + action);
 
 		try {
 			Resource r = Resource.fromDatabase(this, resourceId);
@@ -753,6 +771,9 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 					", with "+event.getAlarms().size()+" alarms.");
 			//display savingdialog
 
+			Log.i(TAG, "Sending RREventEditedRequest to ResourceManager");
+			// Reset state for new deletion operation
+			mHandler.sendEmptyMessage(RESET_DELETE_STATE);
 			ResourceManager.getInstance(this).sendRequest(new RREventEditedRequest(this, event, action, instances));
 
 			//set message for 10 seconds to fail.
@@ -760,6 +781,7 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 
 			//showDialog(SAVING_DIALOG);
 			mHandler.sendEmptyMessageDelayed(SHOW_DELETING,50);
+			Log.i(TAG, "DELETE_FAILED scheduled for 100s, SHOW_DELETING scheduled for 50ms");
 
 
 		}
@@ -1102,11 +1124,15 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 
 	@Override
 	public void resourceResponse(ResourceResponse<Long> response) {
+		Log.i(TAG, "resourceResponse called");
 		Object result = response.result();
+		Log.i(TAG, "resourceResponse result: " + result + " (type: " + (result == null ? "null" : result.getClass().getName()) + ")");
 		if (result != null && result instanceof Long) {
+			Log.i(TAG, "Sending DELETE_SUCCEEDED message");
 			mHandler.sendMessage(mHandler.obtainMessage(DELETE_SUCCEEDED, result));
 		} else {
 			// Ensure dialog is dismissed even on failure
+			Log.i(TAG, "Sending DELETE_FAILED message (result was null or not Long)");
 			mHandler.sendEmptyMessage(DELETE_FAILED);
 		}
 	}
