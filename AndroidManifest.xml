@@ -296,6 +296,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activity.CertificatePinActivity"
+            android:exported="false"
+            android:label="@string/cert_title_new"
+            android:launchMode="singleTop" />
 
         <service
             android:name=".service.ContactsSyncAdapterService"

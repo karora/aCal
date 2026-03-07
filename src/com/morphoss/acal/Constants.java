@@ -47,6 +47,18 @@ public class Constants {
     public static final String PRE_ALARM_NOTIFICATION_CHANNEL_ID = "acal_alarms_pre";
     public static final String ACTIVE_NOTIFICATION_CHANNEL_ID    = "acal_alarms_active";
 
+    /**
+     * Notification channel and intent extras for certificate pinning
+     */
+    public static final String CERT_PIN_NOTIFICATION_CHANNEL_ID = "acal_cert_pin";
+
+    public static final String CERT_EXTRA_HOSTNAME        = "cert_hostname";
+    public static final String CERT_EXTRA_PORT            = "cert_port";
+    public static final String CERT_EXTRA_SUBJECT         = "cert_subject";
+    public static final String CERT_EXTRA_FINGERPRINT     = "cert_fingerprint";
+    public static final String CERT_EXTRA_EXPIRY          = "cert_expiry";
+    public static final String CERT_EXTRA_OLD_FINGERPRINT = "cert_old_fingerprint";
+
     public static final String ALARM_ACTION_FIRE    = "com.morphoss.acal.ALARM_FIRE";
     public static final String ALARM_ACTION_PRE     = "com.morphoss.acal.ALARM_PRE";
     public static final String ALARM_ACTION_DISMISS = "com.morphoss.acal.ALARM_DISMISS";

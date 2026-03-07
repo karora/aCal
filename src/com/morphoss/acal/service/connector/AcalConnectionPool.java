@@ -77,8 +77,7 @@ public class AcalConnectionPool {
 	 */
 	private static OkHttpClient createClient() {
 		try {
-			// Create trust manager that delegates to EasyX509TrustManager
-			X509TrustManager trustManager = new EasyX509TrustManager(null, appContext);
+			EasyX509TrustManager trustManager = new EasyX509TrustManager(null, appContext);
 
 			SSLContext sslContext = SSLContext.getInstance("TLS");
 			sslContext.init(null, new TrustManager[]{trustManager}, null);
@@ -88,7 +87,12 @@ public class AcalConnectionPool {
 				.readTimeout(socketTimeOut, TimeUnit.MILLISECONDS)
 				.writeTimeout(socketTimeOut, TimeUnit.MILLISECONDS)
 				.sslSocketFactory(sslContext.getSocketFactory(), trustManager)
-				.hostnameVerifier((hostname, session) -> true) // Hostname verification handled by TrustManager
+				.hostnameVerifier((hostname, session) -> {
+					// For CA-valid certs, verifyPin() returns true immediately.
+					// For self-signed certs it enforces TOFU pinning.
+					int port = session.getPeerPort();
+					return trustManager.verifyPin(hostname, port);
+				})
 				.connectionPool(new ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION_MINUTES, TimeUnit.MINUTES))
 				.followRedirects(false) // Manual redirect handling in AcalRequestor
 				.followSslRedirects(false)

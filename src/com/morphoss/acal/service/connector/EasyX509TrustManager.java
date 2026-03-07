@@ -17,59 +17,70 @@ package com.morphoss.acal.service.connector;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.util.Log;
+
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
-
 import com.morphoss.acal.Constants;
+import com.morphoss.acal.R;
+import com.morphoss.acal.activity.CertificatePinActivity;
 
 /**
- * X509TrustManager that validates certificates against the system trust store
- * and allows user-approved certificates that have been explicitly trusted.
+ * X509TrustManager implementing TOFU (trust-on-first-use) certificate pinning
+ * for self-signed / CA-invalid server certificates.
  *
- * Security improvements over the original implementation:
- * - Uses SHA-256 fingerprints for certificate identification
- * - Stores approved certificates securely with encryption
- * - Does NOT allow self-signed certificates by default
- * - Requires explicit user approval for untrusted certificates
+ * CA-valid certificates (e.g. Let's Encrypt) pass through standard validation
+ * with no pinning and no user interaction — including transparent cert rotation.
+ *
+ * Self-signed certificates trigger a user prompt on first connection.  The user
+ * can accept (pin the certificate) or reject.  If the pinned certificate changes,
+ * the user is prompted again and can accept the new cert or choose to stop pinning.
  */
 public class EasyX509TrustManager implements X509TrustManager {
 
     private static final String TAG = "aCal X509TrustManager";
-    private static final String PREFS_NAME = "acal_trusted_certs";
-    private static final String KEY_APPROVED_FINGERPRINTS = "approved_fingerprints";
+    private static final String PREFS_NAME = "acal_cert_pins";
+    private static final String PIN_PREFIX = "pin:";
+    private static final String UNPIN_PREFIX = "unpin:";
+
+    // Hosts with a notification already showing — don't fire duplicates.
+    private static final Set<String> pendingNotifications =
+            Collections.synchronizedSet(new HashSet<>());
+
+    // Thread-locals carry cert state from checkServerTrusted() to verifyPin(),
+    // which is called on the same thread by OkHttp's hostname verifier.
+    private static final ThreadLocal<Boolean> tLastWasCaValid = new ThreadLocal<>();
+    private static final ThreadLocal<X509Certificate[]> tLastChain = new ThreadLocal<>();
 
     private final X509TrustManager standardTrustManager;
     private final Context context;
-    private Set<String> approvedFingerprints;
 
-    /**
-     * Constructor for EasyX509TrustManager.
-     *
-     * @param keystore The keystore to use (can be null for system default)
-     * @param context  Application context for secure storage access
-     */
     public EasyX509TrustManager(KeyStore keystore, Context context)
             throws NoSuchAlgorithmException, KeyStoreException {
         super();
         this.context = context;
-
         TrustManagerFactory factory = TrustManagerFactory.getInstance(
                 TrustManagerFactory.getDefaultAlgorithm());
         factory.init(keystore);
@@ -78,18 +89,6 @@ public class EasyX509TrustManager implements X509TrustManager {
             throw new NoSuchAlgorithmException("No trust manager found");
         }
         this.standardTrustManager = (X509TrustManager) trustmanagers[0];
-
-        loadApprovedFingerprints();
-    }
-
-    /**
-     * Legacy constructor for compatibility - uses null context (limited functionality).
-     * @deprecated Use constructor with Context parameter for full security features.
-     */
-    @Deprecated
-    public EasyX509TrustManager(KeyStore keystore)
-            throws NoSuchAlgorithmException, KeyStoreException {
-        this(keystore, null);
     }
 
     @Override
@@ -98,52 +97,23 @@ public class EasyX509TrustManager implements X509TrustManager {
         standardTrustManager.checkClientTrusted(certificates, authType);
     }
 
+    /**
+     * Records the chain and whether CA validation passed in thread-locals.
+     * Does NOT throw for CA-invalid certs — verifyPin() makes the final decision.
+     */
     @Override
     public void checkServerTrusted(X509Certificate[] certificates, String authType)
             throws CertificateException {
         if (certificates == null || certificates.length < 1) {
             throw new CertificateException("No certificates provided");
         }
-
+        tLastChain.set(certificates);
         try {
-            // First, try standard validation
             standardTrustManager.checkServerTrusted(certificates, authType);
-        } catch (CertificateExpiredException e) {
-            logCertificateError("Certificate expired", e, certificates);
-            throw e;
-        } catch (CertificateNotYetValidException e) {
-            logCertificateError("Certificate not yet valid", e, certificates);
-            throw e;
+            tLastWasCaValid.set(true);
         } catch (CertificateException e) {
-            // Standard validation failed - check if user has approved this certificate
-            if (Constants.LOG_DEBUG) {
-                Log.d(TAG, "Standard validation failed: " + e.getMessage());
-            }
-
-            if (isUserApprovedCertificate(certificates[0])) {
-                // User has previously approved this certificate
-                if (Constants.LOG_DEBUG) {
-                    Log.d(TAG, "Certificate approved by user");
-                }
-
-                // Still verify the certificate is currently valid (not expired)
-                try {
-                    certificates[0].checkValidity();
-                } catch (CertificateExpiredException ce) {
-                    // Remove expired certificate from approved list
-                    removeApprovedCertificate(certificates[0]);
-                    logCertificateError("Previously approved certificate has expired", ce, certificates);
-                    throw ce;
-                } catch (CertificateNotYetValidException ce) {
-                    logCertificateError("Certificate not yet valid", ce, certificates);
-                    throw ce;
-                }
-                return; // Certificate is approved and valid
-            }
-
-            // Certificate is not trusted and not approved by user
-            logCertificateError("Untrusted certificate", e, certificates);
-            throw e;
+            tLastWasCaValid.set(false);
+            // Don't throw — verifyPin() will accept or reject based on pinning state.
         }
     }
 
@@ -153,16 +123,186 @@ public class EasyX509TrustManager implements X509TrustManager {
     }
 
     /**
-     * Calculate SHA-256 fingerprint of a certificate.
-     *
-     * @param cert The certificate
-     * @return Hex-encoded SHA-256 fingerprint, or null on error
+     * Called by OkHttp's hostname verifier immediately after checkServerTrusted().
+     * Implements the TOFU pinning decision for CA-invalid certs.
      */
+    public boolean verifyPin(String hostname, int port) {
+        X509Certificate[] chain = tLastChain.get();
+        Boolean caValid = tLastWasCaValid.get();
+        if (chain == null || caValid == null) return false;
+
+        if (caValid) {
+            // CA validation passed — always trust.  Clear any stale pin in case
+            // the server upgraded from self-signed to a real certificate.
+            clearPin(hostname, port);
+            return true;
+        }
+
+        // CA-invalid (self-signed) from here:
+        String hostKey = hostname + ":" + port;
+        X509Certificate cert = chain[0];
+        String currentFingerprint = getCertificateFingerprint(cert);
+        if (currentFingerprint == null) return false;
+
+        if (isUnpinned(hostname, port)) {
+            return true; // User chose "accept all future changes"
+        }
+
+        String storedPin = getStoredPin(hostname, port);
+
+        if (storedPin == null) {
+            // First connection with a self-signed cert: prompt the user.
+            if (!pendingNotifications.contains(hostKey)) {
+                pendingNotifications.add(hostKey);
+                fireFirstConnectNotification(hostname, port, cert);
+            }
+            return false;
+        }
+
+        if (storedPin.equals(currentFingerprint)) {
+            return true; // Fingerprint matches stored pin.
+        }
+
+        // Fingerprint mismatch: cert has changed.
+        if (!pendingNotifications.contains(hostKey)) {
+            pendingNotifications.add(hostKey);
+            fireCertChangedNotification(hostname, port, cert, storedPin);
+        }
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Static methods called by CertificatePinActivity
+    // -------------------------------------------------------------------------
+
+    /** Store a pin for this host and mark any pending notification as resolved. */
+    public static void pinCertificate(Context context, String hostname, int port,
+                                      String fingerprint) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+             .putString(PIN_PREFIX + hostname + ":" + port, fingerprint)
+             .remove(UNPIN_PREFIX + hostname + ":" + port)
+             .apply();
+        pendingNotifications.remove(hostname + ":" + port);
+        if (Constants.LOG_DEBUG) Log.d(TAG, "Pinned cert for " + hostname + ":" + port);
+    }
+
+    /** Mark host as unpinned (accept any cert) and clear any pending notification. */
+    public static void unpinHost(Context context, String hostname, int port) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+             .remove(PIN_PREFIX + hostname + ":" + port)
+             .putString(UNPIN_PREFIX + hostname + ":" + port, "true")
+             .apply();
+        pendingNotifications.remove(hostname + ":" + port);
+        if (Constants.LOG_DEBUG) Log.d(TAG, "Unpinned host " + hostname + ":" + port);
+    }
+
+    /** Called when the user dismisses the cert prompt without choosing. */
+    public static void clearPendingNotification(String hostname, int port) {
+        pendingNotifications.remove(hostname + ":" + port);
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    private String getStoredPin(String hostname, int port) {
+        if (context == null) return null;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(PIN_PREFIX + hostname + ":" + port, null);
+    }
+
+    private boolean isUnpinned(String hostname, int port) {
+        if (context == null) return false;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.contains(UNPIN_PREFIX + hostname + ":" + port);
+    }
+
+    private void clearPin(String hostname, int port) {
+        if (context == null) return;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        if (prefs.contains(PIN_PREFIX + hostname + ":" + port)) {
+            prefs.edit().remove(PIN_PREFIX + hostname + ":" + port).apply();
+            Log.i(TAG, "Cleared stale pin for " + hostname + ":" + port
+                    + " (cert is now CA-valid)");
+        }
+    }
+
+    private void fireFirstConnectNotification(String hostname, int port, X509Certificate cert) {
+        if (context == null) return;
+        String fingerprint = getCertificateFingerprint(cert);
+        String subject = cert.getSubjectDN().getName();
+        String expiry = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cert.getNotAfter());
+
+        Intent activityIntent = new Intent(context, CertificatePinActivity.class);
+        activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        activityIntent.putExtra(Constants.CERT_EXTRA_HOSTNAME, hostname);
+        activityIntent.putExtra(Constants.CERT_EXTRA_PORT, port);
+        activityIntent.putExtra(Constants.CERT_EXTRA_SUBJECT, subject);
+        activityIntent.putExtra(Constants.CERT_EXTRA_FINGERPRINT, fingerprint);
+        activityIntent.putExtra(Constants.CERT_EXTRA_EXPIRY, expiry);
+
+        postCertNotification(hostname, port, activityIntent,
+                context.getString(R.string.cert_notif_first_title));
+        Log.i(TAG, "Fired first-connect cert notification for " + hostname + ":" + port);
+    }
+
+    private void fireCertChangedNotification(String hostname, int port,
+                                              X509Certificate cert, String oldFingerprint) {
+        if (context == null) return;
+        String newFingerprint = getCertificateFingerprint(cert);
+        String subject = cert.getSubjectDN().getName();
+        String expiry = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cert.getNotAfter());
+
+        Intent activityIntent = new Intent(context, CertificatePinActivity.class);
+        activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        activityIntent.putExtra(Constants.CERT_EXTRA_HOSTNAME, hostname);
+        activityIntent.putExtra(Constants.CERT_EXTRA_PORT, port);
+        activityIntent.putExtra(Constants.CERT_EXTRA_SUBJECT, subject);
+        activityIntent.putExtra(Constants.CERT_EXTRA_FINGERPRINT, newFingerprint);
+        activityIntent.putExtra(Constants.CERT_EXTRA_EXPIRY, expiry);
+        activityIntent.putExtra(Constants.CERT_EXTRA_OLD_FINGERPRINT, oldFingerprint);
+
+        postCertNotification(hostname, port, activityIntent,
+                context.getString(R.string.cert_notif_changed_title));
+        Log.i(TAG, "Fired cert-changed notification for " + hostname + ":" + port);
+    }
+
+    private void postCertNotification(String hostname, int port,
+                                      Intent activityIntent, String title) {
+        int notifId = notificationId(hostname, port);
+        PendingIntent pi = PendingIntent.getActivity(context, notifId, activityIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Notification.Builder builder = new Notification.Builder(context)
+                .setSmallIcon(R.drawable.icon)
+                .setContentTitle(title)
+                .setContentText(hostname)
+                .setContentIntent(pi)
+                .setAutoCancel(false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setChannelId(Constants.CERT_PIN_NOTIFICATION_CHANNEL_ID);
+        } else {
+            builder.setPriority(Notification.PRIORITY_HIGH);
+        }
+        NotificationManager nm = (NotificationManager)
+                context.getSystemService(Context.NOTIFICATION_SERVICE);
+        nm.notify(notifId, builder.build());
+    }
+
+    // -------------------------------------------------------------------------
+    // Public utilities
+    // -------------------------------------------------------------------------
+
+    public static int notificationId(String hostname, int port) {
+        return (Math.abs((hostname + ":" + port).hashCode()) % 100_000) + 500_000;
+    }
+
     public static String getCertificateFingerprint(X509Certificate cert) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] der = cert.getEncoded();
-            byte[] digest = md.digest(der);
+            byte[] digest = md.digest(cert.getEncoded());
             return bytesToHex(digest);
         } catch (NoSuchAlgorithmException | CertificateEncodingException e) {
             Log.e(TAG, "Error calculating certificate fingerprint", e);
@@ -170,158 +310,17 @@ public class EasyX509TrustManager implements X509TrustManager {
         }
     }
 
-    /**
-     * Check if a certificate has been approved by the user.
-     */
-    private boolean isUserApprovedCertificate(X509Certificate cert) {
-        String fingerprint = getCertificateFingerprint(cert);
-        if (fingerprint == null) {
-            return false;
+    /** Format a 64-char hex fingerprint as colon-separated pairs, 8 per line. */
+    public static String formatFingerprint(String hex) {
+        if (hex == null || hex.length() != 64) return hex;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 64; i += 2) {
+            if (i > 0) sb.append(i % 16 == 0 ? "\n" : ":");
+            sb.append(hex, i, i + 2);
         }
-        return approvedFingerprints.contains(fingerprint);
+        return sb.toString().toUpperCase(Locale.US);
     }
 
-    /**
-     * Add a certificate to the user-approved list.
-     * Call this after the user explicitly approves a certificate.
-     *
-     * @param cert The certificate to approve
-     * @return true if successfully added
-     */
-    public boolean addApprovedCertificate(X509Certificate cert) {
-        String fingerprint = getCertificateFingerprint(cert);
-        if (fingerprint == null) {
-            return false;
-        }
-
-        approvedFingerprints.add(fingerprint);
-        saveApprovedFingerprints();
-
-        if (Constants.LOG_DEBUG) {
-            Log.d(TAG, "Added approved certificate: " + cert.getSubjectDN());
-            Log.d(TAG, "Fingerprint: " + fingerprint);
-        }
-        return true;
-    }
-
-    /**
-     * Remove a certificate from the user-approved list.
-     *
-     * @param cert The certificate to remove
-     * @return true if successfully removed
-     */
-    public boolean removeApprovedCertificate(X509Certificate cert) {
-        String fingerprint = getCertificateFingerprint(cert);
-        if (fingerprint == null) {
-            return false;
-        }
-
-        boolean removed = approvedFingerprints.remove(fingerprint);
-        if (removed) {
-            saveApprovedFingerprints();
-            if (Constants.LOG_DEBUG) {
-                Log.d(TAG, "Removed approved certificate: " + cert.getSubjectDN());
-            }
-        }
-        return removed;
-    }
-
-    /**
-     * Clear all user-approved certificates.
-     */
-    public void clearApprovedCertificates() {
-        approvedFingerprints.clear();
-        saveApprovedFingerprints();
-        if (Constants.LOG_DEBUG) {
-            Log.d(TAG, "Cleared all approved certificates");
-        }
-    }
-
-    /**
-     * Get the number of user-approved certificates.
-     */
-    public int getApprovedCertificateCount() {
-        return approvedFingerprints.size();
-    }
-
-    /**
-     * Load approved certificate fingerprints from secure storage.
-     */
-    private void loadApprovedFingerprints() {
-        approvedFingerprints = new HashSet<>();
-
-        if (context == null) {
-            return;
-        }
-
-        try {
-            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            String stored = prefs.getString(KEY_APPROVED_FINGERPRINTS, "");
-
-            if (!stored.isEmpty()) {
-                String[] fingerprints = stored.split(";");
-                for (String fp : fingerprints) {
-                    if (!fp.isEmpty() && fp.length() == 64) { // SHA-256 = 64 hex chars
-                        approvedFingerprints.add(fp);
-                    }
-                }
-            }
-
-            if (Constants.LOG_DEBUG) {
-                Log.d(TAG, "Loaded " + approvedFingerprints.size() + " approved certificates");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error loading approved certificates", e);
-        }
-    }
-
-    /**
-     * Save approved certificate fingerprints to secure storage.
-     */
-    private void saveApprovedFingerprints() {
-        if (context == null) {
-            return;
-        }
-
-        try {
-            StringBuilder sb = new StringBuilder();
-            for (String fp : approvedFingerprints) {
-                if (sb.length() > 0) {
-                    sb.append(";");
-                }
-                sb.append(fp);
-            }
-
-            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            prefs.edit().putString(KEY_APPROVED_FINGERPRINTS, sb.toString()).apply();
-
-            if (Constants.LOG_DEBUG) {
-                Log.d(TAG, "Saved " + approvedFingerprints.size() + " approved certificates");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error saving approved certificates", e);
-        }
-    }
-
-    /**
-     * Log certificate error details.
-     */
-    private void logCertificateError(String message, Exception e, X509Certificate[] certificates) {
-        Log.w(TAG, message + ": " + e.getMessage());
-        for (X509Certificate cert : certificates) {
-            Log.w(TAG, "  Subject: " + cert.getSubjectDN());
-            Log.w(TAG, "  Issuer: " + cert.getIssuerDN());
-            Log.w(TAG, "  Valid: " + cert.getNotBefore() + " to " + cert.getNotAfter());
-            String fingerprint = getCertificateFingerprint(cert);
-            if (fingerprint != null) {
-                Log.w(TAG, "  SHA-256: " + fingerprint);
-            }
-        }
-    }
-
-    /**
-     * Convert bytes to hexadecimal string.
-     */
     private static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff0f0f0">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/cert_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#ff000000"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cert_label_server"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#ff666666" />
+
+        <TextView
+            android:id="@+id/cert_server"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="#ff000000" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="12dp"
+            android:background="#ffcccccc" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cert_label_subject"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#ff666666" />
+
+        <TextView
+            android:id="@+id/cert_subject"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#ff000000" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cert_label_expiry"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#ff666666" />
+
+        <TextView
+            android:id="@+id/cert_expiry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#ff000000" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cert_label_fingerprint"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#ff666666" />
+
+        <TextView
+            android:id="@+id/cert_fingerprint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:fontFamily="monospace"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#ff000000" />
+
+        <!-- Shown only when the certificate has changed -->
+        <LinearLayout
+            android:id="@+id/cert_old_fingerprint_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="12dp"
+                android:background="#ffcccccc" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/cert_label_old_fingerprint"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="#ff666666" />
+
+            <TextView
+                android:id="@+id/cert_old_fingerprint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="monospace"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="#ff888888" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="16dp"
+            android:background="#ffcccccc" />
+
+        <Button
+            android:id="@+id/cert_accept"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/cert_accept" />
+
+        <Button
+            android:id="@+id/cert_accept_all"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/cert_accept_all"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/cert_reject"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cert_reject" />
+
+    </LinearLayout>
+
+</ScrollView>

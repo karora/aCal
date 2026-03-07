@@ -91,6 +91,17 @@ public class AcalApplication extends Application {
             active.setSound(null, null);
             active.enableVibration(false);
             manager.createNotificationChannel(active);
+
+            // Certificate pinning channel: requires user action, high importance
+            NotificationChannel certPin = new NotificationChannel(
+                Constants.CERT_PIN_NOTIFICATION_CHANNEL_ID,
+                "Certificate Verification",
+                NotificationManager.IMPORTANCE_HIGH
+            );
+            certPin.setDescription("Alerts when a server certificate needs verification");
+            certPin.setSound(null, null);
+            certPin.enableVibration(false);
+            manager.createNotificationChannel(certPin);
         }
     }
 
