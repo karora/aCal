@@ -213,13 +213,28 @@ public class VCalendar extends VComponent implements Cloneable {
 				break;
 
 			case EventEdit.INSTANCES_THIS_FUTURE:
-				AcalRepeatRuleParser parsedRule = AcalRepeatRuleParser.parseRepeatRule(calendarInstance.getRRule());
-				AcalDateTime until = calendarInstance.getStart().clone();
+				// Get RRULE from the master child — calendarInstance.getRRule() returns null
+				// for override VEVENTs that don't carry their own RRULE.
+				String masterRRule = getMasterChild().getRRule();
+				if (masterRRule == null) {
+					// No RRULE: single-instance or RDATE-only event — delete the whole resource.
+					return null;
+				}
+				AcalRepeatRuleParser parsedRule = AcalRepeatRuleParser.parseRepeatRule(masterRRule);
+				if (parsedRule == null) {
+					// Unsupported RRULE frequency — fall back to full delete.
+					return null;
+				}
+				AcalDateTime cutoff = calendarInstance.getStart().clone();
+				AcalDateTime until = cutoff.clone();
 				until.addSeconds(-1);
 				parsedRule.setUntil(until);
 				String rrule = parsedRule.toString();
 				m.removeProperties( new PropertyName[] {PropertyName.RRULE} );
 				m.addProperty(new AcalProperty(PropertyName.RRULE,rrule));
+				// Remove any override VEVENTs whose RECURRENCE-ID falls on or after the
+				// cutoff; they would otherwise survive the UNTIL truncation and reappear.
+				removeOverridesOnOrAfter(cutoff);
 				break;
 
 			case EventEdit.INSTANCES_ALL:
@@ -232,6 +247,27 @@ public class VCalendar extends VComponent implements Cloneable {
 			Log.println(Constants.LOGD, TAG, "Reconstructed Blob for\n"+this.getCurrentBlob());
 
 		return this.getCurrentBlob();
+	}
+
+	/**
+	 * Remove all override VEVENTs (children with a RECURRENCE-ID property) whose
+	 * scheduled start is on or after {@code cutoff}.  Called after truncating the
+	 * RRULE with UNTIL so that those orphaned overrides don't survive the edit.
+	 */
+	private void removeOverridesOnOrAfter(AcalDateTime cutoff) {
+		List<VComponent> toRemove = new ArrayList<VComponent>();
+		for (VComponent child : getChildren()) {
+			if (!(child instanceof Masterable)) continue;
+			Masterable m = (Masterable) child;
+			RecurrenceId rrid = m.getRecurrenceId();
+			if (rrid == null || rrid.when == null) continue;
+			if (!rrid.when.before(cutoff)) {
+				toRemove.add(child);
+			}
+		}
+		for (VComponent child : toRemove) {
+			removeChild(child);
+		}
 	}
 
 
