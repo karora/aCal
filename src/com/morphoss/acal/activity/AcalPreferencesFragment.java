@@ -71,6 +71,7 @@ public class AcalPreferencesFragment extends PreferenceFragmentCompat
 	}
 
 	private void addDefaultCollectionPreference( ListPreference defaultCollection, short includeWhich ) {
+		if (defaultCollection == null) return;
 		ContentValues[] collections = DavCollections.getCollections(requireContext().getContentResolver(), includeWhich );
 		if ( collections.length == 0 ) return;
 
@@ -90,6 +91,7 @@ public class AcalPreferencesFragment extends PreferenceFragmentCompat
 
 	private void addDefaultAlarmTonePreference(PreferenceManager pm) {
 		ListPreference defaultAlarm = (ListPreference)pm.findPreference(getString(R.string.DefaultAlarmTone_PrefKey));
+		if (defaultAlarm == null) return;
 		RingtoneManager rm = new RingtoneManager(requireActivity());
 		Cursor cursor = rm.getCursor();
 		int count = cursor.getCount();

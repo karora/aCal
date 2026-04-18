@@ -42,12 +42,11 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.morphoss.acal.AcalTheme;
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.R;
 import com.morphoss.acal.ServiceManager;
+import com.morphoss.acal.activity.AcalAppCompatActivity;
 import com.morphoss.acal.providers.Servers;
 import com.morphoss.acal.security.CredentialManager;
 import com.morphoss.acal.service.ServiceRequest;
@@ -65,7 +64,7 @@ import com.morphoss.acal.service.ServiceRequest;
  * @author Morphoss Ltd
  *
  */
-public class ServerConfigList extends AppCompatActivity implements OnClickListener {
+public class ServerConfigList extends AcalAppCompatActivity implements OnClickListener {
 
 	private ListView listView;
 
@@ -99,6 +98,7 @@ public class ServerConfigList extends AppCompatActivity implements OnClickListen
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.servers_list);
+		setupToolbarAndDrawer(getString(R.string.appActivityAccounts));
 		listView = findViewById(android.R.id.list);
 		updateListView();
 		listView.setOnItemClickListener(new ServerListClickListener());

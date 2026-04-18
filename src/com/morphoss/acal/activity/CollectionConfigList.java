@@ -33,8 +33,6 @@ import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.R;
 import com.morphoss.acal.ServiceManager;
@@ -55,7 +53,7 @@ import com.morphoss.acal.service.ServiceRequest;
  * @author Morphoss Ltd
  *
  */
-public class CollectionConfigList extends AppCompatActivity
+public class CollectionConfigList extends AcalAppCompatActivity
 		implements CollectionConfigListFragment.OnCollectionSelectedListener {
 
 	public static final String TAG = "aCal CollectionConfigList";
@@ -85,6 +83,7 @@ public class CollectionConfigList extends AppCompatActivity
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_preferences);
+		setupToolbarAndDrawer(getString(R.string.appActivityCollectionConfigList));
 
 		if (savedInstanceState == null) {
 			fragment = new CollectionConfigListFragment();

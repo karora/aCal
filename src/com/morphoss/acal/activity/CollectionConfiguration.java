@@ -28,9 +28,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
+import com.morphoss.acal.AcalTheme;
 import com.morphoss.acal.R;
 import com.morphoss.acal.ServiceManager;
 import com.morphoss.acal.dataservice.Collection;
@@ -52,7 +50,7 @@ import com.morphoss.acal.service.WorkerClass;
  * <p>This configuration screen uses AndroidX PreferenceFragmentCompat but does not persist data to
  * SharedPreferences — data is persisted manually via the ContentResolver on apply.</p>
  */
-public class CollectionConfiguration extends AppCompatActivity implements OnClickListener {
+public class CollectionConfiguration extends AcalAppCompatActivity implements OnClickListener {
 
 	public static final String TAG = "aCal CollectionConfiguration";
 
@@ -68,8 +66,9 @@ public class CollectionConfiguration extends AppCompatActivity implements OnClic
 		super.onCreate(bundle);
 		setContentView(R.layout.collection_config);
 
-		Toolbar toolbar = findViewById(R.id.toolbar);
+		toolbar = findViewById(R.id.toolbar);
 		if (toolbar != null) {
+			toolbar.setBackgroundColor(AcalTheme.getToolbarColour());
 			setSupportActionBar(toolbar);
 			if (getSupportActionBar() != null) {
 				getSupportActionBar().setDisplayHomeAsUpEnabled(true);

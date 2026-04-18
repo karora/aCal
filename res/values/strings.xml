@@ -10,7 +10,7 @@
 	<string name="appDescriptionTasks">A Task List for Android which will store your tasks on a remote CalDAV / CardDAV server, such as DAViCal (See: www.davical.org)</string>
 	<string name="appDescriptionNotes">A Task List for Android which will store your tasks on a remote CalDAV / CardDAV server, such as DAViCal (See: www.davical.org)</string>
 	<string name="Active">Active</string>
-	<string name="Add_Server">Add Server</string>
+	<string name="Add_Server">Add Account</string>
 	<string name="A_name_for_this_server_configuration">A name for this server configuration</string>
 	<string name="Authentication_Type">Authentication Type</string>
 	<string name="Simple_Path">Simple Path</string>

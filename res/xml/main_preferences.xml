@@ -100,7 +100,9 @@
 			android:title="@string/AlarmVolumeType_PrefTitle" >
 		</ListPreference>
 	</PreferenceScreen>
-	<PreferenceScreen android:title="@string/WeekViewPreferences" >
+	<PreferenceScreen
+		android:key="weekViewPreferences"
+		android:title="@string/WeekViewPreferences" >
 		<com.morphoss.acal.TimePickerPreference
 			android:defaultValue="9:00"
 			android:enabled="true"
@@ -132,7 +134,9 @@
 			android:summary="@string/prefWeekViewDayWidth_Summary"
 			android:title="@string/prefWeekViewDayWidth_Title" />
 	</PreferenceScreen>
-	<PreferenceScreen android:title="@string/AppearancePreferences" >
+	<PreferenceScreen
+		android:key="appearancePreferences"
+		android:title="@string/AppearancePreferences" >
 		<ListPreference
 			android:defaultValue="6"
 			android:enabled="true"

@@ -36,13 +36,12 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
+import com.morphoss.acal.AcalTheme;
 import com.morphoss.acal.Constants;
 import com.morphoss.acal.PrefNames;
 import com.morphoss.acal.R;
 import com.morphoss.acal.ServiceManager;
+import com.morphoss.acal.activity.AcalAppCompatActivity;
 import com.morphoss.acal.providers.Servers;
 import com.morphoss.acal.service.ServiceRequest;
 
@@ -58,7 +57,7 @@ import com.morphoss.acal.service.ServiceRequest;
  * <p>This configuration screen uses AndroidX PreferenceFragmentCompat but does not persist data to
  * SharedPreferences — data is persisted manually via the ContentResolver on apply.</p>
  */
-public class ServerConfiguration extends AppCompatActivity
+public class ServerConfiguration extends AcalAppCompatActivity
 		implements OnClickListener, ServerConfigurator {
 
 	public static final String TAG = "ServerConfiguration";
@@ -87,8 +86,9 @@ public class ServerConfiguration extends AppCompatActivity
 		super.onCreate(bundle);
 		setContentView(R.layout.server_config);
 
-		Toolbar toolbar = findViewById(R.id.toolbar);
+		toolbar = findViewById(R.id.toolbar);
 		if (toolbar != null) {
+			toolbar.setBackgroundColor(AcalTheme.getToolbarColour());
 			setSupportActionBar(toolbar);
 			if (getSupportActionBar() != null) {
 				getSupportActionBar().setDisplayHomeAsUpEnabled(true);
