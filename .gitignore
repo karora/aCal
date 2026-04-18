@@ -21,6 +21,10 @@ timezones/tzdata
 design/screenshot*
 local.properties
 secure.properties
+keystore.properties
+*.jks
+*.keystore
+apk/
 custom_rules.xml
 proguard/*
 design/*.odt

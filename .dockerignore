@@ -1,0 +1,9 @@
+.git
+.gradle
+build
+bin
+gen
+.idea
+*.apk
+*.jks
+keystore.properties
