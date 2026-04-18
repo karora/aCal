@@ -26,7 +26,7 @@
 <string name="Username">Имя пользователя</string>
 <string name="Use_SSL">Использовать SSL</string>
 <string name="appActivityEventCreate">Новое событие</string>
-<string name="appActivityServerConfigList">Серверы</string>
+<string name="appActivityAccounts">Серверы</string>
 <string name="appActivityAddServerList">Шаблон сервера</string>
 <string name="appActivityCollectionConfigList">Календари и Контакты</string>
 <string name="appActivitySettings">Настройки</string>

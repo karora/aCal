@@ -43,7 +43,7 @@
 <string name="Whether_this_server_is_active">Define se este servidor será utilizado</string>
 <string name="Whether_to_use_encryption">Define se a conexão com o servidor será segura (criptografada)</string>
 <string name="appActivityEventCreate">Novo compromisso</string>
-<string name="appActivityServerConfigList">Servidores</string>
+<string name="appActivityAccounts">Servidores</string>
 <string name="appActivityServerConfiguration">Configuração do Servidor</string>
 <string name="appActivityAddServerList">Modelos de servidor</string>
 <string name="appActivityCollectionConfigList">Agendas e listas de contatos</string>

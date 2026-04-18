@@ -153,7 +153,7 @@ msgstr "Define se a conexão com o servidor será segura (criptografada)"
 msgid "appActivityEventCreate"
 msgstr "Novo compromisso"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Servidores"
 
 msgid "appActivityServerConfiguration"

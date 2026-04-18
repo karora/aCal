@@ -39,7 +39,7 @@
 <string name="Whether_this_server_is_active">Czy ten serwer powinien być aktywnie wykorzystywany</string>
 <string name="Whether_to_use_encryption">Czy korzystać z szyfrowanego połączenia z serwerem</string>
 <string name="appActivityEventCreate">Nowe zdarzenie</string>
-<string name="appActivityServerConfigList">Serwery</string>
+<string name="appActivityAccounts">Serwery</string>
 <string name="appActivityAddServerList">Szablon serwera</string>
 <string name="appActivityCollectionConfigList">Kalendarze i książki adresowe</string>
 <string name="appActivityDebugSettings">Debugowanie ustawień</string>

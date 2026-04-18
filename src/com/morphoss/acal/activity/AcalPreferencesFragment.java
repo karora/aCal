@@ -52,6 +52,9 @@ public class AcalPreferencesFragment extends PreferenceFragmentCompat
 			Log.println(Constants.LOGD, TAG, "Showing preference fragment with "
 					+ getPreferenceScreen().getPreferenceCount() + " preferences.");
 
+			Preference debugPref = findPreference("debugOptions");
+			if (debugPref != null) debugPref.setVisible(Constants.DEBUG_SETTINGS);
+
 			PreferenceManager pm = getPreferenceManager();
 			this.addDefaultCollectionPreference((ListPreference)pm.findPreference(PrefNames.defaultEventsCollection), DavCollections.INCLUDE_EVENTS );
 			this.addDefaultCollectionPreference((ListPreference)pm.findPreference(PrefNames.defaultTasksCollection), DavCollections.INCLUDE_TASKS );
@@ -63,7 +66,7 @@ public class AcalPreferencesFragment extends PreferenceFragmentCompat
 			}
 		}
 		catch ( Exception e ) {
-			Log.d(TAG, Log.getStackTraceString(e));
+			Log.e(TAG, "Failed to inflate preferences", e);
 		}
 	}
 

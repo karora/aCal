@@ -164,7 +164,7 @@ msgstr "Einstellung, ob Verschlüsselung verwendet werden soll"
 msgid "appActivityEventCreate"
 msgstr "Neues Ereignis"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Server"
 
 msgid "appActivityServerConfiguration"

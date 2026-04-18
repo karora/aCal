@@ -228,7 +228,7 @@ public class JournalListView extends AcalAppCompatActivity implements OnClickLis
 	private void startSettings() {
 		Intent settingsIntent = new Intent();
 		settingsIntent.setClassName("com.morphoss.acal",
-				"com.morphoss.acal.activity.Settings");
+				"com.morphoss.acal.activity.AcalPreferences");
 		this.startActivity(settingsIntent);
 	}
 

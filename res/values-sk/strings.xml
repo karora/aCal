@@ -44,7 +44,7 @@
 <string name="Whether_this_server_is_active">Má sa server aktívne používať?</string>
 <string name="Whether_to_use_encryption">Má sa pre spojenie so serverom použiť šifrovanie?</string>
 <string name="appActivityEventCreate">Nová udalosť</string>
-<string name="appActivityServerConfigList">Server</string>
+<string name="appActivityAccounts">Server</string>
 <string name="appActivityServerConfiguration">Konfigurácia servera</string>
 <string name="appActivityAddServerList">Šablóny pre servery</string>
 <string name="appActivityCollectionConfigList">Kalendáre a adresáre</string>

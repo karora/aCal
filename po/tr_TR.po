@@ -152,7 +152,7 @@ msgstr ""
 msgid "appActivityEventCreate"
 msgstr ""
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Sunucular"
 
 msgid "appActivityServerConfiguration"

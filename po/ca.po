@@ -153,7 +153,7 @@ msgstr "Si cal utilitzar xifrat"
 msgid "appActivityEventCreate"
 msgstr "Nova cita"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Servidors"
 
 msgid "appActivityServerConfiguration"

@@ -152,7 +152,7 @@ msgstr "Czy korzystać z szyfrowanego połączenia z serwerem"
 msgid "appActivityEventCreate"
 msgstr "Nowe zdarzenie"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Serwery"
 
 msgid "appActivityServerConfiguration"

@@ -45,7 +45,7 @@
 <string name="Whether_this_server_is_active">Define si el servidor debe ser utilizado</string>
 <string name="Whether_to_use_encryption">Define si se debe usar cifrado</string>
 <string name="appActivityEventCreate">Nueva cita</string>
-<string name="appActivityServerConfigList">Servidores</string>
+<string name="appActivityAccounts">Servidores</string>
 <string name="appActivityServerConfiguration">Configuración del Servidor</string>
 <string name="appActivityAddServerList">Plantilla de servidor</string>
 <string name="appActivityCollectionConfigList">Calendarios y libretas de direcciones</string>

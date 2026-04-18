@@ -38,7 +38,7 @@
 <string name="Whether_this_server_is_active">Si aquest servidor és actiu o no</string>
 <string name="Whether_to_use_encryption">Si cal utilitzar xifrat</string>
 <string name="appActivityEventCreate">Nova cita</string>
-<string name="appActivityServerConfigList">Servidors</string>
+<string name="appActivityAccounts">Servidors</string>
 <string name="appActivityAddServerList">Plantilles de servidor</string>
 <string name="appActivityCollectionConfigList">Calendaris i llibretes d\'adreces</string>
 <string name="appActivityDebugSettings">Paràmetres de depuració</string>

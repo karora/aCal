@@ -158,7 +158,7 @@ msgstr "Whether to use encryption for the connection to the server"
 msgid "appActivityEventCreate"
 msgstr "New Event"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Servers"
 
 msgid "appActivityServerConfiguration"

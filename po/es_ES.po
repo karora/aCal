@@ -156,7 +156,7 @@ msgstr "Define si se debe usar cifrado"
 msgid "appActivityEventCreate"
 msgstr "Nueva cita"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Servidores"
 
 msgid "appActivityServerConfiguration"

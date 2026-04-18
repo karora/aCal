@@ -42,7 +42,7 @@
 <string name="Whether_this_server_is_active">Se questo server dovrebbe essere usato attivamente</string>
 <string name="Whether_to_use_encryption">Se bisogna usare una connessione sicura per il server</string>
 <string name="appActivityEventCreate">Nuovo Appuntamento</string>
-<string name="appActivityServerConfigList">Server</string>
+<string name="appActivityAccounts">Server</string>
 <string name="appActivityServerConfiguration">Configurazione del server</string>
 <string name="appActivityAddServerList">Modelli Server</string>
 <string name="appActivityCollectionConfigList">Calendari e Rubriche</string>

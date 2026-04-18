@@ -33,7 +33,7 @@
 <string name="The_username_to_use">Sunucu ile kimlik doğrulaması için kullanıcı adı kullan</string>
 <string name="Username">Kullanıcı adı</string>
 <string name="Use_SSL">SSL kullan</string>
-<string name="appActivityServerConfigList">Sunucular</string>
+<string name="appActivityAccounts">Sunucular</string>
 <string name="appActivityDebugSettings">Hata Ayıklama Ayarları</string>
 <string name="appActivitySettings">Ayarlar</string>
 <string name="appActivityPreference">Tercihler</string>

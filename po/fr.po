@@ -163,7 +163,7 @@ msgstr "S'il faut utiliser un connexion cryptée avec le serveur"
 msgid "appActivityEventCreate"
 msgstr "Nouvel événement"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Serveurs"
 
 msgid "appActivityServerConfiguration"

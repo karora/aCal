@@ -20,11 +20,9 @@ package com.morphoss.acal.activity;
 
 import android.os.Bundle;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.morphoss.acal.R;
 
-public class AcalPreferences extends AppCompatActivity {
+public class AcalPreferences extends AcalAppCompatActivity {
 
 	public static final String TAG = "AcalPreferences";
 
@@ -32,6 +30,7 @@ public class AcalPreferences extends AppCompatActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_preferences);
+		setupToolbarAndDrawer(getString(R.string.appActivitySettings));
 
 		if (savedInstanceState == null) {
 			getSupportFragmentManager()

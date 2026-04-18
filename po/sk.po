@@ -152,7 +152,7 @@ msgstr "Má sa pre spojenie so serverom použiť šifrovanie?"
 msgid "appActivityEventCreate"
 msgstr "Nová udalosť"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Server"
 
 msgid "appActivityServerConfiguration"

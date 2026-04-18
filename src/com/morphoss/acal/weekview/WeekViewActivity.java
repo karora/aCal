@@ -346,7 +346,7 @@ public class WeekViewActivity extends AcalActivity implements OnGestureListener,
 	private void startSettings() {
 		Intent settingsIntent = new Intent();
 		settingsIntent.setClassName("com.morphoss.acal",
-				"com.morphoss.acal.activity.Settings");
+				"com.morphoss.acal.activity.AcalPreferences");
 		this.startActivity(settingsIntent);
 	}
 

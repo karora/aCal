@@ -119,7 +119,7 @@
         <activity
             android:name=".activity.serverconfig.ServerConfigList"
             android:exported="false"
-            android:label="@string/appActivityServerConfigList"
+            android:label="@string/appActivityAccounts"
             android:launchMode="standard">
             <intent-filter>
                 <action android:name="com.morphoss.acal.activity.serverconfig.ServerConfigList" />
@@ -143,16 +143,6 @@
             android:launchMode="standard">
             <intent-filter>
                 <action android:name="com.morphoss.acal.activity.CollectionConfigList" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".activity.Settings"
-            android:exported="false"
-            android:label="@string/appActivitySettings"
-            android:launchMode="standard">
-            <intent-filter>
-                <action android:name="com.morphoss.acal.activity.Settings" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
@@ -281,8 +271,9 @@
         <activity
             android:name=".activity.AcalPreferences"
             android:exported="false"
-            android:label="@string/appActivityPreference"
-            android:launchMode="standard">
+            android:label="@string/appActivitySettings"
+            android:launchMode="standard"
+            android:theme="@style/Theme.aCal.NoActionBar">
             <intent-filter>
                 <action android:name="com.morphoss.acal.activity.AcalPreferences" />
                 <category android:name="android.intent.category.DEFAULT" />

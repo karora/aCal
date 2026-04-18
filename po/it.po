@@ -155,7 +155,7 @@ msgstr "Se bisogna usare una connessione sicura per il server"
 msgid "appActivityEventCreate"
 msgstr "Nuovo Appuntamento"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Server"
 
 msgid "appActivityServerConfiguration"

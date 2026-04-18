@@ -479,7 +479,7 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 	 * </p>
 	 */
 	private void startSettings() {
-		this.startActivity(new Intent(this, Settings.class));
+		this.startActivity(new Intent(this, AcalPreferences.class));
 	}
 
 

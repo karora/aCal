@@ -45,7 +45,7 @@
 	<string name="Whether_this_server_is_active">Whether this server should be actively used</string>
 	<string name="Whether_to_use_encryption">Whether to use encryption for the connection to the server</string>
 	<string name="appActivityEventCreate">New Event</string>
-	<string name="appActivityServerConfigList">Servers</string>
+	<string name="appActivityAccounts">Accounts</string>
 	<string name="appActivityServerConfiguration">Server Configuration</string>
 	<string name="appActivityAddServerList">Server Templates</string>
 	<string name="appActivityCollectionConfigList">Calendars and Addressbooks</string>

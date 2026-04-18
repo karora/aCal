@@ -176,7 +176,9 @@ public abstract class AcalAppCompatActivity extends AppCompatActivity
 				finish();
 			}
 		} else if (id == R.id.nav_settings) {
-			startActivity(new Intent(this, Settings.class));
+			if (!(this instanceof AcalPreferences)) {
+				startActivity(new Intent(this, AcalPreferences.class));
+			}
 		} else if (id == R.id.nav_about) {
 			if (!(this instanceof ShowUpgradeChanges)) {
 				startActivity(new Intent(this, ShowUpgradeChanges.class));

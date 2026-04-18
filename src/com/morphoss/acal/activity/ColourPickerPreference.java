@@ -21,83 +21,77 @@
 
 package com.morphoss.acal.activity;
 
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.preference.DialogPreference;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.preference.Preference;
+import androidx.preference.PreferenceViewHolder;
 
 import com.morphoss.acal.activity.ColourPickerDialog.OnColourPickerListener;
 
-public class ColourPickerPreference extends DialogPreference  {
+public class ColourPickerPreference extends Preference {
 	public static final String TAG = "aCal ColourPickerPreference";
 
-	private Context context;
-	private ColourPickerDialog dialog;
-	private int colour = 0xFF808080;
-	
+	private static final int FALLBACK_DEFAULT = 0xFF808080;
+
+	private int colour = FALLBACK_DEFAULT;
+
 	public ColourPickerPreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		this.context = context;
 	}
-	
+
+	public ColourPickerPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+		super(context, attrs, defStyleAttr);
+	}
+
 	@Override
-	public void onDialogClosed(boolean positiveResult) {
-		this.dialog = null;
+	protected Object onGetDefaultValue(TypedArray a, int index) {
+		return a.getInteger(index, FALLBACK_DEFAULT);
 	}
-	
+
+	@Override
+	protected void onSetInitialValue(Object defaultValue) {
+		int fallback = defaultValue instanceof Integer ? (Integer) defaultValue : FALLBACK_DEFAULT;
+		colour = getPersistedInt(fallback);
+	}
+
+	@Override
+	public void onBindViewHolder(PreferenceViewHolder holder) {
+		super.onBindViewHolder(holder);
+		TextView title = (TextView) holder.findViewById(android.R.id.title);
+		if (title != null) {
+			title.setTextColor(colour);
+		}
+	}
+
 	public int getColour() {
 		return this.colour;
 	}
-	
+
 	public void setColor(int colour) {
 		this.colour = colour;
+		persistInt(colour);
+		notifyChanged();
 	}
-	
-	protected void showDialog() {
-		dialog.show();
-		
-	}
-	
-	@Override
-	public View getView(View convertView, ViewGroup parent) {
-		View v = super.getView(convertView, parent);
-		TextView tv = (TextView) v.findViewById(android.R.id.title);
-		colour = getPersistedInt(colour);
-		tv.setTextColor(this.colour);
-		return v;
-	}
-	
-	
-	public void onClick(DialogInterface dialog, int whichButton) {
-		switch (whichButton) {
-			case Dialog.BUTTON_POSITIVE: {
-				this.colour = this.dialog.selectedColour;
-				this.persistInt(colour);
-				this.callChangeListener(this.dialog.selectedColour);
-				break;
-			}
-		}
-	}
-	
-	protected View onCreateDialogView() {
-	dialog =  new ColourPickerDialog(this.context,colour, new OnColourPickerListener() {
 
+	@Override
+	protected void onClick() {
+		ColourPickerDialog dialog = new ColourPickerDialog(getContext(), colour, new OnColourPickerListener() {
 			@Override
 			public void onCancel(ColourPickerDialog dialog) {
-				ColourPickerPreference.this.callChangeListener(colour);				
+				callChangeListener(colour);
 			}
 
 			@Override
 			public void onOk(ColourPickerDialog dialog, int color) {
-				ColourPickerPreference.this.colour = color;
-				ColourPickerPreference.this.callChangeListener(color);
+				colour = color;
+				persistInt(colour);
+				callChangeListener(color);
+				notifyChanged();
 			}
-			
 		});
-		return dialog.primaryView;
+		dialog.show();
 	}
 }

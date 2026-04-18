@@ -153,7 +153,7 @@ msgstr "Of encryptie moet gebruikt worden voor de verbinding met de server"
 msgid "appActivityEventCreate"
 msgstr "Nieuwe Afspraak"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Servers"
 
 msgid "appActivityServerConfiguration"

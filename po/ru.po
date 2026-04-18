@@ -152,7 +152,7 @@ msgstr ""
 msgid "appActivityEventCreate"
 msgstr "Новое событие"
 
-msgid "appActivityServerConfigList"
+msgid "appActivityAccounts"
 msgstr "Серверы"
 
 msgid "appActivityServerConfiguration"

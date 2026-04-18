@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-	<PreferenceScreen android:title="@string/GeneralPreferences" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<Preference android:title="@string/appActivityAccounts">
+		<intent
+			android:targetPackage="com.morphoss.acal"
+			android:targetClass="com.morphoss.acal.activity.serverconfig.ServerConfigList" />
+	</Preference>
+	<Preference android:title="@string/appActivityCollectionConfigList">
+		<intent
+			android:targetPackage="com.morphoss.acal"
+			android:targetClass="com.morphoss.acal.activity.CollectionConfigList" />
+	</Preference>
+
+	<PreferenceScreen
+		android:key="generalPreferences"
+		android:title="@string/GeneralPreferences" >
 		<CheckBoxPreference
 			android:key="@string/prefDefaultView"
 			android:summaryOff="Month View"
@@ -53,7 +67,9 @@
 			android:summary="@string/bedeworkOrgTzUrl"
 			android:title="@string/prefTzServerBaseUrl_Title" />
 	</PreferenceScreen>
-	<PreferenceScreen android:title="@string/AlarmPreferences" >
+	<PreferenceScreen
+		android:key="alarmPreferences"
+		android:title="@string/AlarmPreferences" >
 		<CheckBoxPreference
 			android:key="@string/prefIgnoreValarmDescription"
 			android:summaryOff="@string/prefIgnoreValarmDescription_OffSummary"
@@ -135,4 +151,12 @@
 			android:summary="@string/prefThemeButtonColour_Summary"
 			android:title="@string/prefThemeButtonColour_Title" />
 	</PreferenceScreen>
+
+	<Preference
+		android:key="debugOptions"
+		android:title="@string/appActivityDebugSettings">
+		<intent
+			android:targetPackage="com.morphoss.acal"
+			android:targetClass="com.morphoss.acal.activity.DebugSettings" />
+	</Preference>
 </PreferenceScreen>

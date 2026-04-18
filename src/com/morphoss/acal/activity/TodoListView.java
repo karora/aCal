@@ -256,7 +256,7 @@ public class TodoListView extends AcalAppCompatActivity implements OnClickListen
 	private void startSettings() {
 		Intent settingsIntent = new Intent();
 		settingsIntent.setClassName("com.morphoss.acal",
-		"com.morphoss.acal.activity.Settings");
+		"com.morphoss.acal.activity.AcalPreferences");
 		this.startActivity(settingsIntent);
 	}
 
