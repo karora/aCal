@@ -271,7 +271,8 @@
         <activity
             android:name=".activity.ShowUpgradeChanges"
             android:exported="false"
-            android:launchMode="standard">
+            android:launchMode="standard"
+            android:theme="@style/Theme.aCal.NoActionBar">
             <intent-filter>
                 <action android:name="com.morphoss.acal.activity.ShowUpgradeChanges" />
                 <category android:name="android.intent.category.DEFAULT" />

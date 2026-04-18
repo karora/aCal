@@ -37,7 +37,7 @@ import com.morphoss.acal.PrefNames;
 import com.morphoss.acal.R;
 import com.morphoss.acal.aCal;
 
-public class ShowUpgradeChanges extends AcalActivity implements OnClickListener {
+public class ShowUpgradeChanges extends AcalAppCompatActivity implements OnClickListener {
 
 	WebView upgradeNotes;
 	Button seenEm;
@@ -50,6 +50,7 @@ public class ShowUpgradeChanges extends AcalActivity implements OnClickListener 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.changes_on_upgrade);
+		setupToolbarAndDrawer(getString(R.string.aCalVersionChanges));
 		upgradeNotes = (WebView) this.findViewById(R.id.UpgradeNotes);
 		seenEm = (Button) this.findViewById(R.id.FinishedWithUpgradeNotes);
 		AcalTheme.setContainerFromTheme(seenEm, AcalTheme.BUTTON);
