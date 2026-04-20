@@ -34,7 +34,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.morphoss.acal"
+        applicationId "org.davical.acal"
         minSdkVersion 23
         targetSdkVersion 35
         versionCode 63
