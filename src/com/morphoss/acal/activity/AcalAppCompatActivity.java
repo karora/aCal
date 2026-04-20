@@ -22,6 +22,9 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
@@ -61,6 +64,7 @@ public abstract class AcalAppCompatActivity extends AppCompatActivity
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		AcalTheme.applySelectedTheme(this);
 		super.onCreate(savedInstanceState);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		AcalTheme.initializeTheme(this);
@@ -124,8 +128,14 @@ public abstract class AcalAppCompatActivity extends AppCompatActivity
 					R.string.nav_drawer_open,
 					R.string.nav_drawer_close
 			);
+			drawerToggle.getDrawerArrowDrawable().setColor(Color.WHITE);
 			drawerLayout.addDrawerListener(drawerToggle);
 			drawerToggle.syncState();
+
+			Drawable overflow = toolbar.getOverflowIcon();
+			if (overflow != null) {
+				overflow.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+			}
 
 			navigationView.setNavigationItemSelectedListener(this);
 

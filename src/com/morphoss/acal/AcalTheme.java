@@ -17,13 +17,17 @@
  */
 package com.morphoss.acal;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.TextView;
+
+import com.google.android.material.color.DynamicColors;
 
 public final class AcalTheme {
 
@@ -42,9 +46,46 @@ public final class AcalTheme {
 	
 	public static void initializeTheme(Context context) {
 		prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		themeButtonColour = prefs.getInt(context.getString(R.string.prefThemeButtonColour), themeButtonColour);
+		int colorPrimary = resolveThemeColour(context, androidx.appcompat.R.attr.colorPrimary);
+		int defaultButtonColour = colorPrimary != 0 ? colorPrimary : themeButtonColour;
+		themeButtonColour = prefs.getInt(context.getString(R.string.prefThemeButtonColour), defaultButtonColour);
 		Log.i(TAG,"Set theme button colour to "+themeButtonColour);
-	}	
+	}
+
+	private static int resolveThemeColour(Context context, int attr) {
+		TypedValue tv = new TypedValue();
+		if (context.getTheme().resolveAttribute(attr, tv, true)) {
+			return tv.data;
+		}
+		return 0;
+	}
+
+	/**
+	 * Apply the user-selected colour theme to the given activity. Must be
+	 * called before super.onCreate (before setContentView) to take effect.
+	 */
+	public static void applySelectedTheme(Activity activity) {
+		SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(activity);
+		String choice = p.getString(PrefNames.appTheme, "pink");
+		if ("dynamic".equals(choice) && DynamicColors.isDynamicColorAvailable()) {
+			activity.setTheme(themeResForKey("pink"));
+			DynamicColors.applyToActivityIfAvailable(activity);
+			return;
+		}
+		activity.setTheme(themeResForKey(choice));
+	}
+
+	private static int themeResForKey(String key) {
+		if (key == null) return R.style.Theme_aCal_Pink;
+		switch (key) {
+			case "teal":   return R.style.Theme_aCal_Teal;
+			case "indigo": return R.style.Theme_aCal_Indigo;
+			case "green":  return R.style.Theme_aCal_Green;
+			case "amber":  return R.style.Theme_aCal_Amber;
+			case "pink":
+			default:       return R.style.Theme_aCal_Pink;
+		}
+	}
 
 	final public static View getContainerView(View someView) {
 		ViewParent vp;

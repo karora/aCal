@@ -16,4 +16,6 @@ public class PrefNames {
 	public static final String	defaultEventsCollection	= AcalApplication.getResourceString(R.string.prefDefaultEventsCollection);
 	public static final String	defaultTasksCollection	= AcalApplication.getResourceString(R.string.prefDefaultTasksCollection);
 	public static final String	defaultNotesCollection	= AcalApplication.getResourceString(R.string.prefDefaultNotesCollection);
+
+	public static final String	appTheme				= AcalApplication.getResourceString(R.string.prefAppTheme);
 }

@@ -53,9 +53,82 @@
 		<item name="android:background">@drawable/titlebg</item>
 		<item name="android:tileMode">repeat</item>
 	</style>
-	<style name="Theme.aCal.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
-		<item name="colorPrimary">@color/themed_button_colour</item>
-		<item name="colorPrimaryDark">#cc9010</item>
-		<item name="colorAccent">@color/themed_button_colour</item>
+	<style name="Theme.aCal.NoActionBar" parent="Theme.aCal.Pink" />
+
+	<!-- Base Material3 theme for aCal. Individual colour variants extend this. -->
+	<style name="Theme.aCal.Base" parent="Theme.Material3.Light.NoActionBar">
+		<item name="android:windowLightStatusBar">true</item>
+		<!-- Preserve the legacy compact toolbar height (Material3 default is 64dp). -->
+		<item name="actionBarSize">56dp</item>
+		<item name="android:actionBarSize">56dp</item>
+		<!-- Material themes' default view inflater auto-substitutes <Button> with
+		     MaterialButton, which brings a tonal rounded background that overrides
+		     our @drawable/themed_button_fg. Use the plain AppCompat inflater so
+		     <Button> stays as AppCompatButton. -->
+		<item name="viewInflaterClass">androidx.appcompat.app.AppCompatViewInflater</item>
+		<!-- Also strip minHeight/minWidth enforcement for legacy compact buttons. -->
+		<item name="buttonStyle">@style/Widget.aCal.LegacyButton</item>
+		<item name="android:buttonStyle">@style/Widget.aCal.LegacyButton</item>
+	</style>
+
+	<!-- Plain legacy button style: no Material3 surface, no minHeight enforcement. -->
+	<style name="Widget.aCal.LegacyButton" parent="android:Widget.Material.Light.Button">
+		<item name="android:minHeight">0dp</item>
+		<item name="android:minWidth">0dp</item>
+	</style>
+
+	<style name="Theme.aCal.Pink" parent="Theme.aCal.Base">
+		<item name="colorPrimary">#C2185B</item>
+		<item name="colorOnPrimary">#FFFFFF</item>
+		<item name="colorPrimaryContainer">#FFD9E2</item>
+		<item name="colorOnPrimaryContainer">#3F001D</item>
+		<item name="colorSecondary">#75565B</item>
+		<item name="colorOnSecondary">#FFFFFF</item>
+		<item name="colorTertiary">#7A5733</item>
+		<item name="colorOnTertiary">#FFFFFF</item>
+	</style>
+
+	<style name="Theme.aCal.Teal" parent="Theme.aCal.Base">
+		<item name="colorPrimary">#00796B</item>
+		<item name="colorOnPrimary">#FFFFFF</item>
+		<item name="colorPrimaryContainer">#74F8E5</item>
+		<item name="colorOnPrimaryContainer">#00201C</item>
+		<item name="colorSecondary">#4A6360</item>
+		<item name="colorOnSecondary">#FFFFFF</item>
+		<item name="colorTertiary">#46617A</item>
+		<item name="colorOnTertiary">#FFFFFF</item>
+	</style>
+
+	<style name="Theme.aCal.Indigo" parent="Theme.aCal.Base">
+		<item name="colorPrimary">#3F51B5</item>
+		<item name="colorOnPrimary">#FFFFFF</item>
+		<item name="colorPrimaryContainer">#DFE0FF</item>
+		<item name="colorOnPrimaryContainer">#00105C</item>
+		<item name="colorSecondary">#5B5D72</item>
+		<item name="colorOnSecondary">#FFFFFF</item>
+		<item name="colorTertiary">#77536D</item>
+		<item name="colorOnTertiary">#FFFFFF</item>
+	</style>
+
+	<style name="Theme.aCal.Green" parent="Theme.aCal.Base">
+		<item name="colorPrimary">#2E7D32</item>
+		<item name="colorOnPrimary">#FFFFFF</item>
+		<item name="colorPrimaryContainer">#B3F1B0</item>
+		<item name="colorOnPrimaryContainer">#002204</item>
+		<item name="colorSecondary">#53634F</item>
+		<item name="colorOnSecondary">#FFFFFF</item>
+		<item name="colorTertiary">#386569</item>
+		<item name="colorOnTertiary">#FFFFFF</item>
+	</style>
+
+	<style name="Theme.aCal.Amber" parent="Theme.aCal.Base">
+		<item name="colorPrimary">#8C5000</item>
+		<item name="colorOnPrimary">#FFFFFF</item>
+		<item name="colorPrimaryContainer">#FFDCBE</item>
+		<item name="colorOnPrimaryContainer">#2D1600</item>
+		<item name="colorSecondary">#725A42</item>
+		<item name="colorOnSecondary">#FFFFFF</item>
+		<item name="colorTertiary">#57633B</item>
+		<item name="colorOnTertiary">#FFFFFF</item>
 	</style>
 </resources>

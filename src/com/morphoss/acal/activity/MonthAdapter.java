@@ -83,6 +83,7 @@ public class MonthAdapter extends BaseAdapter implements CacheChangedListener, C
 	
 	private volatile long wait = 0;
 	private static final int HANDLER_NEW_DATA = 0;
+	private static final float HEADER_RATIO = 0.8f;
 	private Handler mHandler = new Handler(Looper.getMainLooper()) {
 			
 	
@@ -194,7 +195,9 @@ public class MonthAdapter extends BaseAdapter implements CacheChangedListener, C
 		if ( parent != null ) {
 			gridHeight = parent.getHeight();
 			int boxWidth = (parent.getWidth() / 7) - 1;
-			boxHeight = (gridHeight / 7) + 1;
+			// Header row is rendered at HEADER_RATIO * boxHeight (see below), so the
+			// 6 day rows + shrunken header must fit exactly in gridHeight.
+			boxHeight = (int)(gridHeight / (6f + HEADER_RATIO)) + 1;
 			headerHeight = boxHeight - 10;
 			gridHeight = (boxHeight * 6) + headerHeight + 1;
 			if ( boxWidth > (boxHeight * 1.3) ) boxScaleFactor = 1.2f;
@@ -219,18 +222,18 @@ public class MonthAdapter extends BaseAdapter implements CacheChangedListener, C
 				case AcalDateTime.SATURDAY: colText=(context.getString(R.string.Sat)); break;
 				case AcalDateTime.SUNDAY: colText=(context.getString(R.string.Sun)); break;
 			}
-			dayColumnHeader.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
+			dayColumnHeader.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
 			dayColumnHeader.setText(colText);
 			dayColumnHeader.setTextSize( TypedValue.COMPLEX_UNIT_PX, (float) 0.55 * boxScaleFactor * headerHeight);
-			
+
 			ViewParent vp = dayColumnHeader.getParent();
 			if ( vp instanceof View ) {
 				((View) vp).setBackgroundColor(AcalTheme.getElementColour(AcalTheme.BUTTON));
 				dayColumnHeader.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.dayheadings_fg));
 				dayColumnHeader.setTextColor(AcalTheme.pickForegroundForBackground(AcalTheme.getElementColour(AcalTheme.BUTTON)));
 			}
-			
-			if ( headerHeight != 0 ) dayColumnHeader.setHeight(headerHeight - dayColumnHeader.getCompoundPaddingBottom());
+
+			if ( headerHeight != 0 ) dayColumnHeader.setHeight((int)(headerHeight * HEADER_RATIO));
 
 			dayColumnHeader.setVisibility(View.VISIBLE);
 			return v;

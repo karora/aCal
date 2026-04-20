@@ -20,11 +20,14 @@ package com.morphoss.acal.activity;
 
 import android.content.ContentValues;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.media.RingtoneManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.TypedValue;
+import android.widget.Toast;
 
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
@@ -60,6 +63,7 @@ public class AcalPreferencesFragment extends PreferenceFragmentCompat
 			this.addDefaultCollectionPreference((ListPreference)pm.findPreference(PrefNames.defaultTasksCollection), DavCollections.INCLUDE_TASKS );
 			this.addDefaultCollectionPreference((ListPreference)pm.findPreference(PrefNames.defaultNotesCollection), DavCollections.INCLUDE_JOURNAL );
 			this.addDefaultAlarmTonePreference(pm);
+			this.wireApplyThemeAccentPreference(pm);
 
 			for (int i = 0; i < getPreferenceScreen().getPreferenceCount(); i++) {
 				initSummary(getPreferenceScreen().getPreference(i));
@@ -122,6 +126,61 @@ public class AcalPreferencesFragment extends PreferenceFragmentCompat
 		defaultAlarm.setDefaultValue(uris[0]);
 		defaultAlarm.setSelectable(true);
 		defaultAlarm.setEnabled(true);
+	}
+
+	private void wireApplyThemeAccentPreference(PreferenceManager pm) {
+		Preference applyAccent = pm.findPreference("applyThemeAccent");
+		if (applyAccent == null) return;
+
+		ListPreference themePicker = pm.findPreference(getString(R.string.prefAppTheme));
+		String currentTheme = themePicker != null ? themePicker.getValue() : null;
+		applyAccent.setEnabled(!"dynamic".equals(currentTheme));
+
+		applyAccent.setOnPreferenceClickListener(pref -> {
+			String choice = themePicker != null ? themePicker.getValue() : null;
+			if ("dynamic".equals(choice)) {
+				Toast.makeText(requireContext(), R.string.prefApplyThemeAccent_DynamicDisabled, Toast.LENGTH_SHORT).show();
+				return true;
+			}
+			int themeRes = themeResForKey(choice);
+			int colour = resolveColorPrimary(themeRes);
+			if (colour == 0) return true;
+			PreferenceManager.getDefaultSharedPreferences(requireContext())
+					.edit()
+					.putInt(getString(R.string.prefThemeButtonColour), colour)
+					.apply();
+			Toast.makeText(requireContext(), R.string.prefApplyThemeAccent_Done, Toast.LENGTH_SHORT).show();
+			return true;
+		});
+
+		if (themePicker != null) {
+			themePicker.setOnPreferenceChangeListener((p, newValue) -> {
+				applyAccent.setEnabled(!"dynamic".equals(newValue));
+				return true;
+			});
+		}
+	}
+
+	private int themeResForKey(String key) {
+		if (key == null) return R.style.Theme_aCal_Pink;
+		switch (key) {
+			case "teal":   return R.style.Theme_aCal_Teal;
+			case "indigo": return R.style.Theme_aCal_Indigo;
+			case "green":  return R.style.Theme_aCal_Green;
+			case "amber":  return R.style.Theme_aCal_Amber;
+			case "pink":
+			default:       return R.style.Theme_aCal_Pink;
+		}
+	}
+
+	private int resolveColorPrimary(int themeRes) {
+		Resources.Theme theme = requireContext().getResources().newTheme();
+		theme.applyStyle(themeRes, true);
+		TypedValue tv = new TypedValue();
+		if (theme.resolveAttribute(androidx.appcompat.R.attr.colorPrimary, tv, true)) {
+			return tv.data;
+		}
+		return 0;
 	}
 
 	@Override

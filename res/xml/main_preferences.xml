@@ -138,6 +138,15 @@
 		android:key="appearancePreferences"
 		android:title="@string/AppearancePreferences" >
 		<ListPreference
+			android:defaultValue="pink"
+			android:enabled="true"
+			android:entries="@array/AppTheme_Entries"
+			android:entryValues="@array/AppTheme_Values"
+			android:key="@string/prefAppTheme"
+			android:selectable="true"
+			android:summary="@string/prefAppTheme_Summary"
+			android:title="@string/prefAppTheme_Title" />
+		<ListPreference
 			android:defaultValue="6"
 			android:enabled="true"
 			android:entries="@array/YearViewSize_PrefEntries"
@@ -154,6 +163,12 @@
 			android:selectable="true"
 			android:summary="@string/prefThemeButtonColour_Summary"
 			android:title="@string/prefThemeButtonColour_Title" />
+		<Preference
+			android:key="applyThemeAccent"
+			android:persistent="false"
+			android:selectable="true"
+			android:summary="@string/prefApplyThemeAccent_Summary"
+			android:title="@string/prefApplyThemeAccent_Title" />
 	</PreferenceScreen>
 
 	<Preference

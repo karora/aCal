@@ -23,6 +23,7 @@ public abstract class AcalActivity extends Activity {
 	protected boolean waitingForPermissions = false;
 
 	public void onCreate(Bundle savedInstanceState) {
+		AcalTheme.applySelectedTheme(this);
 		super.onCreate(savedInstanceState);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		AcalTheme.initializeTheme(this);

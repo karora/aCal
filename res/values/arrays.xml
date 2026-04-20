@@ -58,4 +58,20 @@
 		<item>@string/changeAllInstances</item>
 		<item>@string/changeThisAndFuture</item>
 	</string-array>
+	<string-array name="AppTheme_Entries">
+		<item>@string/AppTheme_Pink</item>
+		<item>@string/AppTheme_Teal</item>
+		<item>@string/AppTheme_Indigo</item>
+		<item>@string/AppTheme_Green</item>
+		<item>@string/AppTheme_Amber</item>
+		<item>@string/AppTheme_Dynamic</item>
+	</string-array>
+	<string-array name="AppTheme_Values">
+		<item>pink</item>
+		<item>teal</item>
+		<item>indigo</item>
+		<item>green</item>
+		<item>amber</item>
+		<item>dynamic</item>
+	</string-array>
 </resources>
