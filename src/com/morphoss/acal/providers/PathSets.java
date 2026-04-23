@@ -58,7 +58,7 @@ import com.morphoss.acal.database.AcalDBHelper;
 public class PathSets extends ContentProvider {
 
 	//Authority must match one defined in manifest!
-	public static final String AUTHORITY = "pathsets";
+	public static final String AUTHORITY = "org.davical.acal.pathsets";
     public static final Uri CONTENT_URI = Uri.parse("content://"+ AUTHORITY);
 
     //Database + Table

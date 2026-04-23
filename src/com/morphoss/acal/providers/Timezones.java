@@ -60,7 +60,7 @@ public class Timezones extends ContentProvider {
 	public static final String TAG = "aCal Timezones ContentProvider";
 
 	//Authority must match one defined in manifest!
-	public static final String AUTHORITY = "timezones";
+	public static final String AUTHORITY = "org.davical.acal.timezones";
     public static final Uri CONTENT_URI = Uri.parse("content://"+ AUTHORITY);
 
     //Database + Table

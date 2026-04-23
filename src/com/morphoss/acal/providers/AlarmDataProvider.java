@@ -56,7 +56,7 @@ import com.morphoss.acal.database.AcalDBHelper;
 public class AlarmDataProvider extends ContentProvider {
 
 	//Authority must match one defined in manifest!
-	public static final String AUTHORITY = "alarms";
+	public static final String AUTHORITY = "org.davical.acal.alarms";
     public static final Uri CONTENT_URI = Uri.parse("content://"+ AUTHORITY);
     public static final Uri META_URI = Uri.withAppendedPath(CONTENT_URI,"meta");
 

@@ -36,3 +36,7 @@ for apk in "${PROJECT_ROOT}"/build/outputs/apk/**/*.apk; do
     cp -f "${apk}" "${APK_OUT}/"
     echo "Copied $(basename "${apk}") to apk/"
 done
+for aab in "${PROJECT_ROOT}"/build/outputs/bundle/**/*.aab; do
+    cp -f "${aab}" "${APK_OUT}/"
+    echo "Copied $(basename "${aab}") to apk/"
+done

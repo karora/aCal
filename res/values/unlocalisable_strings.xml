@@ -9,7 +9,7 @@
 	<string name="appActivityMonthView">aCal - Month View</string>
 	<string name="appActivityYearView">aCal - Year View</string>
 	<string name="appActivityWeekView">aCal - Week View</string>
-	<string name="AcalAccountType">com.morphoss.acal.AcalAccount</string>
+	<string name="AcalAccountType">org.davical.acal.AcalAccount</string>
 	<string name="davicalOrgTzUrl">http://tz.davical.org/tz.php</string>
 	<string name="bedeworkOrgTzUrl">http://www.bedework.org/.well-known/timezone</string>
 	<dimen name="MonthDayTextSize">14sp</dimen>

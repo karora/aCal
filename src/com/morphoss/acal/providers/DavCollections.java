@@ -59,7 +59,7 @@ public class DavCollections extends ContentProvider {
 	public static final String TAG = "aCal CollectionsProvider";
 	
 	//Authority must match one defined in manifest!
-	public static final String AUTHORITY = "collections";
+	public static final String AUTHORITY = "org.davical.acal.collections";
     public static final Uri CONTENT_URI = Uri.parse("content://"+ AUTHORITY);
     
     //Database + Table

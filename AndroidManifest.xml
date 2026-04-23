@@ -309,27 +309,27 @@
 
         <provider
             android:name="com.morphoss.acal.providers.Servers"
-            android:authorities="servers"
+            android:authorities="org.davical.acal.servers"
             android:exported="false" />
         <provider
             android:name="com.morphoss.acal.providers.PathSets"
-            android:authorities="pathsets"
+            android:authorities="org.davical.acal.pathsets"
             android:exported="false" />
         <provider
             android:name="com.morphoss.acal.providers.Timezones"
-            android:authorities="timezones"
+            android:authorities="org.davical.acal.timezones"
             android:exported="false" />
         <provider
             android:name="com.morphoss.acal.providers.DavCollections"
-            android:authorities="collections"
+            android:authorities="org.davical.acal.collections"
             android:exported="false" />
         <provider
             android:name="com.morphoss.acal.providers.CacheDataProvider"
-            android:authorities="cache"
+            android:authorities="org.davical.acal.cache"
             android:exported="false" />
         <provider
             android:name="com.morphoss.acal.providers.AlarmDataProvider"
-            android:authorities="alarms"
+            android:authorities="org.davical.acal.alarms"
             android:exported="false" />
 
         <service

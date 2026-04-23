@@ -54,7 +54,7 @@ import com.morphoss.acal.database.AcalDBHelper;
 public class CacheDataProvider extends ContentProvider {
 
 	//Authority must match one defined in manifest!
-	public static final String AUTHORITY = "cache";
+	public static final String AUTHORITY = "org.davical.acal.cache";
     public static final Uri CONTENT_URI = Uri.parse("content://"+ AUTHORITY);
     public static final Uri META_URI = Uri.withAppendedPath(CONTENT_URI,"meta");
 

@@ -53,7 +53,7 @@ public class Servers extends ContentProvider {
 	public static final String TAG = "aCal ServersProvider";
 
 	//Authority must match one defined in manifest!
-	public static final String AUTHORITY = "servers";
+	public static final String AUTHORITY = "org.davical.acal.servers";
     public static final Uri CONTENT_URI = Uri.parse("content://"+ AUTHORITY);
     
     //Database + Table
