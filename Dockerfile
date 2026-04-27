@@ -19,8 +19,8 @@ ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platfo
 
 RUN yes | sdkmanager --licenses > /dev/null \
     && sdkmanager --install \
-        "platforms;android-35" \
-        "build-tools;35.0.0" \
+        "platforms;android-36" \
+        "build-tools;36.0.0" \
         "platform-tools" > /dev/null \
     && chmod -R a+rX ${ANDROID_HOME}
 

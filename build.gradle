@@ -25,7 +25,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = 'com.morphoss.acal'
-    compileSdk 35
+    compileSdk 36
+    buildToolsVersion '36.0.0'
 
     useLibrary 'org.apache.http.legacy'
 
@@ -36,9 +37,9 @@ android {
     defaultConfig {
         applicationId "org.davical.acal"
         minSdkVersion 23
-        targetSdkVersion 35
-        versionCode 63
-        versionName "1.63"
+        targetSdkVersion 36
+        versionCode 64
+        versionName "1.64"
     }
 
     signingConfigs {
@@ -86,9 +87,9 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-    implementation 'androidx.work:work-runtime:2.9.0'
-    implementation 'androidx.core:core:1.12.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.work:work-runtime:2.11.2'
+    implementation 'androidx.core:core:1.18.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.preference:preference:1.2.1'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.13.0'
 }

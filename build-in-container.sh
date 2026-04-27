@@ -13,6 +13,11 @@ fi
 
 mkdir -p "${GRADLE_CACHE}"
 
+# local.properties.sdk.dir overrides ANDROID_HOME, so any host-written value
+# (e.g. from Android Studio) points Gradle at a path that doesn't exist in the
+# container. Write a container-correct value on every run.
+echo "sdk.dir=/opt/android-sdk" > "${PROJECT_ROOT}/local.properties"
+
 MOUNTS=(
     -v "${PROJECT_ROOT}:/workspace"
     -v "${GRADLE_CACHE}:/gradle-cache"
