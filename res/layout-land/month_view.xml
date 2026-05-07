@@ -30,7 +30,7 @@
 				android:layout_height="match_parent"
 				android:layout_weight="1">
 
-				<com.morphoss.acal.widget.AcalViewFlipper
+				<org.davical.acal.widget.AcalViewFlipper
 					android:id="@+id/month_grid_flipper"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent" />
@@ -41,7 +41,7 @@
 				android:layout_height="match_parent"
 				android:layout_weight="1">
 
-				<com.morphoss.acal.widget.AcalViewFlipper
+				<org.davical.acal.widget.AcalViewFlipper
 					android:id="@+id/month_list_flipper"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent" />

@@ -4,12 +4,12 @@
 	<Preference android:title="@string/appActivityAccounts">
 		<intent
 			android:targetPackage="com.morphoss.acal"
-			android:targetClass="com.morphoss.acal.activity.serverconfig.ServerConfigList" />
+			android:targetClass="org.davical.acal.activity.serverconfig.ServerConfigList" />
 	</Preference>
 	<Preference android:title="@string/appActivityCollectionConfigList">
 		<intent
 			android:targetPackage="com.morphoss.acal"
-			android:targetClass="com.morphoss.acal.activity.CollectionConfigList" />
+			android:targetClass="org.davical.acal.activity.CollectionConfigList" />
 	</Preference>
 
 	<PreferenceScreen
@@ -103,14 +103,14 @@
 	<PreferenceScreen
 		android:key="weekViewPreferences"
 		android:title="@string/WeekViewPreferences" >
-		<com.morphoss.acal.TimePickerPreference
+		<org.davical.acal.TimePickerPreference
 			android:defaultValue="9:00"
 			android:enabled="true"
 			android:key="@string/prefWorkdayStart"
 			android:selectable="true"
 			android:summary="@string/prefWorkdayStart_Summary"
 			android:title="@string/prefWorkdayStart_Title" />
-		<com.morphoss.acal.TimePickerPreference
+		<org.davical.acal.TimePickerPreference
 			android:defaultValue="17:00"
 			android:enabled="true"
 			android:key="@string/prefWorkdayFinish"
@@ -155,7 +155,7 @@
 			android:selectable="true"
 			android:summary="@string/YearViewSize_PrefSummary"
 			android:title="@string/YearViewSize_PrefTitle" />
-		<com.morphoss.acal.activity.ColourPickerPreference
+		<org.davical.acal.activity.ColourPickerPreference
 			android:defaultValue="-53216"
 			android:enabled="true"
 			android:key="@string/prefThemeButtonColour"
@@ -176,6 +176,6 @@
 		android:title="@string/appActivityDebugSettings">
 		<intent
 			android:targetPackage="com.morphoss.acal"
-			android:targetClass="com.morphoss.acal.activity.DebugSettings" />
+			android:targetClass="org.davical.acal.activity.DebugSettings" />
 	</Preference>
 </PreferenceScreen>

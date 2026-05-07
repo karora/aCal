@@ -1,0 +1,164 @@
+/*
+ * Copyright (C) 2011 Morphoss Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+package org.davical.acal;
+
+import java.util.Map.Entry;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Bundle;
+import android.os.RemoteException;
+import androidx.preference.PreferenceManager;
+import android.text.format.DateFormat;
+import android.util.Log;
+
+import org.davical.acal.activity.AcalActivity;
+import org.davical.acal.activity.MonthView;
+import org.davical.acal.activity.ShowUpgradeChanges;
+import org.davical.acal.activity.serverconfig.NewServerConfiguration;
+import org.davical.acal.dataservice.Collection;
+import org.davical.acal.service.ServiceRequest;
+import org.davical.acal.service.aCalService;
+import org.davical.acal.weekview.WeekViewActivity;
+
+public class aCal extends AcalActivity {
+
+	final public static String TAG = "aCal";
+
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		// Check for required permissions before proceeding
+		if (!checkPermissions()) {
+			// Permission request in progress, wait for callback
+			return;
+		}
+
+		// Permissions granted, proceed with initialization
+		initializeApp();
+	}
+
+	/**
+	 * Initialize the app after permissions are granted.
+	 */
+	private void initializeApp() {
+		// Check alarm permissions (notification, exact alarm, full-screen)
+		// If permissions are missing, dialogs will be shown and we wait for callback
+		if (!checkAlarmPermissions()) {
+			return; // Wait for permission flow to complete
+		}
+
+		// All permissions granted, continue with startup
+		completeStartup();
+	}
+
+	/**
+	 * Complete the startup process after all permissions are granted.
+	 */
+	private void completeStartup() {
+		// make sure aCalService is running
+		Intent serviceIntent = new Intent(this, aCalService.class);
+		serviceIntent.putExtra("UISTARTED", System.currentTimeMillis());
+		this.startService(serviceIntent);
+
+		// Set all default preferences to reasonable values
+		PreferenceManager.setDefaultValues(this, R.xml.main_preferences, false);
+
+		int lastRevision = prefs.getInt(PrefNames.lastRevision, 0);
+
+		try {
+			int thisRevision = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+			if ( lastRevision < thisRevision ) {
+				if ( lastRevision == 0 ) {
+					// Default our 24hr pref to the system one.
+					prefs.edit().putBoolean(getString(R.string.prefTwelveTwentyfour), DateFormat.is24HourFormat(this)).apply();
+				}
+				startActivity(new Intent(this, ShowUpgradeChanges.class));
+			}
+			else {
+				startPreferredView(prefs, this, true);
+			}
+		}
+		catch (NameNotFoundException e) { }
+		this.finish();
+	}
+
+	@Override
+	protected void onPermissionsGranted() {
+		// Permissions were granted via the dialog, now initialize
+		initializeApp();
+	}
+
+	@Override
+	protected void onAlarmPermissionsChecked() {
+		// Alarm permission flow complete, continue with startup
+		completeStartup();
+	}
+
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		// Don't sync if we're waiting for permissions
+		if (waitingForPermissions) {
+			return;
+		}
+
+		// Only sync if we have permissions
+		if (!PermissionHelper.hasAllPermissions(this)) {
+			return;
+		}
+
+		ServiceManager serviceManager = new ServiceManager(this);
+		ServiceRequest sr = serviceManager.getServiceRequest();
+		if (sr == null) {
+			Log.w(TAG, "ServiceRequest is null, service may not be bound yet");
+			return;
+		}
+		for( Entry<Long, Collection> c : Collection.getAllCollections(this).entrySet() ) {
+			try {
+				sr.syncCollectionNow(c.getKey());
+			}
+			catch ( RemoteException e ) {
+				Log.w(TAG,Log.getStackTraceString(e));
+			}
+		}
+	}
+
+
+	public static void startPreferredView( SharedPreferences sPrefs, Activity c, boolean mayStartServerConfig ) {
+		Bundle bundle = new Bundle();
+		Intent startIntent = null;
+
+		if ( mayStartServerConfig && prefs.getInt(PrefNames.serverIsConfigured, 0) == 0 ) {
+			startIntent = new Intent(c, NewServerConfiguration.class);
+		}
+		else if ( sPrefs.getBoolean(c.getString(R.string.prefDefaultView), false) ) {
+			startIntent = new Intent(c, WeekViewActivity.class);
+		}
+		else {
+			startIntent = new Intent(c, MonthView.class);
+		}
+		startIntent.putExtras(bundle);
+		c.startActivity(startIntent);
+	}
+}

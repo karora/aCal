@@ -9,7 +9,7 @@
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:layout_weight="1" >
-		<com.morphoss.acal.views.CustomYearDrawable
+		<org.davical.acal.views.CustomYearDrawable
 			android:id="@+id/year_view_custom"
 			android:layout_width="fill_parent"
 			android:layout_height="fill_parent" />

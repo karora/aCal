@@ -2,7 +2,7 @@
 <AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="296dp"
 	android:layout_height="256dp" >
-	<com.morphoss.acal.activity.ColourPickerView
+	<org.davical.acal.activity.ColourPickerView
 		android:id="@+id/ambilwarna_viewKotak"
 		android:layout_width="240dp"
 		android:layout_height="240dp"

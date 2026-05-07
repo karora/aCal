@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.morphoss.acal.desktop.ShowUpcomingRowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.davical.acal.desktop.ShowUpcomingRowLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="@dimen/widgetRowWidth"
 	android:layout_height="@dimen/widgetRowHeight"
 	android:orientation="horizontal"
@@ -15,4 +15,4 @@
 		android:layout_width="300dip"
 		android:layout_height="@dimen/widgetRowHeight"
 		android:textSize="@dimen/widgetTextSize" />
-</com.morphoss.acal.desktop.ShowUpcomingRowLayout>
+</org.davical.acal.desktop.ShowUpcomingRowLayout>

@@ -23,7 +23,7 @@
 				android:layout_width="fill_parent"
 				android:layout_height="fill_parent" />
 		</LinearLayout>
-		<com.morphoss.acal.weekview.WeekViewHeader
+		<org.davical.acal.weekview.WeekViewHeader
 			android:id="@+id/week_view_header"
 			android:layout_width="fill_parent"
 			android:layout_height="fill_parent"
@@ -33,12 +33,12 @@
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:layout_weight="1" >
-		<com.morphoss.acal.weekview.WeekViewSideBar
+		<org.davical.acal.weekview.WeekViewSideBar
 			android:id="@+id/week_view_sidebar"
 			android:layout_width="fill_parent"
 			android:layout_height="fill_parent"
 			android:layout_weight="15" />
-		<com.morphoss.acal.weekview.WeekViewDays
+		<org.davical.acal.weekview.WeekViewDays
 			android:id="@+id/week_view_days"
 			android:layout_width="fill_parent"
 			android:layout_height="fill_parent"

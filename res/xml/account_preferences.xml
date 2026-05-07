@@ -5,6 +5,6 @@
 	android:title="aCal Account" >
 	<intent
 		android:action="com.morphoss.acal.activity.CollectionConfigList.ACTION_CHOOSE"
-		android:targetClass="com.morphoss.acal.activity.CollectionConfigList"
+		android:targetClass="org.davical.acal.activity.CollectionConfigList"
 		android:targetPackage="com.morphoss.acal" />
 </PreferenceScreen>
