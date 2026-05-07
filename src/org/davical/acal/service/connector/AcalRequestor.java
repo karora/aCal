@@ -965,57 +965,63 @@ public class AcalRequestor {
 	}
 
 
-	/**
-	 * <p>
-	 * Does an XML request against the specified path (or the previously set path, if null),
-	 * following redirects and returning the root DavNode of an XML tree.
-	 * </p>
-	 *
-	 * @return <p>
-	 *         A DavNode which is the root of the multistatus response, or null if it couldn't be parsed.
-	 *         </p>
-	 * @throws SSLHandshakeException
-	 */
-	public DavNode doXmlRequest( String method, String requestPath, Header[] headers, String xml) throws SSLHandshakeException {
-		long start = System.currentTimeMillis();
+    /**
+     * Performs an XML request and parses the multi-status response into a DavNode tree. *
+     * @return The root DavNode, or null if parsing failed or the response was invalid.
+     * @throws SSLHandshakeException If SSL negotiation fails.
+     */
+    public DavNode doXmlRequest(String method, String requestPath, Header[] headers, String xml)
+            throws SSLHandshakeException {
 
-		InputStream responseStream = null;
-		DavNode root = null;
-		try {
-			responseStream = doRequest(method, requestPath, headers, xml);
-			if ( responseHeaders == null ) {
-				return root;
-			}
-			for( Header h : responseHeaders ) {
-				if ( "Content-Type".equals(h.getName()) ) {
-					for( HeaderElement he : h.getElements() ) {
-						if ( "text/plain".equals(he.getName()) || "text/html".equals(he.getName()) ) {
-							Log.println(Constants.LOGI, TAG, "Response is not an XML document");
-							if ( responseStream != null ) responseStream.close();
-							return root;
-						}
-					}
-				}
-			}
-			if ( statusCode == 404 || statusCode == 401 ) {
-				return root;
-			}
-			root = DavParserFactory.buildTreeFromXml(Constants.XMLParseMethod, responseStream );
-		}
-		catch (SSLHandshakeException e) 		{ throw e; }
-		catch (Exception e) {
-			Log.i(TAG, e.getMessage(), e);
-			return null;
-		}
-		finally {
-			if ( responseStream != null )
-				try { responseStream.close(); } catch ( IOException e ) {}
-		}
+        long startTime = System.currentTimeMillis();
 
-		if (debugThisRequest)
-			Log.println(Constants.LOGV,TAG, "Request and parse completed in " + (System.currentTimeMillis() - start) + "ms");
-		return root;
-	}
+        // 1. Initial Request
+        try (InputStream responseStream = doRequest(method, requestPath, headers, xml)) {
+
+            // 2. Early Exit for common error states
+            if (responseHeaders == null || statusCode == 404 || statusCode == 401) {
+                return null;
+            }
+
+            // 3. Robust Content-Type Validation
+            if (!isXmlResponse()) {
+                Log.w(TAG, "Response is not an XML document (Method: " + method + ")");
+                return null;
+            }
+
+            if (responseStream == null) return null;
+
+            // 4. Parse Tree
+            DavNode root = DavParserFactory.buildTreeFromXml(Constants.XMLParseMethod, responseStream);
+
+            if (debugThisRequest) {
+                long duration = System.currentTimeMillis() - startTime;
+                Log.v(TAG, String.format("Request [%s] completed in %dms", method, duration));
+            }
+
+            return root;
+
+        } catch (SSLHandshakeException e) {
+            // Re-throw specific exception as per method contract
+            throw e;
+        } catch (Exception e) {
+            Log.e(TAG, "Error performing/parsing XML request: " + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Helper to verify if the response headers indicate XML content.
+     */
+    private boolean isXmlResponse() {
+        for (Header h : responseHeaders) {
+            if ("Content-Type".equalsIgnoreCase(h.getName())) {
+                String value = h.getValue();
+                return value != null && (value.contains("xml") || value.contains("dav"));
+            }
+        }
+        return false;
+    }
 
 	/**
 	 * Get the current hostname used for the last request, or recently set.
