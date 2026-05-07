@@ -1,3 +1,3 @@
-package com.morphoss.acal.acaltime;
+package org.davical.acal.acaltime;
 
 parcelable AcalDateTime;

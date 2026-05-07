@@ -30,7 +30,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
 import org.davical.acal.database.alarmmanager.AlarmQueueManager;
 import org.davical.acal.database.cachemanager.CacheManager;

@@ -24,7 +24,7 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 public class WeekViewSideBar extends ImageView {
 	

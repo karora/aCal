@@ -44,7 +44,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.activity.CertificatePinActivity;
 
 /**

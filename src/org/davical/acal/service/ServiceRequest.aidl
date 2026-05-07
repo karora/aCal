@@ -1,4 +1,4 @@
-package com.morphoss.acal.service;
+package org.davical.acal.service;
 
 interface ServiceRequest {
 	void revertDatabase();

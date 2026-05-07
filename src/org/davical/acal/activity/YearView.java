@@ -32,7 +32,7 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 
 import org.davical.acal.AcalTheme;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.views.CustomYearDrawable;
 import org.davical.acal.widget.NumberPickerDialog;

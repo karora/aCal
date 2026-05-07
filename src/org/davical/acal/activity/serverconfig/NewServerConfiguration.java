@@ -36,7 +36,7 @@ import android.widget.Toast;
 import org.davical.acal.AcalTheme;
 import org.davical.acal.Constants;
 import org.davical.acal.PrefNames;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
 import org.davical.acal.aCal;
 import org.davical.acal.activity.AcalActivity;
@@ -138,8 +138,8 @@ public class NewServerConfiguration extends AcalActivity implements ServerConfig
 		    public void onClick(View v) {
 		        Log.d(TAG,"Add Server was clicked!");
 		        Intent serverConfigIntent = new Intent();
-		        serverConfigIntent.setClassName("com.morphoss.acal",
-		                            "com.morphoss.acal.activity.serverconfig.AddServerList");
+		        serverConfigIntent.setClassName("org.davical.acal",
+		                            "org.davical.acal.activity.serverconfig.AddServerList");
 		        startActivityForResult(serverConfigIntent, CONFIGURING_ACTIVITY);
 		    }
 

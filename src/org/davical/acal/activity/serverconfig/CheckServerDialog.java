@@ -45,7 +45,7 @@ import android.util.Log;
 
 import org.davical.acal.CheckServerFailedError;
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
 import org.davical.acal.providers.Servers;
 import org.davical.acal.service.connector.AcalRequestor;

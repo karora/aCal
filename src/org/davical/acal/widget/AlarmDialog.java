@@ -32,7 +32,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
 import org.davical.acal.AcalTheme;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.acaltime.AcalDateTimeFormatter;
 import org.davical.acal.acaltime.AcalDuration;

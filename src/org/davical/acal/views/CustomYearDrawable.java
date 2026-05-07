@@ -29,7 +29,7 @@ import android.util.Log;
 import android.widget.ImageView;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 
 public class CustomYearDrawable extends ImageView  {

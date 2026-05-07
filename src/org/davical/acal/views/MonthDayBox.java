@@ -29,7 +29,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.database.cachemanager.CacheObject;
 import org.davical.acal.dataservice.Collection;

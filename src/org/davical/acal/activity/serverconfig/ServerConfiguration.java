@@ -39,7 +39,7 @@ import android.widget.Toast;
 import org.davical.acal.AcalTheme;
 import org.davical.acal.Constants;
 import org.davical.acal.PrefNames;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
 import org.davical.acal.activity.AcalAppCompatActivity;
 import org.davical.acal.providers.Servers;

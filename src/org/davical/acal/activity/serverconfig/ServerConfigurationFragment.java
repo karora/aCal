@@ -31,7 +31,7 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.providers.Servers;
 
 import java.util.HashMap;

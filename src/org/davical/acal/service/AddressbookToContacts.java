@@ -32,7 +32,7 @@ import android.provider.ContactsContract.RawContacts;
 import android.util.Log;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.contacts.VCardContact;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
 import org.davical.acal.database.resourcesmanager.requests.RRGetResourcesInCollection;

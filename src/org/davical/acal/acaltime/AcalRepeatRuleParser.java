@@ -28,7 +28,7 @@ import android.content.Context;
 import android.util.Log;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalRepeatRule.RRuleFreqType;
 
 /**

@@ -46,7 +46,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 
 	/**
 	 * The name of the database, which will be stored in:
-	 *    /data/data/com.morphoss.acal/databases/[DB_NAME].db
+	 *    /data/data/org.davical.acal/databases/[DB_NAME].db
 	 */
 	public static final String DB_NAME = "acal";
 

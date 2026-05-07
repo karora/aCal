@@ -59,10 +59,10 @@ public class Constants {
     public static final String CERT_EXTRA_EXPIRY          = "cert_expiry";
     public static final String CERT_EXTRA_OLD_FINGERPRINT = "cert_old_fingerprint";
 
-    public static final String ALARM_ACTION_FIRE    = "com.morphoss.acal.ALARM_FIRE";
-    public static final String ALARM_ACTION_PRE     = "com.morphoss.acal.ALARM_PRE";
-    public static final String ALARM_ACTION_DISMISS = "com.morphoss.acal.ALARM_DISMISS";
-    public static final String ALARM_ACTION_SNOOZE  = "com.morphoss.acal.ALARM_SNOOZE";
+    public static final String ALARM_ACTION_FIRE    = "org.davical.acal.ALARM_FIRE";
+    public static final String ALARM_ACTION_PRE     = "org.davical.acal.ALARM_PRE";
+    public static final String ALARM_ACTION_DISMISS = "org.davical.acal.ALARM_DISMISS";
+    public static final String ALARM_ACTION_SNOOZE  = "org.davical.acal.ALARM_SNOOZE";
 
     public static final String ALARM_EXTRA_ROW_ID   = "alarm_row_id";
     public static final String ALARM_EXTRA_TITLE    = "alarm_title";
@@ -141,8 +141,8 @@ public class Constants {
     public static final String NS_DAV = "DAV:";
     public static final String NS_CALDAV = "urn:ietf:params:xml:ns:caldav";
     public static final String NS_CARDDAV = "urn:ietf:params:xml:ns:carddav";
-    public static final String NS_ACAL = "urn:com:morphoss:acal";
-    public static final String NS_ACALCONFIG = "urn:com:morphoss:acalconfig";
+    public static final String NS_ACAL = "urn:org.davical.acal";
+    public static final String NS_ACALCONFIG = "urn:org.davical.acalconfig";
     public static final String NS_ICAL = "http://apple.com/ns/ical/";
 
     public static final String CRLF = "\r\n";

@@ -34,7 +34,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.Toast;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
 import org.davical.acal.ServiceManagerCallBack;
 import org.davical.acal.providers.DavCollections;
@@ -71,7 +71,7 @@ public class CollectionConfigList extends AcalAppCompatActivity
 	private CollectionConfigListFragment fragment;
 
 	// Needed for AcalAuthenticator
-	public static final String ACTION_CHOOSE_ADDRESSBOOK = "com.morphoss.acal.ACTION_CHOOSE_ADDRESSBOOK";
+	public static final String ACTION_CHOOSE_ADDRESSBOOK = "org.davical.acal.ACTION_CHOOSE_ADDRESSBOOK";
 
 	/**
 	 * Get the list of collections and create the list view.
@@ -103,7 +103,7 @@ public class CollectionConfigList extends AcalAppCompatActivity
 	@Override
 	public void onCollectionSelected(int collectionId, ContentValues collectionValues) {
 		Intent collectionConfigIntent = new Intent();
-		collectionConfigIntent.setClassName("com.morphoss.acal", "com.morphoss.acal.activity.CollectionConfiguration");
+		collectionConfigIntent.setClassName("org.davical.acal", "org.davical.acal.activity.CollectionConfiguration");
 		collectionConfigIntent.putExtra("CollectionData", collectionValues);
 		startActivityForResult(collectionConfigIntent, UPDATE_COLLECTION_CONFIG);
 	}

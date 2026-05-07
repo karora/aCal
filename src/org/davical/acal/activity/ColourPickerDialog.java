@@ -32,7 +32,7 @@ import android.widget.AbsoluteLayout;
 import android.widget.ImageView;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 @SuppressWarnings("deprecation")
 public class ColourPickerDialog {

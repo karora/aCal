@@ -27,7 +27,7 @@ import android.util.Log;
 import org.davical.acal.AcalApplication;
 import org.davical.acal.Constants;
 import org.davical.acal.PrefNames;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.StaticHelpers;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.davacal.VComponent;

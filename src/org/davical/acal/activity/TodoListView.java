@@ -31,7 +31,7 @@ import android.widget.Toast;
 
 import org.davical.acal.AcalTheme;
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
 import org.davical.acal.database.resourcesmanager.ResourceResponse;
@@ -255,8 +255,8 @@ public class TodoListView extends AcalAppCompatActivity implements OnClickListen
 	 */
 	private void startSettings() {
 		Intent settingsIntent = new Intent();
-		settingsIntent.setClassName("com.morphoss.acal",
-		"com.morphoss.acal.activity.AcalPreferences");
+		settingsIntent.setClassName("org.davical.acal",
+		"org.davical.acal.activity.AcalPreferences");
 		this.startActivity(settingsIntent);
 	}
 
@@ -275,8 +275,8 @@ public class TodoListView extends AcalAppCompatActivity implements OnClickListen
 			Bundle bundle = new Bundle();
 			bundle.putInt("InvokedFromView",1);
 			monthViewIntent.putExtras(bundle);
-			monthViewIntent.setClassName("com.morphoss.acal",
-			"com.morphoss.acal.activity.MonthView");
+			monthViewIntent.setClassName("org.davical.acal",
+			"org.davical.acal.activity.MonthView");
 			this.startActivity(monthViewIntent);
 		}
 	}

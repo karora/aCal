@@ -10,7 +10,7 @@ import android.preference.PreferenceManager;
 
 import org.davical.acal.AcalTheme;
 import org.davical.acal.PermissionHelper;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 public abstract class AcalActivity extends Activity {
 

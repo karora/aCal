@@ -16,7 +16,7 @@ import android.widget.CheckedTextView;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.davacal.ZoneData;
 
 public class TimeZoneListAdapter implements SpinnerAdapter {

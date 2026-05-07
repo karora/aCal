@@ -22,7 +22,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.widget.ImageButton;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 /**
  * This class exists purely to cancel long click events.

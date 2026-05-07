@@ -1,5 +1,5 @@
 
-all:	vtimezones/US/Eastern.ics vtimezones/US/Pacific.ics vtimezones/US/Mountain.ics vtimezones/US/Central.ics ../res/values/timezonenames.xml ../src/com/morphoss/acal/davacal/ZoneData.java
+all:	vtimezones/US/Eastern.ics vtimezones/US/Pacific.ics vtimezones/US/Mountain.ics vtimezones/US/Central.ics ../res/values/timezonenames.xml ../src/org/davical/acal/davacal/ZoneData.java
 
 vtimezones/US/Eastern.ics:	vtimezones/America/New_York.ics
 	cd vtimezones/US && ln -sf ../America/New_York.ics Eastern.ics
@@ -18,8 +18,8 @@ vtimezones/US: vtimezones/America
 	mkdir -p vtimezones/US
 	touch vtimezones/US
 
-../src/com/morphoss/acal/davacal/ZoneData.java: build-acal-zones.pl vtimezones/Pacific
-	./build-acal-zones.pl --output ../src/com/morphoss/acal/davacal/ZoneData.java
+../src/org/davical/acal/davacal/ZoneData.java: build-acal-zones.pl vtimezones/Pacific
+	./build-acal-zones.pl --output ../src/org/davical/acal/davacal/ZoneData.java
 
 ../res/values/timezonenames.xml: build-acal-zones.pl vtimezones/Pacific
 	./build-acal-zones.pl --strings --output ../res/values/timezonenames.xml

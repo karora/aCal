@@ -24,7 +24,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 public class AcalPreferences extends AcalAppCompatActivity
 		implements PreferenceFragmentCompat.OnPreferenceStartScreenCallback {

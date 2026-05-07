@@ -24,7 +24,7 @@ import java.util.List;
 
 import android.content.Context;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalRepeatRule.RRuleFreqType;
 
 /**

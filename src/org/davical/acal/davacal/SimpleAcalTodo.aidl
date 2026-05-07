@@ -1,3 +1,3 @@
-package com.morphoss.acal.davacal;
+package org.davical.acal.davacal;
 
 parcelable SimpleAcalTodo;

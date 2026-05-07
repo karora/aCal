@@ -28,7 +28,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.database.alarmmanager.AlarmQueueManager;
 import org.davical.acal.database.cachemanager.CacheManager;

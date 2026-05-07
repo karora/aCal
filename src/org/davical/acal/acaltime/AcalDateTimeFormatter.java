@@ -7,7 +7,7 @@ import java.util.TimeZone;
 
 import android.content.Context;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.StaticHelpers;
 
 public class AcalDateTimeFormatter {

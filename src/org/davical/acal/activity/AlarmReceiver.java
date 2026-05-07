@@ -28,7 +28,7 @@ import android.os.Build;
 import android.util.Log;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.aCal;
 import org.davical.acal.database.alarmmanager.ALARM_STATE;
 import org.davical.acal.database.alarmmanager.AlarmQueueManager;

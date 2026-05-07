@@ -26,7 +26,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.service.connector.EasyX509TrustManager;
 
 /**

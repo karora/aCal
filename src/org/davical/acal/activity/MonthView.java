@@ -46,7 +46,7 @@ import android.widget.Toast;
 
 import org.davical.acal.AcalTheme;
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
 import org.davical.acal.database.resourcesmanager.ResourceResponse;
@@ -106,7 +106,7 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 	public static final String TAG = "aCal MonthView";
 
 	/** The file that we save state information to */
-	public static final String STATE_FILE = "/data/data/com.morphoss.acal/monthview.dat";
+	public static final String STATE_FILE = "/data/data/org.davical.acal/monthview.dat";
 
 	private boolean invokedFromView = false;
 
@@ -497,8 +497,8 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 			Bundle bundle = new Bundle();
 			bundle.putInt("InvokedFromView",1);
 			todoListIntent.putExtras(bundle);
-			todoListIntent.setClassName("com.morphoss.acal",
-					"com.morphoss.acal.activity.TodoListView");
+			todoListIntent.setClassName("org.davical.acal",
+					"org.davical.acal.activity.TodoListView");
 			this.startActivity(todoListIntent);
 		}
 	}

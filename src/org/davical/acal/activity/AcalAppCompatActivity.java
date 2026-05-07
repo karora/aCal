@@ -40,7 +40,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import org.davical.acal.AcalTheme;
 import org.davical.acal.PermissionHelper;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 /**
  * Base activity class for main views that use AppCompat with Navigation Drawer.

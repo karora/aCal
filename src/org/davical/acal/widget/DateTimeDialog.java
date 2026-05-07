@@ -39,7 +39,7 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.TimePicker.OnTimeChangedListener;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.acaltime.AcalDateTimeFormatter;
 

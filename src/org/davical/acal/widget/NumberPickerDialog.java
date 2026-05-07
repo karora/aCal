@@ -25,7 +25,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 /**
  * @author Morphoss Ltd

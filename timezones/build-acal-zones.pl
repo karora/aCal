@@ -148,7 +148,7 @@ EOHEADER
 }
 else {
   print <<EOHEADER;
-package com.morphoss.acal.davacal;
+package org.davical.acal.davacal;
 public class ZoneData {
 	public final static String[][] zones = new String[][] {
 EOHEADER
@@ -157,4 +157,3 @@ EOHEADER
 
   print "	};\n}\n";
 }
-

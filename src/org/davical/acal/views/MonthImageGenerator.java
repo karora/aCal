@@ -32,7 +32,7 @@ import android.view.View;
 import android.view.View.MeasureSpec;
 import android.widget.TextView;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 
 public class MonthImageGenerator {

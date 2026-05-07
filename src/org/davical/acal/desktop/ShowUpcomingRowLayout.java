@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.davical.acal.AcalTheme;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 public class ShowUpcomingRowLayout extends LinearLayout {
 	

@@ -33,7 +33,7 @@ import android.graphics.Shader.TileMode;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 public class ColourPickerView extends View {
 	

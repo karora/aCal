@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<acal xmlns="urn:com:morphoss:acalconfig">
+<acal xmlns="urn:org:davical:acalconfig">
   <dav_server>
     <friendly_name>Morphoss Hosted DAViCal</friendly_name>
     <config_values>

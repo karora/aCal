@@ -41,7 +41,7 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateRange;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.acaltime.AcalDateTimeFormatter;

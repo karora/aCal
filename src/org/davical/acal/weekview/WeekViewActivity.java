@@ -49,7 +49,7 @@ import android.widget.Toast;
 
 import org.davical.acal.AcalTheme;
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.activity.AcalActivity;
 import org.davical.acal.activity.EventEdit;
@@ -345,8 +345,8 @@ public class WeekViewActivity extends AcalActivity implements OnGestureListener,
 	 */
 	private void startSettings() {
 		Intent settingsIntent = new Intent();
-		settingsIntent.setClassName("com.morphoss.acal",
-				"com.morphoss.acal.activity.AcalPreferences");
+		settingsIntent.setClassName("org.davical.acal",
+				"org.davical.acal.activity.AcalPreferences");
 		this.startActivity(settingsIntent);
 	}
 
@@ -365,8 +365,8 @@ public class WeekViewActivity extends AcalActivity implements OnGestureListener,
 			Bundle bundle = new Bundle();
 			bundle.putInt("InvokedFromView",1);
 			todoListIntent.putExtras(bundle);
-			todoListIntent.setClassName("com.morphoss.acal",
-					"com.morphoss.acal.activity.TodoListView");
+			todoListIntent.setClassName("org.davical.acal",
+					"org.davical.acal.activity.TodoListView");
 			this.startActivity(todoListIntent);
 		}
 	}

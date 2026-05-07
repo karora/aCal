@@ -30,7 +30,7 @@ import android.widget.ListView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.davical.acal.AcalTheme;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 
 public class AddServerList extends AppCompatActivity implements OnClickListener {
 
@@ -73,7 +73,7 @@ public class AddServerList extends AppCompatActivity implements OnClickListener 
 		Intent serverConfigIntent = new Intent();
 
 		// Begin new activity
-		serverConfigIntent.setClassName("com.morphoss.acal", "com.morphoss.acal.activity.serverconfig.ServerConfiguration");
+		serverConfigIntent.setClassName("org.davical.acal", "org.davical.acal.activity.serverconfig.ServerConfiguration");
 		serverConfigIntent.putExtra("ServerData", newServer);
 		startActivityForResult(serverConfigIntent, KEY_CREATE_SERVER_REQUEST);
 	}

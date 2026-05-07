@@ -39,7 +39,7 @@ import androidx.preference.PreferenceScreen;
 
 import org.davical.acal.Constants;
 import org.davical.acal.PrefNames;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.providers.DavCollections;
 
 public class AcalPreferencesFragment extends PreferenceFragmentCompat

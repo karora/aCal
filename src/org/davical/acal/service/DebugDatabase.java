@@ -72,7 +72,7 @@ public class DebugDatabase extends ServiceJob {
 
 	private void saveDatabase() {
 		Log.println(Constants.LOGI,TAG, "Database copy requested. Beginning file xfer to "+Constants.COPY_DB_TARGET);
-		File inputFile = new File("/data/data/com.morphoss.acal/databases/acal.db");
+		File inputFile = new File("/data/data/org.davical.acal/databases/acal.db");
 		File outputFile = new File(Constants.COPY_DB_TARGET);
 
 		try {

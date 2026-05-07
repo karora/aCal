@@ -29,7 +29,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import org.davical.acal.AcalTheme;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
 import org.davical.acal.dataservice.Collection;
 import org.davical.acal.providers.DavCollections;

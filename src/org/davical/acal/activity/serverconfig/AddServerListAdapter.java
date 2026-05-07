@@ -42,7 +42,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.davical.acal.Constants;
-import com.morphoss.acal.R;
+import org.davical.acal.R;
 import org.davical.acal.providers.Servers;
 
 public class AddServerListAdapter extends BaseAdapter {
@@ -219,8 +219,8 @@ public class AddServerListAdapter extends BaseAdapter {
 				Intent serverConfigIntent = new Intent();
 
 				// Begin new activity
-				serverConfigIntent.setClassName("com.morphoss.acal",
-						"com.morphoss.acal.activity.serverconfig.ServerConfiguration");
+				serverConfigIntent.setClassName("org.davical.acal",
+						"org.davical.acal.activity.serverconfig.ServerConfiguration");
 				serverConfigIntent.putExtra("ServerData", item);
 				context.startActivityForResult(serverConfigIntent, AddServerList.KEY_CREATE_SERVER_REQUEST);
 			}

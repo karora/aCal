@@ -24,7 +24,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = 'com.morphoss.acal'
+    namespace = 'org.davical.acal'
     compileSdk 36
     buildToolsVersion '36.0.0'
 
