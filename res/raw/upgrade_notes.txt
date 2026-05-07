@@ -109,3 +109,5 @@ Fix many, many bugs with Alarms.
 Fix some sync problems.
 Timezone download is now on by default.
 Added some minimal logging of DELETE/PUT and server discovery in 'release' builds.
+v64=1.64
+Many updates to current Android ecosystem
