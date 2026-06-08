@@ -33,6 +33,8 @@
     <string name="Summary">Summary</string>
     <string name="Sync_collection_now">Synchronise Now</string>
     <string name="Disable_collection">Disable Collection</string>
+    <string name="Refresh_collection_list">Refresh calendar list</string>
+    <string name="Refreshing_collection_list">Refreshing calendar list from servers…</string>
     <string name="The_authentication_type_used">The authentication type used by the server</string>
     <string name="The_password_to_use">The password to use for authentication with the server</string>
     <string name="The_path_on_the_server">The path on the server, such as "/caldav.php/user/"</string>
@@ -65,8 +67,8 @@
     <string name="Active_for_tasks">Is this collection used to store tasks?</string>
     <string name="The_colour_associated_with_this_collection">The colour associated with data from this collection</string>
     <string name="The_timezone_new_events_default_to">The timezone used for new events in this collection</string>
-    <string name="pMax_age_on_3g">Sync minutes on 3g</string>
-    <string name="The_maximum_age_for_data_while_on_3g">The maximum time (in minutes) before updating, when on 3g</string>
+    <string name="pMax_age_on_3g">Sync minutes on mobile network</string>
+    <string name="The_maximum_age_for_data_while_on_3g">The maximum time (in minutes) before updating, when on mobile network</string>
     <string name="pMax_age_on_wifi">Sync minutes on wifi</string>
     <string name="The_maximum_age_for_data_while_on_wifi">The maximum time (in minutes) before updating, when on wifi</string>
     <string name="Use_alarms_from_this_calendar">Should alarms in this calendar be displayed?</string>
