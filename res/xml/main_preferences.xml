@@ -59,11 +59,11 @@
             android:summary="@string/theDayEachWeekStartsWith"
             android:title="@string/firstDayOfWeek"></ListPreference>
         <EditTextPreference
-            android:defaultValue="@string/bedeworkOrgTzUrl"
+            android:defaultValue="@string/defaultTzServerBaseUrl"
             android:enabled="true"
             android:key="@string/prefTzServerBaseUrl"
             android:selectable="true"
-            android:summary="@string/bedeworkOrgTzUrl"
+            android:summary="@string/defaultTzServerBaseUrl"
             android:title="@string/prefTzServerBaseUrl_Title" />
     </PreferenceScreen>
     <PreferenceScreen
