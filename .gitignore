@@ -34,3 +34,6 @@ traces.txt
 Constants.debug
 .idea
 *.ics
+
+# Local scratch dir (not committed)
+.tmp/
