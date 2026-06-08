@@ -23,11 +23,15 @@ import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.ContentObserver;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -69,6 +73,10 @@ public class CollectionConfigList extends AcalAppCompatActivity
 
 	private ServiceManager serviceManager = null;
 	private CollectionConfigListFragment fragment;
+
+	// Watches the collections table so the list live-updates when a refresh
+	// discovers calendars/addressbooks added or removed on the server.
+	private ContentObserver collectionsObserver;
 
 	// Needed for AcalAuthenticator
 	public static final String ACTION_CHOOSE_ADDRESSBOOK = "org.davical.acal.ACTION_CHOOSE_ADDRESSBOOK";
@@ -199,6 +207,46 @@ public class CollectionConfigList extends AcalAppCompatActivity
 	}
 
 	/**
+	 * Adds the toolbar action(s) for this screen, notably a "refresh calendar list"
+	 * action so the user can pick up collections that were added or removed on the server.
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.collection_config_menu, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.action_refresh_collection_list) {
+			return refreshCollectionList();
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	/**
+	 * <p>
+	 * Called when the user taps the 'Refresh calendar list' action. Asks the service to
+	 * re-discover the home sets and their collections for all active servers, so newly
+	 * added or removed calendars/addressbooks on the server show up here.
+	 * </p>
+	 *
+	 * @return true if the request was dispatched successfully
+	 */
+	private boolean refreshCollectionList() {
+		try {
+			if (serviceManager == null) serviceManager = new ServiceManager(this);
+			serviceManager.getServiceRequest().discoverHomeSets();
+			Toast.makeText(this, getString(R.string.Refreshing_collection_list), Toast.LENGTH_SHORT).show();
+			return true;
+		} catch (RemoteException re) {
+			Log.e(TAG, "Unable to send refresh request to service: " + re.getMessage());
+			Toast.makeText(this, "Request failed: " + re.getMessage(), Toast.LENGTH_SHORT).show();
+		}
+		return false;
+	}
+
+	/**
 	 * <P>
 	 * Handles context menu clicks
 	 * </P>
@@ -274,6 +322,18 @@ public class CollectionConfigList extends AcalAppCompatActivity
 			updateId = -1;
 		}
 		if (this.serviceManager == null) serviceManager = new ServiceManager(this);
+
+		// Live-update the list while we're on screen, so a refresh (or any background
+		// sync) that adds or removes collections is reflected without leaving the screen.
+		if (collectionsObserver == null) {
+			collectionsObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
+				@Override
+				public void onChange(boolean selfChange) {
+					if (fragment != null) fragment.refresh();
+				}
+			};
+		}
+		getContentResolver().registerContentObserver(DavCollections.CONTENT_URI, true, collectionsObserver);
 	}
 
 	@Override
@@ -285,6 +345,9 @@ public class CollectionConfigList extends AcalAppCompatActivity
 	@Override
 	public void onPause() {
 		super.onPause();
+		if (collectionsObserver != null) {
+			getContentResolver().unregisterContentObserver(collectionsObserver);
+		}
 		if (this.serviceManager != null) this.serviceManager.close();
 		serviceManager = null;
 	}
