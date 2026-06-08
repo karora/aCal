@@ -10,6 +10,10 @@ public class PrefNames {
 	public static final String	unapprovedCertificates	= AcalApplication.getResourceString(R.string.prefUnapprovedCertificates); 
 	public static final String	allowSelfSignedCerts	= AcalApplication.getResourceString(R.string.prefAllowSelfSignedCerts);
 	public static final String	tzServerBaseUrl			= AcalApplication.getResourceString(R.string.prefTzServerBaseUrl);
+	// Set true when tzServerBaseUrl was auto-adopted from a server's discovered RFC 7808 service
+	// (rather than the shipped default or a value the user typed). Lets discovery honour
+	// "first server wins" and only prompt before replacing a user-chosen value.
+	public static final String	tzServerDiscovered		= "TzServerDiscovered";
 
 	public static final String	ignoreValarmDescription = AcalApplication.getResourceString(R.string.prefIgnoreValarmDescription);
 

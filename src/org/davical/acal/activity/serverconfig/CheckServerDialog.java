@@ -43,12 +43,17 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import android.net.Uri;
+
+import org.davical.acal.AcalApplication;
 import org.davical.acal.CheckServerFailedError;
 import org.davical.acal.Constants;
+import org.davical.acal.PrefNames;
 import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
 import org.davical.acal.providers.Servers;
 import org.davical.acal.service.connector.AcalRequestor;
+import org.davical.acal.service.connector.TimezoneServiceDiscovery;
 
 
 /**
@@ -80,6 +85,13 @@ public class CheckServerDialog {
 
 	private List<String> successMessages = new ArrayList<String>();
 	private boolean advancedMode = false;
+
+	// RFC 7808 timezone service context discovered on this server (or null). Probed during the
+	// background check; adopted on the UI thread once the server is saved (see #4).
+	private String discoveredTzContext = null;
+	// Set when adopting the discovered service would replace a user-chosen timezone server, so
+	// we ask first (after the success dialog) rather than overwriting silently.
+	private String pendingTzAdoptContext = null;
 
 	//dialog types
 	
@@ -214,6 +226,14 @@ public class CheckServerDialog {
 					successMessages.add(context.getString(R.string.serverSupportsCalDAV));
 					successMessages.add(String.format(context.getString(R.string.foundPrincipalPath), requestor.fullUrl()));
 					tester.applyToServerSettings(serverData);
+
+					// Step 5b: now that we know the host speaks CalDAV, see whether it also offers
+					// an RFC 7808 timezone service we can use (adopted later, on the UI thread).
+					updateProgress(context.getString(R.string.checkServer_TimezoneService));
+					Uri served = Uri.parse(requestor.fullUrl());
+					discoveredTzContext = TimezoneServiceDiscovery.discover(served.getScheme() + "://" + served.getAuthority());
+					if ( discoveredTzContext != null )
+						successMessages.add(context.getString(R.string.foundTimezoneService));
 				}
 				else {
 					int maxAchievement = TestPort.PORT_IS_CLOSED;
@@ -401,6 +421,9 @@ public class CheckServerDialog {
 				);
 		}
 
+		// Work out whether to adopt a discovered timezone service (may defer a prompt to dialog dismiss).
+		decideTimezoneAdoption();
+
 		// We don't set a positive button here since we already saved, above, and
 		// the background actions may have already updated the server table further!
 		// Or worse: we couldn't save, so trying again would be futile...
@@ -420,7 +443,7 @@ public class CheckServerDialog {
 					// fall through
 				case DialogInterface.BUTTON_NEUTRAL:
 					// We already saved before displaying the success dialog to give sync a headstart
-					sc.finish();
+					finishAfterOptionalTzPrompt();
 					break;
 				case DialogInterface.BUTTON_NEGATIVE:
 					sc.setResult(Activity.RESULT_CANCELED);
@@ -428,6 +451,57 @@ public class CheckServerDialog {
 			}
 		}
 	};
+
+	/**
+	 * Decide what to do with a timezone service discovered on this server. Adopts it silently
+	 * when we are still on the shipped default, or when an earlier server already auto-set one
+	 * (first server wins). Only when adoption would replace a value the user chose themselves do
+	 * we defer a confirmation prompt (shown when the success dialog is dismissed).
+	 */
+	private void decideTimezoneAdoption() {
+		if ( discoveredTzContext == null ) return;
+		String current = AcalApplication.getPreferenceString(PrefNames.tzServerBaseUrl, null);
+		String dflt = context.getString(R.string.defaultTzServerBaseUrl);
+		boolean autoDiscovered = AcalApplication.getPreferenceBoolean(PrefNames.tzServerDiscovered, false);
+
+		if ( current != null && current.equals(discoveredTzContext) ) return;	// already using it
+		if ( current == null || current.equals(dflt) )
+			adoptTimezoneService(discoveredTzContext);							// still default -> adopt silently
+		else if ( autoDiscovered )
+			return;																// an earlier server won; leave it
+		else
+			pendingTzAdoptContext = discoveredTzContext;						// user-chosen -> ask first
+	}
+
+	private void adoptTimezoneService(String tzContext) {
+		AcalApplication.setPreferenceString(PrefNames.tzServerBaseUrl, tzContext);
+		AcalApplication.setPreferenceBoolean(PrefNames.tzServerDiscovered, true);
+		Log.println(Constants.LOGI, TAG, "Adopted discovered timezone service: " + tzContext);
+	}
+
+	/** If adopting a discovered service needs the user's confirmation, ask now; then finish. */
+	private void finishAfterOptionalTzPrompt() {
+		if ( pendingTzAdoptContext == null ) {
+			sc.finish();
+			return;
+		}
+		final String tzContext = pendingTzAdoptContext;
+		pendingTzAdoptContext = null;
+		String current = AcalApplication.getPreferenceString(PrefNames.tzServerBaseUrl, "");
+		AlertDialog.Builder b = new AlertDialog.Builder((Context) sc);
+		b.setTitle(R.string.timezoneServiceFoundTitle);
+		b.setMessage(context.getString(R.string.timezoneServiceReplacePrompt, tzContext, current));
+		b.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+			@Override public void onClick(DialogInterface d, int w) { adoptTimezoneService(tzContext); sc.finish(); }
+		});
+		b.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+			@Override public void onClick(DialogInterface d, int w) { sc.finish(); }
+		});
+		b.setOnCancelListener(new DialogInterface.OnCancelListener() {
+			@Override public void onCancel(DialogInterface d) { sc.finish(); }
+		});
+		b.show();
+	}
 
 	/** Check server methods: Each of these methods represents a different step in the check server process */
 	

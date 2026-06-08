@@ -246,7 +246,11 @@
     <string name="checkServer_Connecting">Connecting to server please wait…</string>
     <string name="checkServer_Internet">Checking internet connectivity</string>
     <string name="checkServer_SearchingForServer">Searching for CalDAV server at "%s"</string>
+    <string name="checkServer_TimezoneService">Checking for a timezone service</string>
     <string name="checkServer_DiscoveryCancelled">Server discovery was cancelled</string>
+    <string name="foundTimezoneService">Server offers a timezone service.</string>
+    <string name="timezoneServiceFoundTitle">Timezone service found</string>
+    <string name="timezoneServiceReplacePrompt">This server offers a timezone service:\n\n%1$s\n\nUse it instead of your currently configured timezone server?\n\n%2$s</string>
     <string name="serverRecordAlreadyExists">A server already exists for that protocol, port, host, path &amp; username</string>
     <string name="newEventFromThis">Copy to New Event</string>
     <string name="Delete">Delete</string>

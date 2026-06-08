@@ -130,6 +130,12 @@ public class AcalApplication extends Application {
     	return prefs.getBoolean(key, defValue);
 	}
 
+	public static void setPreferenceBoolean(String key, boolean value) {
+    	if ( prefs == null )
+    		prefs = PreferenceManager.getDefaultSharedPreferences(s_instance);
+    	prefs.edit().putBoolean(key, value).apply();
+	}
+
 	final private static ConcurrentHashMap<String,String> zoneAliasCache = new ConcurrentHashMap<String,String>();
 	public static String getOlsonFromAlias(String alias) {
 	    return zoneAliasCache.computeIfAbsent(alias, key -> {
