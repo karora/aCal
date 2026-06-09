@@ -3,6 +3,9 @@
 bundle:
 	./build-in-container.sh bundleRelease
 
+release:
+	./build-in-container.sh assembleRelease
+
 debug:
 	./build-in-container.sh assembleDebug
 

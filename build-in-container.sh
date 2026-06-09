@@ -38,10 +38,10 @@ APK_OUT="${PROJECT_ROOT}/apk"
 mkdir -p "${APK_OUT}"
 shopt -s globstar nullglob
 for apk in "${PROJECT_ROOT}"/build/outputs/apk/**/*.apk; do
-    cp -f "${apk}" "${APK_OUT}/"
+    cp -a -f "${apk}" "${APK_OUT}/"
     echo "Copied $(basename "${apk}") to apk/"
 done
 for aab in "${PROJECT_ROOT}"/build/outputs/bundle/**/*.aab; do
-    cp -f "${aab}" "${APK_OUT}/"
+    cp -a -f "${aab}" "${APK_OUT}/"
     echo "Copied $(basename "${aab}") to apk/"
 done
