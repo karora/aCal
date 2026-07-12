@@ -25,10 +25,8 @@ import org.davical.acal.AcalApplication;
 import org.davical.acal.acaltime.AcalDateRange;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.activity.AlarmReceiver;
-import org.davical.acal.database.DMAction;
 import org.davical.acal.database.DMInsertQuery;
 import org.davical.acal.database.DMQueryList;
-import org.davical.acal.database.DMUpdateQuery;
 import org.davical.acal.database.DataChangeEvent;
 import org.davical.acal.database.ProviderTableManager;
 import org.davical.acal.database.alarmmanager.requests.ARResourceChanged;
@@ -41,13 +39,15 @@ import org.davical.acal.database.resourcesmanager.ResourceChangedListener;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.ResourceTableManager;
 import org.davical.acal.database.resourcesmanager.requests.RRGetUpcomingAlarms;
+import org.davical.acal.dataservice.CalendarInstance;
+import org.davical.acal.dataservice.JournalInstance;
 import org.davical.acal.dataservice.Resource;
+import org.davical.acal.dataservice.TodoInstance;
 import org.davical.acal.davacal.VCalendar;
 import org.davical.acal.davacal.VComponent;
 import org.davical.acal.davacal.VComponentCreationException;
 import org.davical.acal.di.ServiceRegistry;
 import org.davical.acal.providers.AlarmDataProvider;
-import org.davical.acal.providers.CacheDataProvider;
 
 /**
  * This manager manages the Alarm Database Table(s). It will listen to changes to resources and update the DB
@@ -119,6 +119,9 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 		this.ATMinstance = this.getATMInstance();
 		rm = ResourceManager.getInstance(context);
 		loadState();
+		// Re-register the next alarm with AlarmManager: scheduled alarms do not
+		// survive a reboot, and the process may have died since they were set.
+		ATMinstance.scheduleAlarmIntent();
 		workerThread = new Thread(this);
 		workerThread.start();
 
@@ -204,9 +207,9 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 		}
 		data.put(FIELD_CLOSED, CLOSED_STATE_CLEAN);
 
-        cr.delete(CacheDataProvider.META_URI, null, null);
+        cr.delete(AlarmDataProvider.META_URI, null, null);
         data.remove(FIELD_ID);
-        cr.insert(CacheDataProvider.META_URI, data);
+        cr.insert(AlarmDataProvider.META_URI, data);
 
         rm.addListener(this);
 		releaseMetaLock();
@@ -228,7 +231,7 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
         acquireMetaLock();
 
         // set CLOSED to true
-        cr.update(CacheDataProvider.META_URI, data, null, null);
+        cr.update(AlarmDataProvider.META_URI, data, null, null);
 
         //dereference ourself so GC can clean up
         instance = null;
@@ -395,17 +398,18 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 			ArrayList<AlarmRow> alarms = request.getResponse().result();
 			int count = 0;
 
-			//For each alarm check whether or not it has not been dismissed
+			//For each alarm check whether we already have a row for it in a non-PENDING
+			//state (dismissed, snoozed or fired) which must be preserved, not re-inserted.
 			DMQueryList list = new DMQueryList();
 			for (AlarmRow alarm : alarms) {
-			    ArrayList<ContentValues> dismissedAlarms
+			    ArrayList<ContentValues> handledAlarms
 			        = super.query(
 			                    new String[] {AlarmDataProvider.BASE_TIME_TO_FIRE },
 			                    AlarmDataProvider.RESOURCE_ID+"="+alarm.resourceId+
-            			            " AND " + AlarmDataProvider.RRID+"= '"+alarm.recurrenceId +"' " +
+            			            " AND " + rridPredicate(alarm.recurrenceId) +
             			            " AND " + AlarmDataProvider.BASE_TIME_TO_FIRE+"="+alarm.baseTimeToFire+
-            			            " AND " + AlarmDataProvider.STATE +"="+ ALARM_STATE.DISMISSED.ordinal(), null, null);
-			    if ( dismissedAlarms.isEmpty() /* && alarm.getTimeToFire() < lookForwardLimit */ ) {
+            			            " AND " + AlarmDataProvider.STATE +"!="+ ALARM_STATE.PENDING.ordinal(), null, null);
+			    if ( handledAlarms.isEmpty() /* && alarm.getTimeToFire() < lookForwardLimit */ ) {
     				list.addAction(new DMInsertQuery(null, alarm.toContentValues()));
     				count++;
     				Log.i(TAG,"Alarm set : "+alarm.toString() );
@@ -415,9 +419,10 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 			    }
 			}
 
-			//step 2 - begin db transaction, delete all existing and insert new list
+			//step 2 - begin db transaction, delete all pending and insert new list.
+			//Non-PENDING rows (dismissed/snoozed/fired) carry user state and are kept.
 			super.beginTx();
-			super.delete(AlarmDataProvider.STATE +"!="+ ALARM_STATE.DISMISSED.ordinal(), null);
+			super.delete(AlarmDataProvider.STATE +"="+ ALARM_STATE.PENDING.ordinal(), null);
 			super.processActions(list);
 			super.setTxSuccessful();
 			super.endTx();
@@ -477,8 +482,21 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 
 			row.setState(state);
 			if ( state == ALARM_STATE.SNOOZED ) row.addSnooze();
-			if ( 0 < super.update(row.toContentValues(), AlarmDataProvider._ID+" = " + row.getId(), null) )
+			ContentValues values = row.toContentValues();
+			int updated = super.update(values, AlarmDataProvider._ID+" = " + row.getId(), null);
+			if ( updated == 0 ) {
+				// The row id may be stale (e.g. the table was rebuilt since the notification
+				// was posted), so fall back to matching on the alarm's natural key.
+				values.remove(AlarmDataProvider._ID);
+				updated = super.update(values,
+						AlarmDataProvider.RESOURCE_ID+"="+row.resourceId+
+						" AND "+rridPredicate(row.recurrenceId)+
+						" AND "+AlarmDataProvider.BASE_TIME_TO_FIRE+"="+row.baseTimeToFire, null);
+			}
+			if ( updated > 0 )
 				super.setTxSuccessful();
+			else
+				Log.w(TAG, "No alarm row matched for state change to "+state+" (row id "+row.getId()+")");
 
 			super.endTx();
 
@@ -486,17 +504,20 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 			scheduleAlarmIntent();
 		}
 
+		/**
+		 * SQL predicate matching the given recurrence id, treating NULL and the
+		 * empty string as equivalent (intent extras round-trip null as "").
+		 */
+		private String rridPredicate(String rrid) {
+			if ( rrid == null || rrid.length() == 0 )
+				return "(" + AlarmDataProvider.RRID + " IS NULL OR " + AlarmDataProvider.RRID + " = '')";
+			return AlarmDataProvider.RRID + " = '" + rrid.replace("'", "''") + "'";
+		}
 
-		private String getAlarmTitle(long resourceId) {
-			try {
-				return ((VCalendar) VComponent
-						.createComponentFromResource(
-								AcalApplication.getResourceFromDatabase(resourceId)))
-						.getMasterChild()
-						.getSummary();
-			} catch (Exception e) {
-				return "Calendar Event";
-			}
+
+		private boolean sameRecurrenceId(String a, String b) {
+			if ( a == null || a.length() == 0 ) return ( b == null || b.length() == 0 );
+			return a.equals(b);
 		}
 
 		/**
@@ -508,13 +529,33 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 			if (next == null) {
 	            if ( Constants.LOG_DEBUG && Constants.debugAlarms )
 	                Log.i(TAG, "No alarms scheduled.");
+	            alarmManager.cancel(alarmPendingIntent(Constants.ALARM_ACTION_PRE, 1, null));
+	            alarmManager.cancel(alarmPendingIntent(Constants.ALARM_ACTION_FIRE, 2, null));
 			    return;
 			}
 			long ttf = next.getTimeToFire();
 			AcalDateTime ttfHuman = AcalDateTime.getInstance().setMillis(ttf);
 			Log.i(TAG, "Scheduling Alarm wakeup for "+ ((ttf - System.currentTimeMillis())/1000)+" seconds from now at "+ttfHuman.toString());
 
-			String title = getAlarmTitle(next.resourceId);
+			String title = "Calendar Event";
+			long eventTime = ttf;
+			String component = "";
+			try {
+				Resource r = AcalApplication.getResourceFromDatabase(next.resourceId);
+				String rrid = ( next.recurrenceId == null || next.recurrenceId.length() == 0
+									? null : next.recurrenceId );
+				CalendarInstance instance = CalendarInstance.fromResourceAndRRId(r, rrid);
+				if ( instance.getSummary() != null && instance.getSummary().length() > 0 )
+					title = instance.getSummary();
+				AcalDateTime start = instance.getStart();
+				if ( start == null ) start = instance.getEnd();
+				if ( start != null ) eventTime = start.getMillis();
+				if ( instance instanceof TodoInstance )         component = VComponent.VTODO;
+				else if ( instance instanceof JournalInstance ) component = VComponent.VJOURNAL;
+				else                                            component = VComponent.VEVENT;
+			} catch (Exception e) {
+				Log.w(TAG, "Could not load event details for alarm on resource "+next.resourceId, e);
+			}
 
 			// Build base intent with all alarm row extras
 			Intent baseIntent = new Intent(context, AlarmReceiver.class);
@@ -526,26 +567,37 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 			baseIntent.putExtra(Constants.ALARM_EXTRA_RRID,     next.recurrenceId);
 			baseIntent.putExtra(Constants.ALARM_EXTRA_STATE,    0); // PENDING ordinal
 			baseIntent.putExtra(Constants.ALARM_EXTRA_BLOB,     next.getBlob());
+			baseIntent.putExtra(Constants.ALARM_EXTRA_EVENT_TIME, eventTime);
+			baseIntent.putExtra(Constants.ALARM_EXTRA_COMPONENT,  component);
 
 			// Pre-alarm intent (5 minutes before)
 			long preTtf = ttf - Constants.PRE_ALARM_OFFSET_MS;
+			PendingIntent prePI = alarmPendingIntent(Constants.ALARM_ACTION_PRE, 1, baseIntent);
 			if (preTtf > System.currentTimeMillis()) {
-				Intent preIntent = new Intent(baseIntent);
-				preIntent.setAction(Constants.ALARM_ACTION_PRE);
-				PendingIntent prePI = PendingIntent.getBroadcast(context, 1, preIntent,
-						PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 				scheduleExact(preTtf, prePI);
+			} else {
+				// Don't leave a stale pre-alarm for a previously-scheduled alarm behind.
+				alarmManager.cancel(prePI);
 			}
 
 			// Main alarm intent (at fire time)
-			Intent mainIntent = new Intent(baseIntent);
-			mainIntent.setAction(Constants.ALARM_ACTION_FIRE);
-			PendingIntent mainPI = PendingIntent.getBroadcast(context, 2, mainIntent,
+			scheduleExact(ttf, alarmPendingIntent(Constants.ALARM_ACTION_FIRE, 2, baseIntent));
+		}
+
+		private PendingIntent alarmPendingIntent(String action, int requestCode, Intent baseIntent) {
+			Intent intent = ( baseIntent == null ? new Intent(context, AlarmReceiver.class)
+			                                     : new Intent(baseIntent) );
+			intent.setAction(action);
+			return PendingIntent.getBroadcast(context, requestCode, intent,
 					PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-			scheduleExact(ttf, mainPI);
 		}
 
 		private void scheduleExact(long triggerAtMs, PendingIntent pi) {
+			// Never register a trigger in the past: give in-flight state updates
+			// (e.g. an alarm being marked FIRED right now) a few seconds to land and
+			// replace/cancel this registration, instead of re-firing instantly.
+			long soonest = System.currentTimeMillis() + 5000;
+			if (triggerAtMs < soonest) triggerAtMs = soonest;
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 				alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi);
 			} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -610,8 +662,8 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
                     AlarmDataProvider.RESOURCE_ID+" = "+ data.getAsLong(ResourceTableManager.RESOURCE_ID)+
                     " AND "+AlarmDataProvider.STATE+" != "+ALARM_STATE.PENDING.ordinal(),
                     null, null);
-            AlarmRow inProgressAlarm = null;
-            if ( !existing.isEmpty() ) inProgressAlarm.fromContentValues(existing.get(0));
+            ArrayList<AlarmRow> handledRows = new ArrayList<AlarmRow>();
+            for (ContentValues cv : existing) handledRows.add(AlarmRow.fromContentValues(cv));
 
 			//default start timestamp
 			AcalDateTime after = new AcalDateTime().applyLocalTimeZone();
@@ -653,20 +705,21 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 			//Create query List
 			DMQueryList list = new DMQueryList();
 
-            ContentValues newInstance;
-            DMAction queryAction;
 			for (AlarmRow alarm : alarmList) {
-                newInstance = alarm.toContentValues();
-                if ( inProgressAlarm != null && inProgressAlarm.equals(alarm) ) {
-                    // Skip updating if the alarm is already in progress.
-                    if ( alarm.getTimeToFire() < System.currentTimeMillis() ) continue;
+                // A dismissed/snoozed/fired row for this alarm already carries user
+                // state — don't resurrect it as a fresh PENDING alarm.
+                boolean alreadyHandled = false;
+                for (AlarmRow handled : handledRows) {
+                    if ( handled.resourceId == alarm.resourceId
+                            && handled.baseTimeToFire == alarm.baseTimeToFire
+                            && sameRecurrenceId(handled.recurrenceId, alarm.recurrenceId) ) {
+                        alreadyHandled = true;
+                        break;
+                    }
+                }
+                if ( alreadyHandled ) continue;
 
-                    queryAction = new DMUpdateQuery(newInstance, AlarmDataProvider._ID+"="+inProgressAlarm.getId(), null);
-                }
-                else {
-                    queryAction = new DMInsertQuery( null, newInstance );
-                }
-				list.addAction(queryAction);
+                list.addAction(new DMInsertQuery( null, alarm.toContentValues() ));
 			}
 
 			super.processActions(list);

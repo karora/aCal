@@ -72,6 +72,8 @@ public class Constants {
     public static final String ALARM_EXTRA_RRID     = "alarm_rrid";
     public static final String ALARM_EXTRA_STATE    = "alarm_state";
     public static final String ALARM_EXTRA_BLOB     = "alarm_blob";
+    public static final String ALARM_EXTRA_EVENT_TIME = "alarm_event_time";
+    public static final String ALARM_EXTRA_COMPONENT  = "alarm_component";
 
     public static final int PRE_ALARM_OFFSET_MS = 5 * 60 * 1000;   // 5 minutes
 

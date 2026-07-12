@@ -104,7 +104,10 @@ public class AlarmRow implements Comparable<AlarmRow> {
 	}
 
     public void addSnooze() {
-        this.timeToFire += SNOOZE_MILLIS;
+        // Snooze counts from when the user pressed the button; the original fire
+        // time may already be well in the past.
+        long now = System.currentTimeMillis();
+        this.timeToFire = Math.max(this.timeToFire, now) + SNOOZE_MILLIS;
     }
 
     @Override

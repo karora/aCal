@@ -30,12 +30,16 @@ import android.util.Log;
 import org.davical.acal.Constants;
 import org.davical.acal.R;
 import org.davical.acal.aCal;
+import org.davical.acal.aCalNotes;
+import org.davical.acal.aCalTasks;
 import org.davical.acal.database.alarmmanager.ALARM_STATE;
 import org.davical.acal.database.alarmmanager.AlarmQueueManager;
 import org.davical.acal.database.alarmmanager.AlarmRow;
 import org.davical.acal.database.alarmmanager.requests.ARUpdateAlarmState;
+import org.davical.acal.davacal.VComponent;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -73,7 +77,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         NotificationManager nm = getNotifManager(context);
 
         if (Constants.ALARM_ACTION_PRE.equals(action)) {
-            handlePre(context, nm, rowId, title);
+            handlePre(context, nm, rowId, title, intent);
         } else if (Constants.ALARM_ACTION_DISMISS.equals(action)) {
             handleDismiss(context, nm, rowId, intent);
         } else if (Constants.ALARM_ACTION_SNOOZE.equals(action)) {
@@ -84,14 +88,18 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
     }
 
-    private void handlePre(Context context, NotificationManager nm, long rowId, String title) {
+    private void handlePre(Context context, NotificationManager nm, long rowId, String title,
+                           Intent intent) {
+        long eventTime = intent.getLongExtra(Constants.ALARM_EXTRA_EVENT_TIME,
+                intent.getLongExtra(Constants.ALARM_EXTRA_TTF, System.currentTimeMillis()));
         Notification.Builder builder = new Notification.Builder(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setChannelId(Constants.PRE_ALARM_NOTIFICATION_CHANNEL_ID);
         }
         builder.setSmallIcon(R.drawable.icon)
-               .setContentTitle("In 5 minutes")
-               .setContentText(title)
+               .setContentTitle(title)
+               .setContentText(describeEventTime(eventTime))
+               .setContentIntent(buildViewPendingIntent(context, intent, rowId))
                .setAutoCancel(true);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             builder.setPriority(Notification.PRIORITY_LOW);
@@ -101,11 +109,20 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     private void handleFire(Context context, NotificationManager nm,
                             long rowId, String title, Intent intent) {
+        // Record that this alarm has fired *before* posting, so it is never
+        // rescheduled/refired, and so the next pending alarm gets its wakeup
+        // scheduled. Blocking: the process may be killed once we return.
+        AlarmRow row = buildAlarmRowFromIntent(intent);
+        if (row != null) {
+            AlarmQueueManager.getInstance(context)
+                    .sendBlockingRequest(new ARUpdateAlarmState(row, ALARM_STATE.FIRED));
+        }
+
         // Cancel pre-alarm notification
         nm.cancel((int) rowId);
 
-        long ttf = intent.getLongExtra(Constants.ALARM_EXTRA_TTF, System.currentTimeMillis());
-        String timeStr = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date(ttf));
+        long eventTime = intent.getLongExtra(Constants.ALARM_EXTRA_EVENT_TIME,
+                intent.getLongExtra(Constants.ALARM_EXTRA_TTF, System.currentTimeMillis()));
 
         // Snooze action
         Intent snoozeIntent = new Intent(intent);
@@ -121,11 +138,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                 (int) rowId + 200_000, dismissIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Tap to open main calendar
-        Intent calIntent = new Intent(context, aCal.class);
-        calIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent calPI = PendingIntent.getActivity(context, (int) rowId,
-                calIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        // Tap to open the event this alarm is for
+        PendingIntent viewPI = buildViewPendingIntent(context, intent, rowId);
 
         Notification.Builder builder = new Notification.Builder(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -133,8 +147,8 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
         builder.setSmallIcon(R.drawable.icon)
                .setContentTitle(title)
-               .setContentText(timeStr)
-               .setContentIntent(calPI)
+               .setContentText(describeEventTime(eventTime))
+               .setContentIntent(viewPI)
                .setAutoCancel(true)
                .setOngoing(false)
                .addAction(R.drawable.icon, "Snooze", snoozePI)
@@ -160,6 +174,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
         activeBuilder.setSmallIcon(R.drawable.icon)
                      .setContentTitle("Now: " + title)
+                     .setContentIntent(viewPI)
                      .setOngoing(true)
                      .addAction(R.drawable.icon, "Done", donePI);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -168,14 +183,64 @@ public class AlarmReceiver extends BroadcastReceiver {
         nm.notify((int) rowId + 200_000, activeBuilder.build());
     }
 
+    /**
+     * PendingIntent opening the component the alarm belongs to: the event view for
+     * events, or the tasks/notes list for todos and journals.
+     */
+    private PendingIntent buildViewPendingIntent(Context context, Intent intent, long rowId) {
+        String component = intent.getStringExtra(Constants.ALARM_EXTRA_COMPONENT);
+        long rid = intent.getLongExtra(Constants.ALARM_EXTRA_RID, -1);
+        String rrid = intent.getStringExtra(Constants.ALARM_EXTRA_RRID);
+
+        Intent viewIntent;
+        if (VComponent.VTODO.equals(component)) {
+            viewIntent = new Intent(context, aCalTasks.class);
+        } else if (VComponent.VJOURNAL.equals(component)) {
+            viewIntent = new Intent(context, aCalNotes.class);
+        } else if (rid >= 0) {
+            viewIntent = new Intent(context, EventView.class);
+            viewIntent.putExtra(EventView.RESOURCE_ID_KEY, rid);
+            viewIntent.putExtra(EventView.RECURRENCE_ID_KEY, rrid);
+        } else {
+            viewIntent = new Intent(context, aCal.class);
+        }
+        viewIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        return PendingIntent.getActivity(context, (int) rowId, viewIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    /**
+     * Human-readable event start, e.g. "Starts at 14:30 (in 25 min)" or "Started at 09:00".
+     */
+    private String describeEventTime(long eventTime) {
+        Calendar event = Calendar.getInstance();
+        event.setTimeInMillis(eventTime);
+        Calendar now = Calendar.getInstance();
+        boolean sameDay = event.get(Calendar.YEAR) == now.get(Calendar.YEAR)
+                && event.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR);
+        String pattern = sameDay ? "HH:mm" : "EEE HH:mm";
+        String timeStr = new SimpleDateFormat(pattern, Locale.getDefault()).format(new Date(eventTime));
+
+        long minutes = Math.round((eventTime - System.currentTimeMillis()) / 60000.0);
+        if (minutes > 1) {
+            String in = (minutes >= 60)
+                    ? (minutes / 60) + "h " + (minutes % 60) + "m"
+                    : minutes + " min";
+            return "Starts at " + timeStr + " (in " + in + ")";
+        }
+        if (minutes >= -1) return "Starts now (" + timeStr + ")";
+        return "Started at " + timeStr;
+    }
+
     private void handleDismiss(Context context, NotificationManager nm,
                                long rowId, Intent intent) {
         nm.cancel((int) rowId + 100_000);
         nm.cancel((int) rowId + 200_000);
         AlarmRow row = buildAlarmRowFromIntent(intent);
         if (row != null) {
+            // Blocking: the process may be killed as soon as onReceive completes.
             AlarmQueueManager.getInstance(context)
-                    .sendRequest(new ARUpdateAlarmState(row, ALARM_STATE.DISMISSED));
+                    .sendBlockingRequest(new ARUpdateAlarmState(row, ALARM_STATE.DISMISSED));
         }
     }
 
@@ -184,8 +249,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         nm.cancel((int) rowId + 100_000);
         AlarmRow row = buildAlarmRowFromIntent(intent);
         if (row != null) {
+            // Blocking: the process may be killed as soon as onReceive completes.
             AlarmQueueManager.getInstance(context)
-                    .sendRequest(new ARUpdateAlarmState(row, ALARM_STATE.SNOOZED));
+                    .sendBlockingRequest(new ARUpdateAlarmState(row, ALARM_STATE.SNOOZED));
         }
     }
 
