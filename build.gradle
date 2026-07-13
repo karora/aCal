@@ -38,8 +38,8 @@ android {
         applicationId "org.davical.acal"
         minSdkVersion 23
         targetSdkVersion 36
-        versionCode 64
-        versionName "1.64"
+        versionCode 65
+        versionName "1.65"
     }
 
     signingConfigs {

@@ -111,3 +111,8 @@ Timezone download is now on by default.
 Added some minimal logging of DELETE/PUT and server discovery in 'release' builds.
 v64=1.64
 Many updates to current Android ecosystem
+v65=1.65
+Fix alarm notifications: dismissed and snoozed alarms no longer reappear
+Tapping an alarm notification now opens the event, task or note
+Alarm notifications show the event start time
+Use RFC 7808 timezone server discovery and requests
