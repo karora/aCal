@@ -138,7 +138,26 @@ public class CollectionConfigurationFragment extends PreferenceFragmentCompat
 		maxSyncAgeWifi.setText(Integer.toString(currentWifiAge / 60000));
 		addPreference(maxSyncAgeWifi, getString(R.string.pMax_age_on_wifi), DavCollections.MAX_SYNC_AGE_WIFI);
 
+		if (collectionData.getAsInteger(DavCollections._ID) != null) {
+			addSyncActionPreference(getString(R.string.Sync_collection_now),
+					getString(R.string.Sync_collection_now_summary), false);
+			addSyncActionPreference(getString(R.string.Force_full_resync),
+					getString(R.string.Force_full_resync_summary), true);
+		}
+
 		updateTextSummaries();
+	}
+
+	private void addSyncActionPreference(String title, String summary, final boolean fullResync) {
+		Preference pref = new Preference(requireContext());
+		pref.setPersistent(false);
+		pref.setTitle(title);
+		pref.setSummary(summary);
+		pref.setOnPreferenceClickListener(p -> {
+			((CollectionConfiguration) requireActivity()).requestSync(fullResync);
+			return true;
+		});
+		getPreferenceScreen().addPreference(pref);
 	}
 
 	private void addPreference(Preference pref, String title, String key) {

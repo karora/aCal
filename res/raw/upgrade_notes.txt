@@ -116,3 +116,5 @@ Fix alarm notifications: dismissed and snoozed alarms no longer reappear
 Tapping an alarm notification now opens the event, task or note
 Alarm notifications show the event start time
 Use RFC 7808 timezone server discovery and requests
+v66=1.66
+Fix various synchronization bugs, add resync / full resync options per calendar settings

@@ -93,6 +93,7 @@ public class SyncCollectionContents extends ServiceJob {
 
 	private aCalService			context;
 	private boolean	synchronisationForced			= false;
+	private boolean	syncImmediately					= false;
 	private AcalRequestor 		requestor			= null;
 	private boolean	syncWasCompleted;
 	private int	errorCounter = 0;
@@ -128,6 +129,7 @@ public class SyncCollectionContents extends ServiceJob {
 	public SyncCollectionContents(long collectionId, boolean forceSync ) {
 		this.collectionId = collectionId;
 		this.TIME_TO_EXECUTE = 0;
+		this.syncImmediately = forceSync;
 	}
 
 	
@@ -208,6 +210,12 @@ public class SyncCollectionContents extends ServiceJob {
 		long finish = System.currentTimeMillis();
 		if (Constants.LOG_VERBOSE && Constants.debugSyncCollectionContents )
 			Log.println(Constants.LOGV,TAG, "Collection sync finished in " + (finish - start) + "ms");
+
+		// This same job instance gets re-queued for the next scheduled run, so
+		// one-shot state must not leak into that run.
+		syncImmediately = false;
+		synchronisationForced = false;
+		errorCounter = 0;
 
 		calculateNextSchedulingTime();
 		scheduleNextInstance();
@@ -475,11 +483,20 @@ public class SyncCollectionContents extends ServiceJob {
 			syncToken = root.getFirstNodeText("multistatus/sync-token");
 			if ( Constants.LOG_DEBUG )
 				Log.println(Constants.LOGD,TAG,"Found sync token of '"+syncToken+"' in sync-report response." );
-			
+
 			//ResourceModification.commitChangeList(context, changeList, processor.getTableName(this));
-			ResourceManager.getInstance(context).sendBlockingRequest(
-					new RRBlockAndProcessQueryList(queryList));
-		
+			RRBlockAndProcessQueryList changeRequest = new RRBlockAndProcessQueryList(queryList);
+			ResourceManager.getInstance(context).sendBlockingRequest(changeRequest);
+			if ( !changeRequest.wasSuccessful() ) {
+				// If we advance the sync token past changes we failed to apply, any
+				// deletions in this report would be lost forever.  Leave the old
+				// token in place so the next sync retries them.
+				Log.w(TAG, "Failed to commit sync-report changes for collection "+collectionId
+							+" - not advancing sync token.");
+				syncToken = null;
+				syncWasCompleted = false;
+			}
+
 			return needSyncAfterwards;
 		}
 
@@ -559,7 +576,9 @@ public class SyncCollectionContents extends ServiceJob {
 				queryList.addAction(builder.build());
 
 				if ( queryList.size() > nPerMultiget ) {
-					ResourceManager.getInstance(context).sendBlockingRequest(new RRBlockAndProcessQueryList(queryList));
+					RRBlockAndProcessQueryList batchRequest = new RRBlockAndProcessQueryList(queryList);
+					ResourceManager.getInstance(context).sendBlockingRequest(batchRequest);
+					if ( !batchRequest.wasSuccessful() ) syncWasCompleted = false;
 					queryList = new DMQueryList();
 				}
 			}
@@ -592,9 +611,12 @@ public class SyncCollectionContents extends ServiceJob {
 		}
 
 
-		if ( !queryList.isEmpty() )
-			ResourceManager.getInstance(context).sendBlockingRequest( new RRBlockAndProcessQueryList(queryList));
-		
+		if ( !queryList.isEmpty() ) {
+			RRBlockAndProcessQueryList changeRequest = new RRBlockAndProcessQueryList(queryList);
+			ResourceManager.getInstance(context).sendBlockingRequest(changeRequest);
+			if ( !changeRequest.wasSuccessful() ) syncWasCompleted = false;
+		}
+
 		return needSyncAfterwards;
 	}
 
@@ -752,7 +774,7 @@ public class SyncCollectionContents extends ServiceJob {
 			String s = prop.getFirstNodeText("getctag");
 			if ( s != null ) {
 				collectionChanged = (collectionData.getAsString(DavCollections.COLLECTION_TAG) == null
-									|| s.equals(collectionData.getAsString(DavCollections.COLLECTION_TAG)));
+									|| !s.equals(collectionData.getAsString(DavCollections.COLLECTION_TAG)));
 				if ( collectionChanged ) collectionData.put(DavCollections.COLLECTION_TAG, s);
 				cv.put("COLLECTION", true);
 				return false;
@@ -970,6 +992,11 @@ public class SyncCollectionContents extends ServiceJob {
 	}
 	
 	private boolean timeToRun() {
+		if ( syncImmediately ) {
+			if (Constants.LOG_VERBOSE && Constants.debugSyncCollectionContents )
+				Log.println(Constants.LOGV,TAG, "Synchronising now, since an immediate sync was requested.");
+			return true;
+		}
 		if ( synchronisationForced ) {
 			if (Constants.LOG_VERBOSE && Constants.debugSyncCollectionContents )
 				Log.println(Constants.LOGV,TAG, "Synchronising now, since a sync has been forced.");
@@ -1068,13 +1095,18 @@ public class SyncCollectionContents extends ServiceJob {
 
 	
 	private void updateCollectionToken(String newToken) {
-		ContentValues updateData = new ContentValues();
-		updateData.put(DavCollections.SYNC_TOKEN, newToken);
+		// Update our in-memory copy as well, so a later write of collectionData
+		// (e.g. at the end of run()) cannot resurrect the old token.
+		if ( newToken == null )
+			collectionData.putNull(DavCollections.SYNC_TOKEN);
+		else
+			collectionData.put(DavCollections.SYNC_TOKEN, newToken);
+		oldSyncToken = newToken;
 		if (Constants.LOG_VERBOSE && Constants.debugSyncCollectionContents )
-			Log.i(TAG,"Updated collection record with new sync token '"+syncToken+"'");
+			Log.i(TAG,"Updated collection record with new sync token '"+newToken+"'");
 		ResourceManager.getInstance(context).sendBlockingRequest(
 				new RRUpdateCollection(collectionId,collectionData));
-		
+
 	}
 
 

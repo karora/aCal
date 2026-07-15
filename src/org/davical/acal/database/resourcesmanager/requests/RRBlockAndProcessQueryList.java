@@ -8,22 +8,31 @@ import org.davical.acal.database.resourcesmanager.requesttypes.BlockingResourceR
 public class RRBlockAndProcessQueryList implements BlockingResourceRequest {
 
 	private boolean isProcessed;
+	private boolean wasSuccessful = false;
 	private DMQueryList list;
-	
-	
+
+
 	public RRBlockAndProcessQueryList(DMQueryList list) {
 		this.list = list;
 	}
-	
+
 	@Override
 	public boolean isProcessed() {
 		return isProcessed;
 	}
 
+	/**
+	 * Whether the query list was committed to the database successfully. Only
+	 * meaningful once isProcessed() is true (e.g. after sendBlockingRequest).
+	 */
+	public boolean wasSuccessful() {
+		return wasSuccessful;
+	}
+
 	@Override
 	public void process(WriteableResourceTableManager processor)
-			throws ResourceProcessingException {	
-		processor.processActions(list);
+			throws ResourceProcessingException {
+		wasSuccessful = processor.processActions(list);
 		this.setProcessed();
 
 	}

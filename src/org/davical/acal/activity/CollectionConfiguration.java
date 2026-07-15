@@ -23,10 +23,12 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.Toast;
 
 import org.davical.acal.AcalTheme;
 import org.davical.acal.R;
@@ -34,6 +36,7 @@ import org.davical.acal.ServiceManager;
 import org.davical.acal.dataservice.Collection;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.service.ServiceJob;
+import org.davical.acal.service.ServiceRequest;
 import org.davical.acal.service.SyncChangesToServer;
 import org.davical.acal.service.SyncCollectionContents;
 import org.davical.acal.service.WorkerClass;
@@ -192,6 +195,31 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 
 	ContentValues getCollectionData() {
 		return collectionData;
+	}
+
+	/**
+	 * Ask the service to synchronise this collection immediately.
+	 *
+	 * @param fullResync false requests an immediate incremental sync (sync-report / ctag
+	 *                   check); true rebuilds the local resource list from the server,
+	 *                   which also removes anything deleted on the server.
+	 */
+	void requestSync(boolean fullResync) {
+		Integer collectionId = collectionData.getAsInteger(DavCollections._ID);
+		if (collectionId == null) return;
+		try {
+			ServiceRequest sr = (serviceManager == null ? null : serviceManager.getServiceRequest());
+			if (sr == null) {
+				Toast.makeText(this, getString(R.string.Sync_request_failed), Toast.LENGTH_SHORT).show();
+				return;
+			}
+			if (fullResync) sr.fullCollectionResync(collectionId);
+			else sr.syncCollectionNow(collectionId);
+			Toast.makeText(this, getString(R.string.Synchronisation_requested), Toast.LENGTH_SHORT).show();
+		} catch (RemoteException e) {
+			Log.e(TAG, "Unable to send synchronisation request to service: " + e.getMessage());
+			Toast.makeText(this, getString(R.string.Sync_request_failed), Toast.LENGTH_SHORT).show();
+		}
 	}
 
 	void onCollectionDataChanged() {

@@ -38,8 +38,10 @@ android {
         applicationId "org.davical.acal"
         minSdkVersion 23
         targetSdkVersion 36
-        versionCode 65
-        versionName "1.65"
+
+	// Remember to also update res/raw/upgrade_notes.txt
+        versionCode 66
+        versionName "1.66"
     }
 
     signingConfigs {

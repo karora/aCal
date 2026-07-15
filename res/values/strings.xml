@@ -32,6 +32,10 @@
     <string name="Server_Port">Server Port</string>
     <string name="Summary">Summary</string>
     <string name="Sync_collection_now">Synchronise Now</string>
+    <string name="Sync_collection_now_summary">Check the server for changes to this collection now</string>
+    <string name="Force_full_resync_summary">Rebuild the local copy of this collection from the server, removing anything deleted on the server</string>
+    <string name="Synchronisation_requested">Synchronisation requested</string>
+    <string name="Sync_request_failed">Could not contact the synchronisation service</string>
     <string name="Disable_collection">Disable Collection</string>
     <string name="Refresh_collection_list">Refresh calendar list</string>
     <string name="Refreshing_collection_list">Refreshing calendar list from servers…</string>
