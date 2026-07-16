@@ -118,3 +118,8 @@ Alarm notifications show the event start time
 Use RFC 7808 timezone server discovery and requests
 v66=1.66
 Fix various synchronization bugs, add resync / full resync options per calendar settings
+v67=1.67
+Fix recurring events ignoring some or all EXDATE exclusions (deleted instances now stay deleted, including those deleted by other calendar clients)
+Date-valued EXDATEs now exclude the whole day's instance
+Repeat COUNT now matches other clients when instances are excluded
+Fix corruption of multi-value RDATE properties when saving events

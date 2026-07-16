@@ -202,14 +202,9 @@ public class VCalendar extends VComponent implements Cloneable {
 
 		switch (instances) {
 			case EventEdit.INSTANCES_SINGLE:
-				AcalProperty exDate = m.getProperty(PropertyName.EXDATE);
-				if ( exDate == null || exDate.getValue().equals("") )
-					exDate = AcalProperty.fromString(calendarInstance.getStart().toPropertyString(PropertyName.EXDATE));
-				else {
-					m.removeProperties( new PropertyName[] {PropertyName.EXDATE} );
-					exDate = AcalProperty.fromString(exDate.toRfcString() + "," + calendarInstance.getStart().fmtIcal() );
-				}
-				m.addProperty(exDate);
+				// RFC5545 allows EXDATE to occur multiple times, so we can just add another
+				// one rather than merging into any existing EXDATE value list.
+				m.addProperty( AcalProperty.fromString(calendarInstance.getStart().toPropertyString(PropertyName.EXDATE)) );
 				break;
 
 			case EventEdit.INSTANCES_THIS_FUTURE:

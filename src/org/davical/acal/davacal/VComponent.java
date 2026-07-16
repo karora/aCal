@@ -258,6 +258,23 @@ public abstract class VComponent implements Parcelable {
 	}
 
 	/**
+	 * Returns all properties with the given name.  Needed for properties which RFC5545
+	 * allows to occur multiple times, such as EXDATE, RDATE or ATTENDEE.
+	 * @param pName
+	 * @return a possibly empty list of all properties of that name
+	 */
+	public synchronized List<AcalProperty> getProperties(PropertyName pName) {
+		this.populateProperties();
+		List<AcalProperty> ret = new ArrayList<AcalProperty>();
+		AcalPropertySet pSet = properties.get(pName.toString());
+		if ( pSet != null ) {
+			for( AcalProperty p : pSet ) ret.add(p);
+		}
+		if (this.persistenceCount == 0) destroyProperties();
+		return ret;
+	}
+
+	/**
 	 * This can be useful if you know you don't have two properties of the same name.
 	 * @return
 	 */
@@ -425,7 +442,11 @@ public abstract class VComponent implements Parcelable {
 		for( int i=0; i < content.propertyLines.length; i++ ) {
 			AcalProperty p = AcalProperty.fromString(content.propertyLines[i]);
 			try {
-				properties.put(p.getName(),new AcalPropertySet(p));
+				AcalPropertySet pSet = properties.get(p.getName());
+				if ( pSet == null )
+					properties.put(p.getName(),new AcalPropertySet(p));
+				else
+					pSet.add(p);
 			}
 			catch ( Exception e ) {
 				Log.i(TAG,Log.getStackTraceString(e));

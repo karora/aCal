@@ -28,13 +28,14 @@ public class AcalPropertySet implements Iterable<AcalProperty> {
         return propertyList.size();
     }
 
+    /**
+     * Returns a single property from the set.  Where the property occurs multiple
+     * times the last one is returned; callers needing all of them should iterate
+     * or use VComponent.getProperties(PropertyName).
+     */
     AcalProperty get() {
-        switch ( propertyList.size() ) {
-            case 0: return null;
-            case 1: return propertyList.get(0);
-            default:
-                throw new RuntimeException("Attempt to getProperty('"+propertyName+"') but property is multiple.");
-        }
+        if ( propertyList.isEmpty() ) return null;
+        return propertyList.get(propertyList.size() - 1);
     }
 
     AcalProperty get(int index) {
@@ -46,7 +47,7 @@ public class AcalPropertySet implements Iterable<AcalProperty> {
     }
 
     @Override
-    public Iterator iterator() {
+    public Iterator<AcalProperty> iterator() {
         return propertyList.iterator();
     }
 }
