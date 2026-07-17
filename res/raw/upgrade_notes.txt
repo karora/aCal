@@ -124,3 +124,5 @@ Date-valued EXDATEs now exclude the whole day's instance
 Repeat COUNT now matches other clients when instances are excluded
 Fix corruption of multi-value RDATE properties when saving events
 Fix crash in background sync when a sync was requested while another was already running
+Fix rare loss of the whole calendar list (and per-calendar settings) when refreshing the collection list failed part-way
+Calendar colours are now also stored on the server in Apple-compatible form, so they survive a rebuild and are shared with other clients
