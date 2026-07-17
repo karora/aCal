@@ -67,7 +67,7 @@ public class WorkerClass implements Runnable, IWorkerClass {
 
 	private ScheduledFuture<?>			scheduledWakeup;
 	private final ScheduledExecutorService scheduler		= Executors.newSingleThreadScheduledExecutor();
-	private Thread						worker				= null;
+	private volatile Thread				worker				= null;
 	private PriorityQueue<ServiceJob>	jobQueue			= new PriorityQueue<ServiceJob>();
 	private ConditionVariable			runWorker			= new ConditionVariable(true);
 	private aCalService					context;
@@ -134,7 +134,6 @@ public class WorkerClass implements Runnable, IWorkerClass {
 					Log.println(Constants.LOGD, TAG, "Replaces old " + existing);
 				}
 				jobQueue.remove(existing);
-				jobQueue.add(s);
 			}
 			else {
 				if ( Constants.LOG_DEBUG ) {
@@ -203,7 +202,7 @@ public class WorkerClass implements Runnable, IWorkerClass {
 
 	public void resetWorker() {
 		this.interruptSent = true;
-		worker.interrupt();
+		if ( worker != null ) worker.interrupt();
 		Log.i(TAG, "Resetting worker thread.");
 		this.worker = null;
 		instance.worker = new Thread(instance);
@@ -258,8 +257,12 @@ public class WorkerClass implements Runnable, IWorkerClass {
 
 				// Iterate through remaining jobs. If we run out our condition
 				// variable is closed automatically.
+				// Also stop taking jobs if this thread has been replaced by
+				// resetWorker(): the interrupt does not abort a job in progress,
+				// and two threads draining the queue can run the same job
+				// instance concurrently.
 				ServiceJob job;
-				while ( (job = getJob()) != null ) {
+				while ( worker == Thread.currentThread() && (job = getJob()) != null ) {
 					if (job.getDescription() == null) {
 						Log.w(TAG, "Description of job in class "+job.getClass()+" is returning null.");
 					}
@@ -287,8 +290,13 @@ public class WorkerClass implements Runnable, IWorkerClass {
 			}
 		}
 		finally {
-			this.cancelScheduledWakeup();
-			WorkerClass.isRunning.set(false);
+			// Only clean up if we are still the current worker: a thread that
+			// has been replaced by resetWorker() must not cancel the wakeup its
+			// replacement may just have scheduled.
+			if ( worker == null || worker == Thread.currentThread() ) {
+				this.cancelScheduledWakeup();
+				WorkerClass.isRunning.set(false);
+			}
 		}
 	}
 

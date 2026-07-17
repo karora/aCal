@@ -947,6 +947,13 @@ public class SyncCollectionContents extends ServiceJob {
 	}
 	
 	private void calculateNextSchedulingTime() {
+		// An exception here would propagate out of run() and kill the worker
+		// thread, so never dereference collectionData if something has cleared it.
+		if ( collectionData == null ) {
+			timeToWait = minBetweenSyncs;
+			this.scheduleNextInstance = true;
+			return;
+		}
 		String lastSync = collectionData.getAsString(DavCollections.LAST_SYNCHRONISED);
 		timeToWait = minBetweenSyncs;
 		if ( lastSync != null ) {

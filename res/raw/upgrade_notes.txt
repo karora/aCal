@@ -123,3 +123,4 @@ Fix recurring events ignoring some or all EXDATE exclusions (deleted instances n
 Date-valued EXDATEs now exclude the whole day's instance
 Repeat COUNT now matches other clients when instances are excluded
 Fix corruption of multi-value RDATE properties when saving events
+Fix crash in background sync when a sync was requested while another was already running

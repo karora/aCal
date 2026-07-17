@@ -126,7 +126,10 @@ public class aCalService extends Service {
 			if ( Constants.LOG_DEBUG )
 				Log.i(TAG,"UI Started, requesting internal cache revalidation.");
 
-			worker.resetWorker();
+			// Only reset the worker if it appears to be hung.  Resetting a
+			// healthy worker mid-job leaves the old thread running its current
+			// job while the new thread starts on the queue.
+			if ( System.currentTimeMillis() > worker.getTimeOfNextAction() ) worker.resetWorker();
 
 			ServiceJob job = new SynchronisationJobs(SynchronisationJobs.CACHE_RESYNC);
 			job.TIME_TO_EXECUTE = 5000L;
