@@ -34,6 +34,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import org.davical.acal.Constants;
+import org.davical.acal.HashCodeUtil;
 import org.davical.acal.StaticHelpers;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.davacal.VComponent;
@@ -107,11 +108,20 @@ public class HomeSetsUpdate extends ServiceJob {
 
 		collectionsToDelete = currentCollectionList();
 
+		boolean allHomeSetsProcessed = true;
 		for (String homePath : homeSetPaths) {
-			updateCollectionsWithin(homePath);
+			if ( !updateCollectionsWithin(homePath) ) allHomeSetsProcessed = false;
 		}
 
-		deleteOldCollections(collectionsToDelete);
+		// Anything we did not see on the server is still in collectionsToDelete, so
+		// deleting is only safe if every home set was listed successfully.  A network
+		// failure here must never wipe the local collections (and the user's settings
+		// for them, like colours).
+		if ( allHomeSetsProcessed )
+			deleteOldCollections(collectionsToDelete);
+		else
+			Log.w(TAG, "Not all home sets could be checked for server "+serverId
+						+" - skipping removal of "+collectionsToDelete.size()+" unseen collections.");
 
 		if (Constants.LOG_DEBUG) Log.d(TAG,"DavCollections refresh on server "+this.serverId+" complete.");
 	}
@@ -152,8 +162,10 @@ public class HomeSetsUpdate extends ServiceJob {
 	/**
 	 * Update all of the collections we can find within a homeSet
 	 * @param homeSet
+	 * @return true if the home set was listed successfully, so its absent
+	 *         collections may safely be treated as deleted on the server.
 	 */
-	private void updateCollectionsWithin( String homeSet ) {
+	private boolean updateCollectionsWithin( String homeSet ) {
 
 		if (Constants.LOG_DEBUG) Log.d(TAG,"Updating collections within "+homeSet);
 
@@ -164,8 +176,16 @@ public class HomeSetsUpdate extends ServiceJob {
 				Log.i(TAG, "PROPFIND got 404 on " + homeSet + " so a HomeSetDiscovery is being scheduled.");
 				ServiceJob sj = new HomeSetDiscovery(serverId);
 				context.addWorkerJob(sj);
-				return;
+				return false;
 			}
+			if (root == null) {
+				Log.i(TAG, "No response listing collections within " + homeSet);
+				return false;
+			}
+
+			// The home set itself is not one of the collections within it.
+			requestor.interpretUriString(homeSet);
+			String homeSetUrl = requestor.fullUrl();
 
             // Update NEEDS_SYNC on the home-set URL
             ContentValues cv = new ContentValues();
@@ -185,7 +205,7 @@ public class HomeSetsUpdate extends ServiceJob {
 					if ( collectionPath != null ) {
 						requestor.interpretUriString(collectionPath);
 						collectionPath = requestor.fullUrl();
-						if ( collectionPath.equals(homeSet) ) continue;
+						if ( collectionPath.equals(homeSetUrl) ) continue;
 
 						if ( updateCollectionFromPropstat( collectionPath, propstat ) )
 							collectionsToDelete.remove(collectionPath);
@@ -200,7 +220,9 @@ public class HomeSetsUpdate extends ServiceJob {
 		} catch (Exception ex2) {
 			Log.e(TAG,"Unknown error when updating collections within home sets: "+ex2.getMessage());
 			Log.e(TAG,Log.getStackTraceString(ex2));
+			return false;
 		}
+		return true;
 	}
 
 	/**
@@ -278,6 +300,14 @@ public class HomeSetsUpdate extends ServiceJob {
 		int serverHasSync = 0;
 		int serverHasMultiget = 0;
 		
+		// Principals (including calendar-proxy-read/-write collections) are not data
+		// collections we can sync, even if the server also advertises them as calendars.
+		if ( !propstat.getNodesFromPath("prop/resourcetype/principal").isEmpty()
+					|| !propstat.getNodesFromPath("prop/resourcetype/calendar-proxy-read").isEmpty()
+					|| !propstat.getNodesFromPath("prop/resourcetype/calendar-proxy-write").isEmpty() ) {
+			return false;
+		}
+
 		//is this a calendar or addressbook??
 		List<DavNode> calendar = propstat.getNodesFromPath("prop/resourcetype/calendar");
 		List<DavNode> addressBook = propstat.getNodesFromPath("prop/resourcetype/addressbook");
@@ -486,6 +516,23 @@ public class HomeSetsUpdate extends ServiceJob {
 	}
 
 	
+
+	/**
+	 * One queued instance per server is enough: WorkerClass uses equality to
+	 * avoid queueing duplicate jobs, and without this every collection whose
+	 * sync gets a 404 queues another full refresh of the same server.
+	 */
+	public boolean equals(Object that) {
+		if (this == that) return true;
+		if (!(that instanceof HomeSetsUpdate)) return false;
+		return this.serverId == ((HomeSetsUpdate) that).serverId;
+	}
+
+	public int hashCode() {
+		int result = HashCodeUtil.SEED;
+		result = HashCodeUtil.hash(result, this.serverId);
+		return result;
+	}
 
 	@Override
 	public String getDescription() {
