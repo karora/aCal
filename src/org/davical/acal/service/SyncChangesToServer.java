@@ -415,7 +415,8 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 
 	final static String baseProppatch = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"+
 		"<propertyupdate xmlns=\""+Constants.NS_DAV+"\"\n"+
-		"    xmlns:ACAL=\""+Constants.NS_ACAL+"\">\n"+
+		"    xmlns:ACAL=\""+Constants.NS_ACAL+"\"\n"+
+		"    xmlns:ICAL=\""+Constants.NS_ICAL+"\">\n"+
 		"<set>\n"+
 		"  <prop>\n"+
 		"%s\n"+
@@ -427,7 +428,20 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 	private void updateCollectionProperties( ContentValues collectionData ) {
 	    StringBuilder settings = new StringBuilder();
 	    settings.append("<displayname><![CDATA["+collectionData.getAsString(DavCollections.DISPLAYNAME)+"]]></displayname>");
-        settings.append("<ACAL:collection-colour>"+collectionData.getAsString(DavCollections.COLOUR)+"</ACAL:collection-colour>");
+	    String colour = collectionData.getAsString(DavCollections.COLOUR);
+	    if ( colour != null ) {
+	        try {
+	            String rgb = String.format("#%06X", android.graphics.Color.parseColor(colour) & 0xFFFFFF);
+	            settings.append("<ACAL:collection-colour>"+rgb+"</ACAL:collection-colour>");
+	            // Dead property in the format Apple clients use (#RRGGBBAA), so the
+	            // colour is shared with other CalDAV clients and survives any local
+	            // rebuild of the collection list.
+	            settings.append("<ICAL:calendar-color>"+rgb+"FF</ICAL:calendar-color>");
+	        }
+	        catch ( IllegalArgumentException e ) {
+	            Log.w(TAG,"Not sending unparseable collection colour '"+colour+"' to server.");
+	        }
+	    }
 		String proppatchRequest = String.format(baseProppatch, settings.toString() );
 
 		try {

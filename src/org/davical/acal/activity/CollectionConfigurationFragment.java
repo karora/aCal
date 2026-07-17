@@ -225,7 +225,8 @@ public class CollectionConfigurationFragment extends PreferenceFragmentCompat
 	}
 
 	private boolean validateColor(Object v) {
-		data().put(DavCollections.COLOUR, String.format("#%06x", (Integer) v));
+		// Mask off any alpha bits: with them "#%06x" would produce 8 hex digits.
+		data().put(DavCollections.COLOUR, String.format("#%06X", ((Integer) v) & 0xFFFFFF));
 		data().put(DavCollections.SYNC_METADATA, 1);
 		return true;
 	}
