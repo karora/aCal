@@ -115,6 +115,8 @@ public class EventEdit extends AcalActivity implements  OnClickListener, OnCheck
 	private static final int LOADING_EVENT_DIALOG = 8;
 	private static final int SAVING_DIALOG = 9;
 
+	private static final int REPEAT_RULE_REQUEST = 1;
+
 	boolean prefer24hourFormat = false;
 
 	private String[] repeatRules;
@@ -578,7 +580,8 @@ public class EventEdit extends AcalActivity implements  OnClickListener, OnCheck
 						start.getMonthDay()+AcalDateTime.getSuffix(start.getMonthDay())),
 						String.format(this.getString(R.string.EveryMonthOnTheNthSomeday),
 								weekNum+AcalDateTime.getSuffix(weekNum)+" "+dowLongString),
-								getString(R.string.EveryYear)
+								getString(R.string.EveryYear),
+				getString(R.string.RepeatCustom)
 		};
 		this.repeatRulesValues = new String[] {
 				"FREQ=DAILY",
@@ -879,6 +882,13 @@ public class EventEdit extends AcalActivity implements  OnClickListener, OnCheck
 			builder.setTitle(getString(R.string.ChooseRepeatFrequency));
 			builder.setItems(this.repeatRules, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int item) {
+					if ( item == repeatRules.length - 1 ) {
+						Intent intent = new Intent(EventEdit.this, RepeatRuleEdit.class);
+						intent.putExtra(RepeatRuleEdit.EXTRA_RRULE, event.getRRule());
+						intent.putExtra(RepeatRuleEdit.EXTRA_DTSTART, event.getStart().fmtIcal());
+						startActivityForResult(intent, REPEAT_RULE_REQUEST);
+						return;
+					}
 					String newRule = "";
 					if ( item != 0 ) {
 						item--;
@@ -895,6 +905,20 @@ public class EventEdit extends AcalActivity implements  OnClickListener, OnCheck
 			return builder.create();
 		}
 		return null;
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if ( requestCode == REPEAT_RULE_REQUEST && resultCode == RESULT_OK && data != null ) {
+			String newRule = data.getStringExtra(RepeatRuleEdit.EXTRA_RRULE);
+			if ( newRule == null ) return;
+			if ( action == ACTION_EDIT && !newRule.equals(event.getRRule()) ) {
+				instances = INSTANCES_ALL;
+			}
+			event.setRepeatRule(newRule);
+			updateLayout();
+		}
 	}
 
 	protected void customAlarmDialog() {

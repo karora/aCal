@@ -200,7 +200,18 @@ public abstract class AcalRepeatRuleParser {
 	}
 
 	public AcalDateTime getUntil() {
-		return until.clone();
+		return ( until == null ? null : until.clone() );
+	}
+
+	public RRuleFreqType getFrequency() {
+		return frequency;
+	}
+
+	/**
+	 * @return the COUNT= value of the rule, or -1 if the rule has no COUNT.
+	 */
+	public int getCount() {
+		return ( count == INFINITE_REPEAT_COUNT ? -1 : count + 1 );
 	}
 
 	public void setUntil( AcalDateTime newUntil ) {

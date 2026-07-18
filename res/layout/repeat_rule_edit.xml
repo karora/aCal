@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:fitsSystemWindows="true"
+	android:orientation="vertical" >
+
+	<include layout="@layout/include_toolbar" />
+
+	<ScrollView
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1" >
+
+		<LinearLayout
+			android:id="@+id/RepeatRuleForm"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical"
+			android:padding="12dp" >
+
+			<LinearLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center_vertical"
+				android:orientation="horizontal" >
+
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/RepeatEvery" />
+
+				<EditText
+					android:id="@+id/RepeatInterval"
+					android:layout_width="56dp"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="8dp"
+					android:layout_marginRight="8dp"
+					android:gravity="center"
+					android:inputType="number"
+					android:text="1" />
+
+				<Spinner
+					android:id="@+id/RepeatFreqSpinner"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content" />
+			</LinearLayout>
+
+			<LinearLayout
+				android:id="@+id/WeeklySection"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="12dp"
+				android:orientation="vertical" >
+
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/RepeatOnDays" />
+
+				<LinearLayout
+					android:id="@+id/WeekdayToggles"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:orientation="horizontal" />
+			</LinearLayout>
+
+			<LinearLayout
+				android:id="@+id/YearlySection"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="12dp"
+				android:orientation="vertical" >
+
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/RepeatInMonths" />
+
+				<GridLayout
+					android:id="@+id/MonthToggles"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:columnCount="6" />
+			</LinearLayout>
+
+			<LinearLayout
+				android:id="@+id/MonthlySection"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="12dp"
+				android:orientation="vertical" >
+
+				<RadioButton
+					android:id="@+id/MonthlyOnStartDay"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content" />
+
+				<RadioButton
+					android:id="@+id/MonthlyOnDays"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/MonthlyOnDays" />
+
+				<EditText
+					android:id="@+id/MonthDaysText"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="32dp"
+					android:hint="@string/MonthlyOnDaysHint"
+					android:inputType="text"
+					android:visibility="gone" />
+
+				<RadioButton
+					android:id="@+id/MonthlyOnThe"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/MonthlyOnThe" />
+
+				<LinearLayout
+					android:id="@+id/BydayRows"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="32dp"
+					android:orientation="vertical"
+					android:visibility="gone" />
+
+				<Button
+					android:id="@+id/AddBydayRow"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="32dp"
+					android:text="@string/Add"
+					android:visibility="gone" />
+			</LinearLayout>
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="12dp"
+				android:text="@string/RepeatEnds"
+				android:textStyle="bold" />
+
+			<RadioButton
+				android:id="@+id/EndsNever"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/EndsNever" />
+
+			<LinearLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center_vertical"
+				android:orientation="horizontal" >
+
+				<RadioButton
+					android:id="@+id/EndsOnDate"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/EndsOnDate" />
+
+				<Button
+					android:id="@+id/EndsDateButton"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="8dp" />
+			</LinearLayout>
+
+			<LinearLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center_vertical"
+				android:orientation="horizontal" >
+
+				<RadioButton
+					android:id="@+id/EndsAfter"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/EndsAfter" />
+
+				<EditText
+					android:id="@+id/EndsCount"
+					android:layout_width="56dp"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="8dp"
+					android:layout_marginRight="8dp"
+					android:gravity="center"
+					android:inputType="number"
+					android:text="10" />
+
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/EndsOccurrences" />
+			</LinearLayout>
+
+			<CheckBox
+				android:id="@+id/RawRuleCheckbox"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="12dp"
+				android:text="@string/EditAsRawRrule" />
+
+			<TextView
+				android:id="@+id/AdvancedNotice"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="@string/AdvancedRuleNotice"
+				android:textStyle="italic"
+				android:visibility="gone" />
+
+			<EditText
+				android:id="@+id/RawRuleText"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="textNoSuggestions"
+				android:typeface="monospace"
+				android:visibility="gone" />
+
+			<TextView
+				android:id="@+id/RuleSummary"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="16dp"
+				android:textStyle="bold" />
+
+			<TextView
+				android:id="@+id/PreviewText"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="4dp" />
+		</LinearLayout>
+	</ScrollView>
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal" >
+
+		<Button
+			android:id="@+id/RepeatRuleSetButton"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="@string/Set" />
+
+		<Button
+			android:id="@+id/RepeatRuleCancelButton"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="@string/cancel" />
+	</LinearLayout>
+</LinearLayout>

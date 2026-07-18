@@ -113,6 +113,8 @@ public class TodoEdit extends AcalActivity
 	private static final int COMPLETED_DIALOG = 12;
 	private static final int ADD_ALARM_DIALOG = 20;
 	private static final int SET_REPEAT_RULE_DIALOG = 21;
+
+	private static final int REPEAT_RULE_REQUEST = 1;
 	private static final int INSTANCES_TO_CHANGE_DIALOG = 30;
 	private static final int LOADING_DIALOG = 0xfeed;
 	private static final int SAVING_DIALOG = 0xbeef;
@@ -661,7 +663,8 @@ public class TodoEdit extends AcalActivity
 								relativeTo.getMonthDay()+AcalDateTime.getSuffix(relativeTo.getMonthDay())),
 						String.format(this.getString(R.string.EveryMonthOnTheNthSomeday),
 									weekNum+AcalDateTime.getSuffix(weekNum)+" "+dowLongString),
-						getString(R.string.EveryYear)
+						getString(R.string.EveryYear),
+						getString(R.string.RepeatCustom)
 			};
 			this.repeatRulesValues = new String[] {
 					"FREQ=DAILY;COUNT=400",
@@ -920,6 +923,15 @@ public class TodoEdit extends AcalActivity
 				builder.setTitle( getString( R.string.ChooseRepeatFrequency ) );
 				builder.setItems( this.repeatRules, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int item) {
+						if ( item == repeatRules.length - 1 ) {
+							AcalDateTime relativeTo = (todo.getStart() == null ? todo.getDue() : todo.getStart());
+							if ( relativeTo == null ) relativeTo = new AcalDateTime();
+							Intent intent = new Intent(TodoEdit.this, RepeatRuleEdit.class);
+							intent.putExtra(RepeatRuleEdit.EXTRA_RRULE, todo.getRRule());
+							intent.putExtra(RepeatRuleEdit.EXTRA_DTSTART, relativeTo.fmtIcal());
+							startActivityForResult(intent, REPEAT_RULE_REQUEST);
+							return;
+						}
 						String newRule = "";
 						if ( item != 0 ) {
 							item--;
@@ -942,6 +954,25 @@ public class TodoEdit extends AcalActivity
 				return builder.create();
 			default:
 				return null;
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if ( requestCode == REPEAT_RULE_REQUEST && resultCode == RESULT_OK && data != null ) {
+			String newRule = data.getStringExtra(RepeatRuleEdit.EXTRA_RRULE);
+			if ( newRule == null ) return;
+			if ( isModifyAction() ) {
+				if ( originalHasOccurrence && !newRule.equals(originalOccurence) ) {
+					action = ACTION_MODIFY_ALL;
+				}
+				else if ( originalHasOccurrence ) {
+					action = ACTION_MODIFY_SINGLE;
+				}
+			}
+			todo.setRepetition(newRule);
+			updateLayout();
 		}
 	}
 

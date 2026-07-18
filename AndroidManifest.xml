@@ -182,6 +182,11 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="org.davical.acal.activity.RepeatRuleEdit"
+            android:exported="false"
+            android:launchMode="standard" >
+        </activity>
+        <activity
             android:name="org.davical.acal.activity.EventView"
             android:exported="false"
             android:launchMode="standard">
