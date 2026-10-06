@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "description": "AGP and the Gradle wrapper have to stay compatible, so update them in one PR",
+      "groupName": "Gradle and Android Gradle Plugin",
+      "matchPackageNames": ["gradle", "com.android.tools.build:gradle"]
+    },
+    {
+      "description": "Major build toolchain updates wait for approval on the Dependency Dashboard",
+      "matchPackageNames": ["gradle", "com.android.tools.build:gradle", "eclipse-temurin"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}
