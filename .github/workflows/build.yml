@@ -1,0 +1,28 @@
+name: Build
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  assemble-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      # Keep the JDK in step with the Dockerfile used for local builds
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - run: ./gradlew assembleDebug
