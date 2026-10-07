@@ -153,9 +153,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                .setOngoing(false)
                .addAction(R.drawable.icon, "Snooze", snoozePI)
                .addAction(R.drawable.icon, "Dismiss", dismissPI);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder.setCategory(Notification.CATEGORY_EVENT);
-        }
+        builder.setCategory(Notification.CATEGORY_EVENT);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             builder.setPriority(Notification.PRIORITY_HIGH);
         }
