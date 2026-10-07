@@ -149,7 +149,7 @@ public class CredentialManager {
     }
 
     private void initializeKey() {
-        // Use Android Keystore (available since API 18, minSdk is 23)
+        // Use Android Keystore (available since API 18, minSdk is 24)
         initializeKeystore();
     }
 
