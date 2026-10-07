@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-noble
+FROM eclipse-temurin:25-jdk-noble
 
 ENV ANDROID_HOME=/opt/android-sdk \
     ANDROID_SDK_ROOT=/opt/android-sdk \
@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         wget unzip ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-ARG CMDLINE_TOOLS_VERSION=11076708
+ARG CMDLINE_TOOLS_VERSION=16111833
 RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
     && wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip" -O /tmp/cmdtools.zip \
     && unzip -q /tmp/cmdtools.zip -d ${ANDROID_HOME}/cmdline-tools \
@@ -19,8 +19,8 @@ ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platfo
 
 RUN yes | sdkmanager --licenses > /dev/null \
     && sdkmanager --install \
-        "platforms;android-36" \
-        "build-tools;36.0.0" \
+        "platforms;android-37.0" \
+        "build-tools;37.0.0" \
         "platform-tools" > /dev/null \
     && chmod -R a+rX ${ANDROID_HOME}
 

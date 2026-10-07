@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.2'
+        classpath 'com.android.tools.build:gradle:9.4.1'
     }
 }
 
@@ -25,8 +25,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = 'org.davical.acal'
-    compileSdk 36
-    buildToolsVersion '36.0.0'
+    compileSdk 37
+    buildToolsVersion '37.0.0'
 
     useLibrary 'org.apache.http.legacy'
 
@@ -58,7 +58,7 @@ android {
     buildTypes {
         release {
             if (keystorePropertiesFile.exists()) {
-                signingConfig signingConfigs.release
+                signingConfig = signingConfigs.release
             }
         }
     }
