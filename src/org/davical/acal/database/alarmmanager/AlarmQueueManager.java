@@ -8,7 +8,6 @@ import java.util.concurrent.Semaphore;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.os.Build;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -598,13 +597,7 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 			// replace/cancel this registration, instead of re-firing instantly.
 			long soonest = System.currentTimeMillis() + 5000;
 			if (triggerAtMs < soonest) triggerAtMs = soonest;
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi);
-			} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-				alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMs, pi);
-			} else {
-				alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMs, pi);
-			}
+			alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi);
 		}
 
 		public void logAlarmQueue() {
