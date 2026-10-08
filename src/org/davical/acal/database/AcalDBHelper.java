@@ -81,6 +81,10 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	/** Every plain SQLite database starts with these 16 bytes; an encrypted one never does. */
 	private static final byte[] SQLITE_HEADER = "SQLite format 3\0".getBytes(StandardCharsets.US_ASCII);
 
+	/** For opening a database that is to be copied into another file: see exportTo(). */
+	private static final int EXPORT_OPEN_FLAGS = SQLiteDatabase.OPEN_READWRITE
+			| SQLiteDatabase.CREATE_IF_NECESSARY | SQLiteDatabase.NO_LOCALIZED_COLLATORS;
+
 	/** The database file itself, and the files SQLite may keep beside it. */
 	private static final String[] DATABASE_FILE_SUFFIXES = { "", "-journal", "-wal", "-shm" };
 
@@ -608,15 +612,9 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 		prepare(context);
 		File target = plainCopyFile(context);
 		deleteDatabaseFiles(target);
-		SQLiteDatabase db = open(context.getDatabasePath(DB_NAME+".db").toString(),
-				SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+		SQLiteDatabase db = open(context.getDatabasePath(DB_NAME+".db").toString(), EXPORT_OPEN_FLAGS);
 		try {
-			int version = db.getVersion();
-			db.rawExecSQL("ATTACH DATABASE ? AS plaintext KEY ''", target.getPath());
-			db.rawExecSQL("SELECT sqlcipher_export('plaintext')");
-			// The export does not carry the schema version across.
-			db.rawExecSQL("PRAGMA plaintext.user_version = " + version);
-			db.rawExecSQL("DETACH DATABASE plaintext");
+			exportTo(db, target, "", db.getVersion());
 		}
 		finally {
 			db.close();
@@ -879,18 +877,12 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 		Log.i(TAG,"Encrypting the existing database (" + dbFile.length() + " bytes)");
 
 		int version;
-		long schemaObjects;
-		SQLiteDatabase plain = SQLiteDatabase.openDatabase(dbFile.getPath(), null,
-				SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+		String contents;
+		SQLiteDatabase plain = SQLiteDatabase.openDatabase(dbFile.getPath(), null, EXPORT_OPEN_FLAGS);
 		try {
 			version = plain.getVersion();
-			schemaObjects = countSchemaObjects(plain);
-			plain.rawExecSQL("ATTACH DATABASE ? AS encrypted KEY ?",
-					encrypting.getPath(), new String(key, StandardCharsets.US_ASCII));
-			plain.rawExecSQL("SELECT sqlcipher_export('encrypted')");
-			// The export does not carry the schema version across.
-			plain.rawExecSQL("PRAGMA encrypted.user_version = " + version);
-			plain.rawExecSQL("DETACH DATABASE encrypted");
+			contents = describeContents(plain);
+			exportTo(plain, encrypting, new String(key, StandardCharsets.US_ASCII), version);
 		}
 		finally {
 			plain.close();
@@ -900,7 +892,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 		SQLiteDatabase copy = SQLiteDatabase.openDatabase(encrypting.getPath(), key, null,
 				SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS, null);
 		try {
-			if ( copy.getVersion() != version || countSchemaObjects(copy) != schemaObjects )
+			if ( copy.getVersion() != version || !describeContents(copy).equals(contents) )
 				throw new SQLiteException("The encrypted copy does not match the original");
 		}
 		finally {
@@ -916,15 +908,64 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 		Log.i(TAG,"Database encrypted in " + (System.currentTimeMillis() - started) + "ms");
 	}
 
-	private static long countSchemaObjects( SQLiteDatabase db ) {
-		Cursor c = db.rawQuery("SELECT count(*) FROM sqlite_master", (String[]) null);
+	/**
+	 * Copy everything in an open database into another file, which is created.
+	 *
+	 * Two things here were learned the hard way.  The database being copied has
+	 * to have been opened with CREATE_IF_NECESSARY, because SQLite creates an
+	 * attached file only if the connection it is attached to was opened that
+	 * way.  And SQLiteDatabase.rawExecSQL() must not be used: it silently
+	 * ignores a statement that fails when it is run.
+	 *
+	 * @param key The key for the new file, in the form SQLCipher expects, or an
+	 * empty string to write plain SQLite.
+	 */
+	private static void exportTo( SQLiteDatabase db, File target, String key, int version ) {
+		db.execSQL("ATTACH DATABASE ? AS export KEY ?", new Object[] { target.getPath(), key });
 		try {
-			c.moveToFirst();
-			return c.getLong(0);
+			Cursor c = db.rawQuery("SELECT sqlcipher_export('export')", (String[]) null);
+			try {
+				c.moveToFirst();
+			}
+			finally {
+				c.close();
+			}
+			// The export does not carry the schema version across.
+			db.execSQL("PRAGMA export.user_version = " + version);
+		}
+		finally {
+			db.execSQL("DETACH DATABASE export");
+		}
+	}
+
+	/**
+	 * @return The number of things in the schema and of rows in each table, to
+	 * tell whether a copy of a database has everything the original had.
+	 */
+	private static String describeContents( SQLiteDatabase db ) {
+		ArrayList<String> tables = new ArrayList<String>();
+		StringBuilder contents = new StringBuilder();
+		Cursor c = db.rawQuery("SELECT type, name FROM sqlite_master ORDER BY type, name", (String[]) null);
+		try {
+			contents.append(c.getCount()).append(" objects");
+			while( c.moveToNext() ) {
+				if ( "table".equals(c.getString(0)) ) tables.add(c.getString(1));
+			}
 		}
 		finally {
 			c.close();
 		}
+		for( String table : tables ) {
+			c = db.rawQuery("SELECT count(*) FROM \"" + table.replace("\"", "\"\"") + "\"", (String[]) null);
+			try {
+				c.moveToFirst();
+				contents.append(", ").append(table).append('=').append(c.getLong(0));
+			}
+			finally {
+				c.close();
+			}
+		}
+		return contents.toString();
 	}
 
 	/**
