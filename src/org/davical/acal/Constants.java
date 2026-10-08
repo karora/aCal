@@ -48,6 +48,12 @@ public class Constants {
     public static final String ACTIVE_NOTIFICATION_CHANNEL_ID    = "acal_alarms_active";
 
     /**
+     * Notification channel for things the app has to tell the user about itself
+     */
+    public static final String STATUS_NOTIFICATION_CHANNEL_ID = "acal_status";
+    public static final int DATABASE_RESET_NOTIFICATION_ID = 600_000;
+
+    /**
      * Notification channel and intent extras for certificate pinning
      */
     public static final String CERT_PIN_NOTIFICATION_CHANNEL_ID = "acal_cert_pin";

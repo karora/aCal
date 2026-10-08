@@ -11,12 +11,10 @@
 <data-extraction-rules>
 	<cloud-backup>
 		<exclude domain="database" path="." />
-		<exclude domain="sharedpref" path="acal_db_key.xml" />
 		<exclude domain="sharedpref" path="acal_security.xml" />
 	</cloud-backup>
 	<device-transfer>
 		<exclude domain="database" path="." />
-		<exclude domain="sharedpref" path="acal_db_key.xml" />
 		<exclude domain="sharedpref" path="acal_security.xml" />
 	</device-transfer>
 </data-extraction-rules>

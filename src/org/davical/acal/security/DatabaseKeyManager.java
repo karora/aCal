@@ -18,6 +18,10 @@
 
 package org.davical.acal.security;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -31,7 +35,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
@@ -45,15 +48,18 @@ import android.util.Base64;
  * SQLCipher's raw key form so that SQLCipher does not run its passphrase key
  * derivation on every open.
  *
- * The preferences file that holds the wrapped key is excluded from backups (see
- * res/xml/backup_rules.xml), since it is useless without the Keystore key.
+ * The wrapped key is kept in a file in the no-backup directory, since it is
+ * useless without the Keystore key.  It is a file rather than a preference
+ * because aCal runs in more than one process, and each process has to see what
+ * another has just written.
+ *
+ * The methods here are only safe against other threads.  Creating or discarding
+ * the key must also be guarded against other processes, which AcalDBHelper does
+ * with a file lock.
  */
 public final class DatabaseKeyManager {
 
-	/** Name of the preferences file holding the wrapped key.  Excluded from backups. */
-	public static final String PREFS_NAME = "acal_db_key";
-
-	private static final String PREF_WRAPPED_KEY = "wrapped_key";
+	private static final String KEY_FILE_NAME = "acal_db_key";
 	private static final String KEYSTORE_PROVIDER = "AndroidKeyStore";
 	private static final String KEYSTORE_ALIAS = "AcalDatabaseKey";
 	private static final String WRAP_TRANSFORMATION = "AES/GCM/NoPadding";
@@ -77,13 +83,6 @@ public final class DatabaseKeyManager {
 	}
 
 	/**
-	 * @return true if a wrapped database key has been stored.
-	 */
-	public static synchronized boolean hasKey(Context context) {
-		return cachedKey != null || prefs(context).contains(PREF_WRAPPED_KEY);
-	}
-
-	/**
 	 * Fetch the key for an existing encrypted database.
 	 *
 	 * @return The key in SQLCipher raw key form, or null if none has been stored.
@@ -94,7 +93,7 @@ public final class DatabaseKeyManager {
 	public static synchronized byte[] getExistingKey(Context context) throws GeneralSecurityException {
 		if ( cachedKey != null ) return cachedKey.clone();
 
-		String stored = prefs(context).getString(PREF_WRAPPED_KEY, null);
+		String stored = readKeyFile(context);
 		if ( stored == null ) return null;
 
 		cachedKey = toSqlCipherKey(unwrap(stored));
@@ -113,11 +112,7 @@ public final class DatabaseKeyManager {
 		byte[] raw = new byte[KEY_BYTES];
 		new SecureRandom().nextBytes(raw);
 		try {
-			String wrapped = wrap(raw);
-			// commit() rather than apply(): the key must be on disk before any
-			// database is encrypted with it.
-			if ( !prefs(context).edit().putString(PREF_WRAPPED_KEY, wrapped).commit() )
-				throw new GeneralSecurityException("Could not store the wrapped database key");
+			writeKeyFile(context, wrap(raw));
 			cachedKey = toSqlCipherKey(raw);
 		}
 		finally {
@@ -132,7 +127,7 @@ public final class DatabaseKeyManager {
 	 */
 	public static synchronized void discardKey(Context context) {
 		cachedKey = null;
-		prefs(context).edit().remove(PREF_WRAPPED_KEY).commit();
+		keyFile(context).delete();
 		try {
 			KeyStore keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER);
 			keyStore.load(null);
@@ -143,8 +138,48 @@ public final class DatabaseKeyManager {
 		}
 	}
 
-	private static SharedPreferences prefs(Context context) {
-		return context.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+	private static File keyFile(Context context) {
+		return new File(context.getApplicationContext().getNoBackupFilesDir(), KEY_FILE_NAME);
+	}
+
+	private static String readKeyFile(Context context) throws GeneralSecurityException {
+		File file = keyFile(context);
+		if ( !file.exists() ) return null;
+
+		byte[] content = new byte[(int) file.length()];
+		try ( FileInputStream in = new FileInputStream(file) ) {
+			int count = 0;
+			while( count < content.length ) {
+				int n = in.read(content, count, content.length - count);
+				if ( n < 0 ) break;
+				count += n;
+			}
+			return new String(content, 0, count, StandardCharsets.US_ASCII);
+		}
+		catch ( IOException e ) {
+			throw new GeneralSecurityException("Could not read the wrapped database key", e);
+		}
+	}
+
+	/**
+	 * The key has to be safely on disk before any database is encrypted with
+	 * it, so it is written alongside, synced, and then renamed into place.
+	 */
+	private static void writeKeyFile(Context context, String wrapped) throws GeneralSecurityException {
+		File file = keyFile(context);
+		File writing = new File(file.getPath() + ".new");
+		try ( FileOutputStream out = new FileOutputStream(writing) ) {
+			out.write(wrapped.getBytes(StandardCharsets.US_ASCII));
+			out.getFD().sync();
+		}
+		catch ( IOException e ) {
+			writing.delete();
+			throw new GeneralSecurityException("Could not store the wrapped database key", e);
+		}
+		if ( !writing.renameTo(file) ) {
+			writing.delete();
+			throw new GeneralSecurityException("Could not store the wrapped database key");
+		}
 	}
 
 	private static SecretKey wrappingKey(boolean createIfMissing) throws GeneralSecurityException {
@@ -152,7 +187,7 @@ public final class DatabaseKeyManager {
 		try {
 			keyStore.load(null);
 		}
-		catch ( java.io.IOException e ) {
+		catch ( IOException e ) {
 			throw new GeneralSecurityException("Could not load the Android Keystore", e);
 		}
 
