@@ -40,8 +40,8 @@ android {
         targetSdkVersion 36
 
 	// Remember to also update res/raw/upgrade_notes.txt
-        versionCode 68
-        versionName "1.68"
+        versionCode 69
+        versionName "1.69"
     }
 
     signingConfigs {

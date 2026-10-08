@@ -32,6 +32,8 @@ The following permissions are not required by aCal for normal operation, but som
 
 Your server login credentials (usernames and passwords) and account configurations are stored locally in a private, app-specific database on your Android device. They are not stored using the global Android Account Manager, and they are never transmitted anywhere except directly to your configured CalDAV server to authenticate your sessions.
 
+That database, which also holds the local copy of your calendars, tasks, notes and contacts, is encrypted on the device. Its encryption key is protected by the Android Keystore and never leaves the device. The database and its key are excluded from Android cloud backups and device-to-device transfers.
+
 ### 4. Third-Party Services and Analytics
 
 I wrote all the code for aCal. The app **does not** contain any third-party tracking, advertising, or analytics SDKs (such as Google Analytics, AdMob, or Facebook SDK).
