@@ -21,10 +21,11 @@ package org.davical.acal.database;
 import java.io.File;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
+import net.zetetic.database.sqlcipher.SQLiteOpenHelper;
 
 import org.davical.acal.Constants;
 import org.davical.acal.providers.Servers;
@@ -43,6 +44,12 @@ import org.davical.acal.security.CredentialManager;
 public class AcalDBHelper extends SQLiteOpenHelper {
 
 	public static final String TAG = "AcalDBHelper";
+
+	// Loaded here rather than in AcalApplication because the content providers
+	// open the database before Application.onCreate() runs.
+	static {
+		System.loadLibrary("sqlcipher");
+	}
 
 	/**
 	 * The name of the database, which will be stored in:
@@ -303,7 +310,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	 * Called when database is first instantiated. Creates default schema.
 	 * </p>
 	 *
-	 * @see android.database.sqlite.SQLiteOpenHelper#onCreate(android.database.sqlite.SQLiteDatabase)
+	 * @see SQLiteOpenHelper#onCreate(SQLiteDatabase)
 	 * @author Morphoss Ltd
 	 */
 	@Override
@@ -321,7 +328,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	 * and rebuilding our local cache.
 	 * </p>
 	 *
-	 * @see android.database.sqlite.SQLiteOpenHelper#onUpgrade(android.database.sqlite.SQLiteDatabase, int, int)
+	 * @see SQLiteOpenHelper#onUpgrade(SQLiteDatabase, int, int)
 	 * @author Morphoss Ltd
 	 */
 	@Override

@@ -6,11 +6,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteMisuseException;
 import android.os.Process;
 import android.util.Log;
+
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import org.davical.acal.Constants;
 
