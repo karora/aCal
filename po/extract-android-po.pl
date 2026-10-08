@@ -16,7 +16,7 @@ use Getopt::Long qw(:config permute);  # allow mixed args.
 
 
 # Stuff that should not be hard-coded, but is :-)
-my $resources_dir = "../res";
+my $resources_dir = "../src/main/res";
 my @extract_filenames = ( "strings", "timezonenames" );
 my $build_filename = "strings";
 my $messages_filename = "messages.pot";
