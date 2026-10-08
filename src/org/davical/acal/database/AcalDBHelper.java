@@ -593,6 +593,29 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 
 
 	/**
+	 * Write a copy of the database, as plain unencrypted SQLite, to a file.  The
+	 * caller is responsible for deleting it.
+	 */
+	public static void exportPlainCopy( Context context, File target ) {
+		prepare(context);
+		deleteDatabaseFiles(target);
+		SQLiteDatabase db = open(context.getDatabasePath(DB_NAME+".db").toString(),
+				SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+		try {
+			int version = db.getVersion();
+			db.rawExecSQL("ATTACH DATABASE ? AS plaintext KEY ''", target.getPath());
+			db.rawExecSQL("SELECT sqlcipher_export('plaintext')");
+			// The export does not carry the schema version across.
+			db.rawExecSQL("PRAGMA plaintext.user_version = " + version);
+			db.rawExecSQL("DETACH DATABASE plaintext");
+		}
+		finally {
+			db.close();
+		}
+	}
+
+
+	/**
 	 * @return true once the database is ready to be opened without waiting,
 	 * which on the first run after an upgrade means it has been encrypted.
 	 */

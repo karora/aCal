@@ -20,10 +20,15 @@ package org.davical.acal.service;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.davical.acal.Constants;
 import org.davical.acal.database.AcalDBHelper;
@@ -36,11 +41,23 @@ public class DebugDatabase extends ServiceJob {
 	public static final int SAVE = 1;
 
 	private int jobtype;
+	private Uri saveTarget;
 	private aCalService context;
 
 	public DebugDatabase(int jobtype) {
 		this.jobtype = jobtype;
 		this.TIME_TO_EXECUTE = System.currentTimeMillis();
+	}
+
+	/**
+	 * Save an unencrypted copy of the database.
+	 *
+	 * @param saveTarget Where to write it, as chosen by the user with the
+	 * system file picker.
+	 */
+	public DebugDatabase(Uri saveTarget) {
+		this(SAVE);
+		this.saveTarget = saveTarget;
 	}
 
 	@Override
@@ -71,31 +88,47 @@ public class DebugDatabase extends ServiceJob {
 	}
 
 	private void saveDatabase() {
-		Log.println(Constants.LOGI,TAG, "Database copy requested. Beginning file xfer to "+Constants.COPY_DB_TARGET);
-		File inputFile = new File("/data/data/org.davical.acal/databases/acal.db");
-		File outputFile = new File(Constants.COPY_DB_TARGET);
-
+		Log.println(Constants.LOGI,TAG, "Database copy requested. Beginning file xfer to "+saveTarget);
+		// The database is exported to a plain SQLite file of our own first, as
+		// SQLite needs a real file to write to, and that is then copied to
+		// wherever the user asked for it.
+		File plainCopy = new File(context.getCacheDir(), "acal-export.db");
+		String outcome;
 		try {
-			FileInputStream fileInputStream = new FileInputStream(inputFile);
-			FileChannel inChannel = fileInputStream.getChannel();
-			FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-			FileChannel outChannel = fileOutputStream.getChannel();
-			inChannel.transferTo(0, inChannel.size(), outChannel);
-			inChannel.close();
-			fileInputStream.close();
-			outChannel.close();
-			fileOutputStream.close();
+			AcalDBHelper.exportPlainCopy(context, plainCopy);
+			try ( InputStream in = new FileInputStream(plainCopy);
+					OutputStream out = context.getContentResolver().openOutputStream(saveTarget) ) {
+				if ( out == null ) throw new IOException("Could not open "+saveTarget);
+				byte[] buffer = new byte[65536];
+				int count;
+				while ( (count = in.read(buffer)) > 0 ) out.write(buffer, 0, count);
+			}
+			outcome = "Unencrypted copy of the database saved.";
+			Log.println(Constants.LOGI,TAG, "Database copy completed.");
 		} catch (Exception e) {
-			Log.e(TAG,"Error copying '"+inputFile.getAbsolutePath()+"' to '"+outputFile.getAbsolutePath()+"'");
+			Log.e(TAG,"Error saving a copy of the database to '"+saveTarget+"'", e);
+			outcome = "Saving the database failed: "+e.getMessage();
 		}
-		Log.println(Constants.LOGI,TAG, "Database copy completed.");
+		finally {
+			for ( String suffix : new String[] { "", "-journal", "-wal", "-shm" } ) {
+				new File(plainCopy.getPath() + suffix).delete();
+			}
+		}
+
+		final String message = outcome;
+		new Handler(Looper.getMainLooper()).post(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+			}
+		});
 	}
 
 	@Override
 	public String getDescription() {
 		switch( jobtype ) {
 			case SAVE:
-				return "Saving database to file "+ Constants.COPY_DB_TARGET;
+				return "Saving an unencrypted copy of the database to "+ saveTarget;
 			case REVERT:
 				return "Reverting to empty database.";
 		}

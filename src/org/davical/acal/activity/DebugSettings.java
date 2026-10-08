@@ -18,6 +18,8 @@
 
 package org.davical.acal.activity;
 
+import android.content.DialogInterface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
@@ -28,6 +30,10 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.davical.acal.R;
@@ -35,6 +41,7 @@ import org.davical.acal.ServiceManager;
 import org.davical.acal.database.alarmmanager.AlarmQueueManager;
 import org.davical.acal.database.cachemanager.CacheManager;
 import org.davical.acal.database.cachemanager.requests.CRClearCacheRequest;
+import org.davical.acal.service.DebugDatabase;
 import org.davical.acal.service.SyncChangesToServer;
 import org.davical.acal.service.WorkerClass;
 
@@ -56,6 +63,15 @@ public static final String TAG = "aCal Settings";
 	};
 
 	private ServiceManager serviceManager;
+
+	private final ActivityResultLauncher<String> saveDatabasePicker = registerForActivityResult(
+			new ActivityResultContracts.CreateDocument("application/vnd.sqlite3"),
+			new ActivityResultCallback<Uri>() {
+				@Override
+				public void onActivityResult(Uri target) {
+					if ( target != null ) saveDatabaseTo(target);
+				}
+			});
 
 
 
@@ -90,6 +106,34 @@ public static final String TAG = "aCal Settings";
 
 
 	/**
+	 * The database on the device is encrypted, but the copy saved from here is
+	 * not, so make sure that is understood before asking where to put it.
+	 */
+	private void confirmSaveDatabase() {
+		new AlertDialog.Builder(this)
+			.setTitle("Save an unencrypted copy?")
+			.setMessage("The saved copy of the database will NOT be encrypted. It contains all of your "
+					+ "events, tasks, notes and contacts, readable by anyone who can open the file.")
+			.setPositiveButton("Save unencrypted", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					saveDatabasePicker.launch("acal.db");
+				}
+			})
+			.setNegativeButton(android.R.string.cancel, null)
+			.show();
+	}
+
+	private void saveDatabaseTo(Uri target) {
+		WorkerClass worker = WorkerClass.getExistingInstance();
+		if ( worker == null ) {
+			Toast.makeText(this, "Request failed: the aCal service is not running", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		worker.addJobAndWake(new DebugDatabase(target));
+	}
+
+	/**
 	 * Click listener for Settings List.
 	 *
 	 * @author Morphoss Ltd
@@ -103,13 +147,7 @@ public static final String TAG = "aCal Settings";
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			String task = TASKS[position];
 			if (task.equals("Save Database")){
-	    		try {
-	    			DebugSettings.this.serviceManager.getServiceRequest().saveDatabase();
-	    			return;
-	    		} catch (RemoteException re) {
-	    			Log.e(TAG, "Unable to send save database request to server: "+re.getMessage());
-	    			Toast.makeText(DebugSettings.this, "Request failed: "+re.getMessage(), Toast.LENGTH_SHORT).show();
-	    		}
+				confirmSaveDatabase();
 	    	}
 			else if (task.equals("Revert Database")){
 	    		try {

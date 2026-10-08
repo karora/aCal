@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
 public class Constants {
 
     public static final String PUBLIC_DATA_DIR = Environment.getExternalStorageDirectory() + "/acal/";
-    public static final String COPY_DB_TARGET = PUBLIC_DATA_DIR + "acal.db"; //File path and name of copy
     public static final long MAXIMUM_SERVICE_WORKER_DELAY_MS = 1000 * 60 * 60 * 24;    //maximum time between worker thread runs in ms
     public static final long SERVICE_WORKER_GRACE_PERIOD = 1000 * 60 * 60 * 1;        //Amount of time we will allow worker to be 'late' before assuming its hung
 

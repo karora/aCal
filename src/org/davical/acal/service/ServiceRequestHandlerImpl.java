@@ -73,11 +73,6 @@ public class ServiceRequestHandlerImpl extends ServiceRequest.Stub {
     }
 
     @Override
-    public void saveDatabase() throws RemoteException {
-        worker.addJobAndWake(new DebugDatabase(DebugDatabase.SAVE));
-    }
-
-    @Override
     public void homeSetDiscovery(int server) throws RemoteException {
         HomeSetDiscovery job = new HomeSetDiscovery(server);
         worker.addJobAndWake(job);
