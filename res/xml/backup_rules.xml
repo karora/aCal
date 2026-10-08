@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	Auto Backup rules for Android 7 to 11 (android:fullBackupContent).
+
+	The database is a copy of what is on the server, and neither it nor the
+	stored passwords can be read without keys that never leave the device,
+	so none of them are backed up. Keep in step with data_extraction_rules.xml.
+-->
+<full-backup-content>
+	<exclude domain="database" path="." />
+	<exclude domain="sharedpref" path="acal_db_key.xml" />
+	<exclude domain="sharedpref" path="acal_security.xml" />
+</full-backup-content>

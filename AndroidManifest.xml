@@ -43,7 +43,10 @@
         android:smallScreens="true" />
     <application
         android:name="org.davical.acal.AcalApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:description="@string/appDescription"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/appName"
         android:roundIcon="@mipmap/ic_launcher_round"
