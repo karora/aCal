@@ -30,6 +30,7 @@ import org.davical.acal.AcalTheme;
 import org.davical.acal.PrefNames;
 import org.davical.acal.R;
 import org.davical.acal.aCal;
+import org.davical.acal.database.AcalDBHelper;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -138,6 +139,30 @@ public class ShowUpgradeChanges extends AcalAppCompatActivity implements OnClick
         upgradeNotes.setBackgroundColor(0); // transparent
 
         seenEm.setOnClickListener(this);
+        if (!AcalDBHelper.isReady()) waitForDatabase();
+    }
+
+    /**
+     * After an upgrade the database may still be being encrypted, and whatever
+     * comes after this screen would have to wait for that with nothing to show.
+     * Hold the user here, where there is something to read, until it is done.
+     */
+    private void waitForDatabase() {
+        final CharSequence label = seenEm.getText();
+        seenEm.setEnabled(false);
+        seenEm.setText(R.string.UpgradingDatabase);
+        AcalDBHelper.whenReady(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        seenEm.setText(label);
+                        seenEm.setEnabled(true);
+                    }
+                });
+            }
+        });
     }
 
 

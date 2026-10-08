@@ -21,6 +21,7 @@ package org.davical.acal;
 import java.util.Map.Entry;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -34,6 +35,7 @@ import org.davical.acal.activity.AcalActivity;
 import org.davical.acal.activity.MonthView;
 import org.davical.acal.activity.ShowUpgradeChanges;
 import org.davical.acal.activity.serverconfig.NewServerConfiguration;
+import org.davical.acal.database.AcalDBHelper;
 import org.davical.acal.dataservice.Collection;
 import org.davical.acal.service.ServiceRequest;
 import org.davical.acal.service.aCalService;
@@ -74,10 +76,24 @@ public class aCal extends AcalActivity {
 	 * Complete the startup process after all permissions are granted.
 	 */
 	private void completeStartup() {
-		// make sure aCalService is running
-		Intent serviceIntent = new Intent(this, aCalService.class);
+		// make sure aCalService is running.  Starting it opens the database on
+		// this thread, so if the database is still being encrypted after an
+		// upgrade that is left until it has finished.
+		final Context appContext = getApplicationContext();
+		final Intent serviceIntent = new Intent(appContext, aCalService.class);
 		serviceIntent.putExtra("UISTARTED", System.currentTimeMillis());
-		this.startService(serviceIntent);
+		AcalDBHelper.whenReady(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					appContext.startService(serviceIntent);
+				}
+				catch ( IllegalStateException e ) {
+					// We have gone into the background in the meantime.
+					Log.w(TAG, "Could not start aCalService: " + e.getMessage());
+				}
+			}
+		});
 
 		// Set all default preferences to reasonable values
 		PreferenceManager.setDefaultValues(this, R.xml.main_preferences, false);
