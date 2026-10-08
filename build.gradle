@@ -89,6 +89,9 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.squareup.okhttp3:okhttp:5.5.0'
+    // Take care with major SQLCipher upgrades: if a new version cannot open
+    // existing databases with its default settings, AcalDBHelper will treat
+    // them as unreadable and replace them with empty ones.
     implementation 'net.zetetic:sqlcipher-android:4.19.1'
     implementation 'androidx.sqlite:sqlite:2.7.1'
     implementation 'androidx.work:work-runtime:2.12.0'

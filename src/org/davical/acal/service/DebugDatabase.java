@@ -92,10 +92,9 @@ public class DebugDatabase extends ServiceJob {
 		// The database is exported to a plain SQLite file of our own first, as
 		// SQLite needs a real file to write to, and that is then copied to
 		// wherever the user asked for it.
-		File plainCopy = new File(context.getCacheDir(), "acal-export.db");
 		String outcome;
 		try {
-			AcalDBHelper.exportPlainCopy(context, plainCopy);
+			File plainCopy = AcalDBHelper.exportPlainCopy(context);
 			try ( InputStream in = new FileInputStream(plainCopy);
 					OutputStream out = context.getContentResolver().openOutputStream(saveTarget) ) {
 				if ( out == null ) throw new IOException("Could not open "+saveTarget);
@@ -110,9 +109,7 @@ public class DebugDatabase extends ServiceJob {
 			outcome = "Saving the database failed: "+e.getMessage();
 		}
 		finally {
-			for ( String suffix : new String[] { "", "-journal", "-wal", "-shm" } ) {
-				new File(plainCopy.getPath() + suffix).delete();
-			}
+			AcalDBHelper.deletePlainCopy(context);
 		}
 
 		final String message = outcome;

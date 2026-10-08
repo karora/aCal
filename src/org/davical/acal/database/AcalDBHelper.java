@@ -75,6 +75,9 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	 */
 	private static final String ENCRYPTING_DB_NAME = "acal-encrypting.db";
 
+	/** Where an unencrypted copy is written on its way to being saved by the user. */
+	private static final String PLAIN_COPY_DB_NAME = "acal-export.db";
+
 	/** Every plain SQLite database starts with these 16 bytes; an encrypted one never does. */
 	private static final byte[] SQLITE_HEADER = "SQLite format 3\0".getBytes(StandardCharsets.US_ASCII);
 
@@ -84,6 +87,8 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	private static final String LOCK_FILE_NAME = "acal_db.lock";
 
 	private static final Object prepareLock = new Object();
+	// Held for the life of the process: closing the file would drop its locks.
+	private static RandomAccessFile lockFile;
 	private static FileChannel lockChannel;
 	private static FileLock processLock;
 	private static final Object createLock = new Object();
@@ -593,11 +598,15 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 
 
 	/**
-	 * Write a copy of the database, as plain unencrypted SQLite, to a file.  The
-	 * caller is responsible for deleting it.
+	 * Write a copy of the database, as plain unencrypted SQLite, to a file of
+	 * our own.  The caller must hand it back to deletePlainCopy() when it has
+	 * finished with it.
+	 *
+	 * @return The file the copy was written to.
 	 */
-	public static void exportPlainCopy( Context context, File target ) {
+	public static File exportPlainCopy( Context context ) {
 		prepare(context);
+		File target = plainCopyFile(context);
 		deleteDatabaseFiles(target);
 		SQLiteDatabase db = open(context.getDatabasePath(DB_NAME+".db").toString(),
 				SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
@@ -612,6 +621,15 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 		finally {
 			db.close();
 		}
+		return target;
+	}
+
+	public static void deletePlainCopy( Context context ) {
+		deleteDatabaseFiles(plainCopyFile(context));
+	}
+
+	private static File plainCopyFile( Context context ) {
+		return new File(context.getCacheDir(), PLAIN_COPY_DB_NAME);
 	}
 
 
@@ -712,8 +730,8 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	private static byte[] chooseKey( Context context ) {
 		try {
 			if ( lockChannel == null ) {
-				File lockFile = new File(context.getNoBackupFilesDir(), LOCK_FILE_NAME);
-				lockChannel = new RandomAccessFile(lockFile, "rw").getChannel();
+				lockFile = new RandomAccessFile(new File(context.getNoBackupFilesDir(), LOCK_FILE_NAME), "rw");
+				lockChannel = lockFile.getChannel();
 			}
 			FileLock deciding = lockChannel.lock(0, 1, false);
 			try {
@@ -768,6 +786,8 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 		File dbFile = context.getDatabasePath(DB_NAME+".db");
 		File encrypting = new File(dbFile.getParentFile(), ENCRYPTING_DB_NAME);
 		deleteDatabaseFiles(encrypting);
+		// An unencrypted copy that was being saved when we were last killed.
+		deletePlainCopy(context);
 
 		if ( dbFile.length() == 0 ) {
 			// A new database: encrypt it from the start if we can.
