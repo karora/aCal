@@ -21,7 +21,6 @@ package org.davical.acal.providers;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -61,6 +60,12 @@ public class CacheDataProvider extends ContentProvider {
 
     //Database + Table
     private SQLiteDatabase mAcalDB;
+
+    private synchronized SQLiteDatabase db() {
+        if ( mAcalDB == null ) mAcalDB = new AcalDBHelper(getContext()).getWritableDatabase();
+        return mAcalDB;
+    }
+
     static final String DATABASE_TABLE = "event_cache";
     static final String QUERY_TABLE = "dav_server LEFT JOIN dav_collection ON (dav_server._id=dav_collection.server_id) " +
     		"LEFT JOIN event_cache ON (dav_collection._id=event_cache.collection_id)";
@@ -110,10 +115,10 @@ public class CacheDataProvider extends ContentProvider {
      */
     @Override
     public boolean onCreate() {
-        Context context = getContext();
-        AcalDBHelper dbHelper = new AcalDBHelper(context);
-        mAcalDB = dbHelper.getWritableDatabase();
-        return (mAcalDB == null)?false:true;
+        // The database is opened on first use, not here: this runs on the main
+        // thread at process start, and the first open may have to wait for the
+        // database to be encrypted.
+        return true;
     }
 
 	/*
@@ -125,11 +130,11 @@ public class CacheDataProvider extends ContentProvider {
 		int count=0;
         switch ( uriMatcher.match(uri) ) {
             case ALLSETS:
-    			count = mAcalDB.delete( DATABASE_TABLE, selection, selectionArgs);
+    			count = db().delete( DATABASE_TABLE, selection, selectionArgs);
     			break;
     		case ROW_ID_SET:
     			String row_id = uri.getPathSegments().get(0);
-    			count = mAcalDB.delete(
+    			count = db().delete(
     					DATABASE_TABLE,
     					_ID + " = " + row_id +
     					(!TextUtils.isEmpty(selection) ? " AND (" +
@@ -138,7 +143,7 @@ public class CacheDataProvider extends ContentProvider {
     			break;
     		case RESOURCE_ID_SET:
     		    String resource_id = uri.getPathSegments().get(1);
-    			count = mAcalDB.delete(
+    			count = db().delete(
     					DATABASE_TABLE,
     					RESOURCE_ID + " = " + resource_id +
     					(!TextUtils.isEmpty(selection) ? " AND (" +
@@ -146,7 +151,7 @@ public class CacheDataProvider extends ContentProvider {
     							selectionArgs);
     			break;
             case META_QUERY:
-                count = mAcalDB.delete( META_TABLE, selection, selectionArgs);
+                count = db().delete( META_TABLE, selection, selectionArgs);
                 break;
     		default: throw new IllegalArgumentException(
     				"Unknown URI " + uri);
@@ -182,7 +187,7 @@ public class CacheDataProvider extends ContentProvider {
 	public Uri insert(Uri uri, ContentValues values) {
 
 		//---add a new server---
-		long rowID = mAcalDB.insert( (uriMatcher.match(uri) == META_QUERY ? META_TABLE : DATABASE_TABLE), null, values);
+		long rowID = db().insert( (uriMatcher.match(uri) == META_QUERY ? META_TABLE : DATABASE_TABLE), null, values);
 
 		//---if added successfully---
 		if (rowID>0)
@@ -227,7 +232,7 @@ public class CacheDataProvider extends ContentProvider {
             projection = new String[] { DATABASE_TABLE + ".*" };
 
 		Cursor c = sqlBuilder.query(
-				mAcalDB,
+				db(),
 				projection,
 				selection,
 				selectionArgs,
@@ -266,14 +271,14 @@ public class CacheDataProvider extends ContentProvider {
 
 		switch (uriMatcher.match(uri)){
     		case ALLSETS:
-    			count = mAcalDB.update(
+    			count = db().update(
     					DATABASE_TABLE,
     					values,
     					selection,
     					selectionArgs);
     			break;
     		case ROW_ID_SET:
-    			count = mAcalDB.update(
+    			count = db().update(
     					DATABASE_TABLE,
     					values,
     					_ID + " = " + uri.getPathSegments().get(0) +
@@ -282,7 +287,7 @@ public class CacheDataProvider extends ContentProvider {
     							selectionArgs);
     			break;
     		case RESOURCE_ID_SET:
-    			count = mAcalDB.update(
+    			count = db().update(
     					DATABASE_TABLE,
     					values,
     					RESOURCE_ID + " = " + uri.getPathSegments().get(1) +
@@ -292,22 +297,22 @@ public class CacheDataProvider extends ContentProvider {
     			break;
     		case BEGIN_TRANSACTION:	//Return 1 for success or 0 for failure
     				//We are beginning a new transaction only (at this time we wont allow nested tx's)
-    				if (mAcalDB.inTransaction()) return 0;
-    				mAcalDB.beginTransaction();
+    				if (db().inTransaction()) return 0;
+    				db().beginTransaction();
     				return 1;
 
     		case END_TRANSACTION:	//Return 1 for success or 0 for failure
     			//We are ending an existing transaction only
-    			if (!mAcalDB.inTransaction()) return 0;
-    			mAcalDB.endTransaction();
+    			if (!db().inTransaction()) return 0;
+    			db().endTransaction();
     			return 1;
     		case APPROVE_TRANSACTION:	//Return 1 for success or 0 for failure
     			//We are ending an existing transaction only
-    			if (!mAcalDB.inTransaction()) return 0;
-    			mAcalDB.setTransactionSuccessful();
+    			if (!db().inTransaction()) return 0;
+    			db().setTransactionSuccessful();
     			return 1;
             case META_QUERY:
-                count = mAcalDB.update( META_TABLE, values, selection, selectionArgs);
+                count = db().update( META_TABLE, values, selection, selectionArgs);
                 break;
     		default: throw new IllegalArgumentException( "Unknown URI " + uri);
 		}

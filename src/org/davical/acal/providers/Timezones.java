@@ -27,7 +27,6 @@ import java.util.Set;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -66,6 +65,12 @@ public class Timezones extends ContentProvider {
 
     //Database + Table
     private SQLiteDatabase AcalDB;
+
+    private synchronized SQLiteDatabase db() {
+        if ( AcalDB == null ) AcalDB = new AcalDBHelper(getContext()).getWritableDatabase();
+        return AcalDB;
+    }
+
     private static final String TIMEZONE_TABLE = "timezone";
     private static final String TZ_ALIAS_TABLE = "timezone_alias";
     private static final String TZ_NAME_TABLE = "timezone_name";
@@ -112,10 +117,10 @@ public class Timezones extends ContentProvider {
 	 */
 	@Override
 	public boolean onCreate() {
-		Context context = getContext();
-		AcalDBHelper dbHelper = new AcalDBHelper(context);
-		AcalDB = dbHelper.getWritableDatabase();
-		return (AcalDB == null)?false:true;
+		// The database is opened on first use, not here: this runs on the main
+		// thread at process start, and the first open may have to wait for the
+		// database to be encrypted.
+		return true;
 	}
 
 
@@ -170,7 +175,7 @@ public class Timezones extends ContentProvider {
 		        sortOrder = "tzid LIMIT 1";
 		}
 
-		Cursor c = sqlBuilder.query( AcalDB, projection, selection, selectionArgs, null, null, sortOrder);
+		Cursor c = sqlBuilder.query( db(), projection, selection, selectionArgs, null, null, sortOrder);
 
 		//---register to watch a content URI for changes---
 		c.setNotificationUri(getContext().getContentResolver(), uri);
@@ -187,33 +192,33 @@ public class Timezones extends ContentProvider {
 		int count=0;
 		switch (uriMatcher.match(uri)){
 		case ALLSETS:
-			count = AcalDB.delete( TIMEZONE_TABLE, selection, selectionArgs);
+			count = db().delete( TIMEZONE_TABLE, selection, selectionArgs);
 			break;
 		case ROW_ID_SET:
 			String row_id = uri.getPathSegments().get(0);
-			count = AcalDB.delete( TIMEZONE_TABLE,
+			count = db().delete( TIMEZONE_TABLE,
 						_ID + " = " + row_id + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""),
 						selectionArgs);
 			break;
 		case TZID_SET:
 			String tzid = uri.getPathSegments().get(1);
-			AcalDB.beginTransaction();
+			db().beginTransaction();
 			try {
-				count = AcalDB.delete( TIMEZONE_TABLE,
+				count = db().delete( TIMEZONE_TABLE,
 							TZID + " = " + tzid + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""),
 							selectionArgs);
 				// The ... AND NOT EXISTS ... stuff is needed in case the selection restricted the delete from actually happening
-				AcalDB.delete( TZ_ALIAS_TABLE, TZID + " =? AND NOT EXISTS( SELECT 1 FROM "+TIMEZONE_TABLE+" WHERE "+TZID+"=?)",
+				db().delete( TZ_ALIAS_TABLE, TZID + " =? AND NOT EXISTS( SELECT 1 FROM "+TIMEZONE_TABLE+" WHERE "+TZID+"=?)",
 						new String[] { tzid, tzid } );
-				AcalDB.delete( TZ_NAME_TABLE, TZID + " =? AND NOT EXISTS( SELECT 1 FROM "+TIMEZONE_TABLE+" WHERE "+TZID+"=?)",
+				db().delete( TZ_NAME_TABLE, TZID + " =? AND NOT EXISTS( SELECT 1 FROM "+TIMEZONE_TABLE+" WHERE "+TZID+"=?)",
 						new String[] { tzid, tzid } );
-				AcalDB.setTransactionSuccessful();
+				db().setTransactionSuccessful();
 			}
 			catch( SQLException e ) {
 				Log.println(Constants.LOGW, TAG, Log.getStackTraceString(e));
 			}
 			finally {
-				AcalDB.endTransaction();
+				db().endTransaction();
 			}
 			break;
 		default: throw new IllegalArgumentException(
@@ -263,9 +268,9 @@ public class Timezones extends ContentProvider {
 		nameValues.put(TZID, tzid);
 		boolean success = false;
 		long rowID = -1;
-		AcalDB.beginTransaction();
+		db().beginTransaction();
 		try {
-			rowID = AcalDB.insert( TIMEZONE_TABLE, null, values);
+			rowID = db().insert( TIMEZONE_TABLE, null, values);
 			HashSet<String> existing = getAliasesFor(tzid);
 			for( String alias : aliases ) {
 				if ( alias.equals("") ) continue;
@@ -275,14 +280,14 @@ public class Timezones extends ContentProvider {
 				}
 				aliasValues.put(TZID_ALIAS,alias);
 				try {
-					AcalDB.insert(TZ_ALIAS_TABLE, null, aliasValues);
+					db().insert(TZ_ALIAS_TABLE, null, aliasValues);
 				}
 				catch( Exception sqe ) {
 					Log.println(Constants.LOGW, TAG, "Unable to insert alias '"+alias+"' for '"+values.getAsString(TZID));
 				}
 			}
 			for( String alias : existing ) {  // It seems these no longer apply
-				AcalDB.delete( TZ_ALIAS_TABLE, TZID+"=? AND "+TZID_ALIAS+"=?", new String[] {tzid, alias} );
+				db().delete( TZ_ALIAS_TABLE, TZID+"=? AND "+TZID_ALIAS+"=?", new String[] {tzid, alias} );
 			}
 
 			existing = getNamesFor(tzid);
@@ -293,24 +298,24 @@ public class Timezones extends ContentProvider {
 				nameValues.put(TZ_NAME, e.getValue());
 				try {
 					if ( existing.contains(locale) ) {
-						AcalDB.update(TZ_NAME_TABLE, nameValues, TZID+"=? AND " + TZ_NAME_LOCALE+"=?", new String[] { tzid, locale } );
+						db().update(TZ_NAME_TABLE, nameValues, TZID+"=? AND " + TZ_NAME_LOCALE+"=?", new String[] { tzid, locale } );
 					}
 					else {
-						AcalDB.insert(TZ_NAME_TABLE, null, nameValues);
+						db().insert(TZ_NAME_TABLE, null, nameValues);
 					}
 				}
 				catch( Exception sqe ) {
 					Log.println(Constants.LOGW, TAG, "Unable to insert name '"+e.getValue()+"'for locale '"+locale+"' for TZID '"+values.getAsString(TZID));
 				}
 			}
-			AcalDB.setTransactionSuccessful();
+			db().setTransactionSuccessful();
 			success = true;
 		}
 		catch( SQLException e ) {
 			Log.println(Constants.LOGW, TAG, Log.getStackTraceString(e));
 		}
 		finally {
-			AcalDB.endTransaction();
+			db().endTransaction();
 		}
 
 		//---if added successfully---
@@ -331,7 +336,7 @@ public class Timezones extends ContentProvider {
 	 * @return
 	 */
 	private HashSet<String> getAliasesFor(String tzid) {
-		Cursor c = AcalDB.query(TZ_ALIAS_TABLE, new String[] { TZID_ALIAS }, TZID+"=?", new String[] { tzid }, null, null, null);
+		Cursor c = db().query(TZ_ALIAS_TABLE, new String[] { TZID_ALIAS }, TZID+"=?", new String[] { tzid }, null, null, null);
 		HashSet<String> existingAliases = new HashSet<String>(c.getCount());
 		try {
 			for( c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
@@ -352,7 +357,7 @@ public class Timezones extends ContentProvider {
 	 * @return
 	 */
 	private HashSet<String> getNamesFor(String tzid) {
-		Cursor c = AcalDB.query(TZ_NAME_TABLE, new String[] { TZ_NAME_LOCALE }, TZID+"=?", new String[] { tzid }, null, null, null);
+		Cursor c = db().query(TZ_NAME_TABLE, new String[] { TZ_NAME_LOCALE }, TZID+"=?", new String[] { tzid }, null, null, null);
 		HashSet<String> existingNames = new HashSet<String>(c.getCount());
 		try {
 			for( c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
@@ -369,7 +374,7 @@ public class Timezones extends ContentProvider {
 
 	private void updateAliasSet(String tzid, String[] aliases, ContentValues aliasValues ) {
 		Set<String> deleteAliases = new HashSet<String>();
-		Cursor c = AcalDB.queryWithFactory(null, false, TZ_ALIAS_TABLE, new String[] { TZID_ALIAS }, TZID+"='"+tzid+"'",
+		Cursor c = db().queryWithFactory(null, false, TZ_ALIAS_TABLE, new String[] { TZID_ALIAS }, TZID+"='"+tzid+"'",
 				null, null, null, null, null);
 		for( c.moveToFirst(); c.isAfterLast(); c.moveToNext() )
 			deleteAliases.add(c.getString(0));
@@ -384,7 +389,7 @@ public class Timezones extends ContentProvider {
 				}
 				else {
 					aliasValues.put(TZID_ALIAS, (String) alias);
-					AcalDB.insert(TZ_ALIAS_TABLE, null, aliasValues);
+					db().insert(TZ_ALIAS_TABLE, null, aliasValues);
 				}
 			}
 		}
@@ -393,13 +398,13 @@ public class Timezones extends ContentProvider {
 			if ( deleteList.length() != 0 ) deleteList.append(',');
 			deleteList.append(alias);
 		}
-		AcalDB.delete(TZ_ALIAS_TABLE, TZID+"='"+tzid+"' AND "+TZID_ALIAS+" IN ("+deleteList+")", null);
+		db().delete(TZ_ALIAS_TABLE, TZID+"='"+tzid+"' AND "+TZID_ALIAS+" IN ("+deleteList+")", null);
 	}
 
 
 	private void updateNameSet(String tzid, Map<?,?> names, ContentValues nameValues ) {
 		Set<String> deleteLocales = new HashSet<String>();
-		Cursor c = AcalDB.queryWithFactory(null, false, TZ_NAME_TABLE, new String[] { TZ_NAME_LOCALE }, TZID+"='"+tzid+"'",
+		Cursor c = db().queryWithFactory(null, false, TZ_NAME_TABLE, new String[] { TZ_NAME_LOCALE }, TZID+"='"+tzid+"'",
 				null, null, null, null, null);
 		for( c.moveToFirst(); c.isAfterLast(); c.moveToNext() )
 			deleteLocales.add(c.getString(0));
@@ -413,10 +418,10 @@ public class Timezones extends ContentProvider {
 			nameValues.put(TZ_NAME, (String) alias.getValue());
 			if ( deleteLocales.contains(key) ) {
 				deleteLocales.remove(key);
-				AcalDB.update(TZ_NAME_TABLE, nameValues, TZID+"='"+tzid+"' AND "+TZ_NAME_LOCALE+"='"+key+"'", null);
+				db().update(TZ_NAME_TABLE, nameValues, TZID+"='"+tzid+"' AND "+TZ_NAME_LOCALE+"='"+key+"'", null);
 			}
 			else {
-				AcalDB.insert(TZ_NAME_TABLE, null, nameValues);
+				db().insert(TZ_NAME_TABLE, null, nameValues);
 			}
 		}
 		StringBuilder deleteList = new StringBuilder();
@@ -424,7 +429,7 @@ public class Timezones extends ContentProvider {
 			if ( deleteList.length() != 0 ) deleteList.append(',');
 			deleteList.append(alias);
 		}
-		AcalDB.delete(TZ_ALIAS_TABLE, TZID+"='"+tzid+"' AND "+TZID_ALIAS+" IN ("+deleteList+")", null);
+		db().delete(TZ_ALIAS_TABLE, TZID+"='"+tzid+"' AND "+TZID_ALIAS+" IN ("+deleteList+")", null);
 	}
 
 	/*
@@ -457,20 +462,20 @@ public class Timezones extends ContentProvider {
 		Map<String,String> names = buildNamesMap( (String) values.get(TZ_NAMES) );
 		values.remove(TZ_NAMES);
 
-		AcalDB.beginTransaction();
+		db().beginTransaction();
 		try {
 
 			switch ( uriMatcher.match(uri) ) {
 				case ALLSETS:
-					count = AcalDB.update(TIMEZONE_TABLE, values, selection, selectionArgs);
+					count = db().update(TIMEZONE_TABLE, values, selection, selectionArgs);
 					break;
 				case ROW_ID_SET:
-					count = AcalDB.update(TIMEZONE_TABLE, values,
+					count = db().update(TIMEZONE_TABLE, values,
 							_ID + " = " + uri.getPathSegments().get(0)
 									+ (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
 					break;
 				case TZID_SET:
-					count = AcalDB.update(TIMEZONE_TABLE, values,
+					count = db().update(TIMEZONE_TABLE, values,
 							TZID + " = " + uri.getPathSegments().get(1)
 									+ (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
 					break;
@@ -497,10 +502,10 @@ public class Timezones extends ContentProvider {
 			else if ( aliases != null || names != null ) {
 				throw new IllegalArgumentException("Update affects more than one row and aliases or localised names were supplied");
 			}
-			AcalDB.setTransactionSuccessful();
+			db().setTransactionSuccessful();
 		}
 		finally {
-			AcalDB.endTransaction();
+			db().endTransaction();
 		}
 
 		getContext().getContentResolver().notifyChange(uri, null);
