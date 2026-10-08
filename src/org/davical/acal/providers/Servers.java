@@ -29,11 +29,12 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
+import net.zetetic.database.sqlcipher.SQLiteQueryBuilder;
 
 import org.davical.acal.StaticHelpers;
 import org.davical.acal.database.AcalDBHelper;
@@ -58,6 +59,12 @@ public class Servers extends ContentProvider {
     
     //Database + Table
     private SQLiteDatabase AcalDB;
+
+    private synchronized SQLiteDatabase db() {
+        if ( AcalDB == null ) AcalDB = new AcalDBHelper(getContext()).getWritableDatabase();
+        return AcalDB;
+    }
+
     public static final String DATABASE_TABLE = "dav_server";
     
     //Path definitions
@@ -106,10 +113,10 @@ public class Servers extends ContentProvider {
      */
     @Override
     public boolean onCreate() {
-        Context context = getContext();
-        AcalDBHelper dbHelper = new AcalDBHelper(context);
-        AcalDB = dbHelper.getWritableDatabase();
-        return (AcalDB == null)?false:true;
+        // The database is opened on first use, not here: this runs on the main
+        // thread at process start, and the first open may have to wait for the
+        // database to be encrypted.
+        return true;
     }
 
 	/*
@@ -121,14 +128,14 @@ public class Servers extends ContentProvider {
 		int count=0;
 		switch (uriMatcher.match(uri)){
 		case SERVERS:
-			count = AcalDB.delete(
+			count = db().delete(
 					DATABASE_TABLE,
 					selection, 
 					selectionArgs);
 			break;
 		case SERVER_ID:
 			String id = uri.getPathSegments().get(0);
-			count = AcalDB.delete( DATABASE_TABLE,
+			count = db().delete( DATABASE_TABLE,
 						_ID + " = " + id + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), 
 							selectionArgs);
 			break;
@@ -168,7 +175,7 @@ public class Servers extends ContentProvider {
 		encryptPassword(values);
 
 		//---add a new server---
-		long rowID = AcalDB.insert(
+		long rowID = db().insert(
 				DATABASE_TABLE, "", values);
 
 		//---if added successfully---
@@ -200,7 +207,7 @@ public class Servers extends ContentProvider {
 			sortOrder = _ID;
 
 		Cursor c = sqlBuilder.query(
-				AcalDB, 
+				db(), 
 				projection, 
 				selection, 
 				selectionArgs, 
@@ -227,10 +234,10 @@ public class Servers extends ContentProvider {
 		try {
 			switch (uriMatcher.match(uri)) {
 				case SERVERS:
-					count = AcalDB.update(DATABASE_TABLE, values, selection, selectionArgs);
+					count = db().update(DATABASE_TABLE, values, selection, selectionArgs);
 					break;
 				case SERVER_ID:
-					count = AcalDB.update(DATABASE_TABLE, values, _ID + " = " + uri.getPathSegments().get(0)
+					count = db().update(DATABASE_TABLE, values, _ID + " = " + uri.getPathSegments().get(0)
 								+ (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
 					break;
 				default:

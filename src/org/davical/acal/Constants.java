@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
 public class Constants {
 
     public static final String PUBLIC_DATA_DIR = Environment.getExternalStorageDirectory() + "/acal/";
-    public static final String COPY_DB_TARGET = PUBLIC_DATA_DIR + "acal.db"; //File path and name of copy
     public static final long MAXIMUM_SERVICE_WORKER_DELAY_MS = 1000 * 60 * 60 * 24;    //maximum time between worker thread runs in ms
     public static final long SERVICE_WORKER_GRACE_PERIOD = 1000 * 60 * 60 * 1;        //Amount of time we will allow worker to be 'late' before assuming its hung
 
@@ -46,6 +45,12 @@ public class Constants {
     public static final String ALARM_NOTIFICATION_CHANNEL_ID = "acal_alarms";
     public static final String PRE_ALARM_NOTIFICATION_CHANNEL_ID = "acal_alarms_pre";
     public static final String ACTIVE_NOTIFICATION_CHANNEL_ID    = "acal_alarms_active";
+
+    /**
+     * Notification channel for things the app has to tell the user about itself
+     */
+    public static final String STATUS_NOTIFICATION_CHANNEL_ID = "acal_status";
+    public static final int DATABASE_RESET_NOTIFICATION_ID = 600_000;
 
     /**
      * Notification channel and intent extras for certificate pinning

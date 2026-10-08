@@ -1,7 +1,9 @@
 package org.davical.acal;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -9,6 +11,7 @@ import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Process;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -17,6 +20,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.davical.acal.dataservice.Resource;
+import org.davical.acal.database.AcalDBHelper;
 import org.davical.acal.providers.Timezones;
 import org.davical.acal.service.SyncWorkScheduler;
 import org.davical.acal.service.connector.AcalConnectionPool;
@@ -39,10 +43,28 @@ public class AcalApplication extends Application {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
+        // Encrypt an existing database, if that is still to be done, without
+        // holding up whatever is starting us.  Not in the :contacts and :auth
+        // processes, which open the database only if and when they need it.
+        if (isMainProcess()) AcalDBHelper.prepareInBackground(this);
         // Initialize connection pool with app context for certificate storage
         AcalConnectionPool.initialize(this);
         // Schedule periodic sync work using WorkManager
         SyncWorkScheduler.schedulePeriodicSync(this);
+    }
+
+    private boolean isMainProcess() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return getPackageName().equals(getProcessName());
+        }
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> processes = am.getRunningAppProcesses();
+        if (processes != null) {
+            for (ActivityManager.RunningAppProcessInfo process : processes) {
+                if (process.pid == Process.myPid()) return getPackageName().equals(process.processName);
+            }
+        }
+        return true;
     }
 
     private void createNotificationChannel() {
@@ -101,6 +123,15 @@ public class AcalApplication extends Application {
             certPin.setSound(null, null);
             certPin.enableVibration(false);
             manager.createNotificationChannel(certPin);
+
+            // Status channel: things the app has to tell the user about itself
+            NotificationChannel status = new NotificationChannel(
+                Constants.STATUS_NOTIFICATION_CHANNEL_ID,
+                "App Status",
+                NotificationManager.IMPORTANCE_DEFAULT
+            );
+            status.setDescription("Tells you when aCal has had to reset its local data");
+            manager.createNotificationChannel(status);
         }
     }
 

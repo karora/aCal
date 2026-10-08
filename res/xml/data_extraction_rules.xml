@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	Backup and device-transfer rules for Android 12 and later
+	(android:dataExtractionRules).
+
+	The database is a copy of what is on the server, and neither it nor the
+	stored passwords can be read without keys that never leave the device,
+	so none of them are backed up or transferred. Keep in step with
+	backup_rules.xml.
+-->
+<data-extraction-rules>
+	<cloud-backup>
+		<exclude domain="database" path="." />
+		<exclude domain="sharedpref" path="acal_security.xml" />
+	</cloud-backup>
+	<device-transfer>
+		<exclude domain="database" path="." />
+		<exclude domain="sharedpref" path="acal_security.xml" />
+	</device-transfer>
+</data-extraction-rules>

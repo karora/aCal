@@ -460,4 +460,7 @@
     <string name="nav_notes">Notes</string>
     <string name="nav_about">About / Changes</string>
     <string name="nav_other">Other</string>
+    <string name="UpgradingDatabase">Upgrading database…</string>
+    <string name="Database_reset_title">aCal data was reset</string>
+    <string name="Database_reset_text">aCal could not unlock its encrypted data on this device, so it has started again with an empty database. Please add your server again. Changes that had not yet been sent to the server were lost.</string>
 </resources>

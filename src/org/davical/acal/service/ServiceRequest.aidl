@@ -2,7 +2,6 @@ package org.davical.acal.service;
 
 interface ServiceRequest {
 	void revertDatabase();
-	void saveDatabase();
 	void fullResync();
 	void discoverHomeSets();
 	void updateCollectionsFromHomeSets();

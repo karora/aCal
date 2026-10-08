@@ -19,16 +19,35 @@
 package org.davical.acal.database;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
+import net.zetetic.database.sqlcipher.SQLiteNotADatabaseException;
+import net.zetetic.database.sqlcipher.SQLiteOpenHelper;
+
 import org.davical.acal.Constants;
+import org.davical.acal.R;
+import org.davical.acal.aCal;
 import org.davical.acal.providers.Servers;
 import org.davical.acal.security.CredentialManager;
+import org.davical.acal.security.DatabaseKeyManager;
 
 /**
  * <p>
@@ -43,6 +62,46 @@ import org.davical.acal.security.CredentialManager;
 public class AcalDBHelper extends SQLiteOpenHelper {
 
 	public static final String TAG = "AcalDBHelper";
+
+	// Loaded here rather than in AcalApplication because the content providers
+	// open the database before Application.onCreate() runs.
+	static {
+		System.loadLibrary("sqlcipher");
+	}
+
+	/**
+	 * Where an encrypted copy of an existing database is built, before it
+	 * replaces the original.
+	 */
+	private static final String ENCRYPTING_DB_NAME = "acal-encrypting.db";
+
+	/** Where an unencrypted copy is written on its way to being saved by the user. */
+	private static final String PLAIN_COPY_DB_NAME = "acal-export.db";
+
+	/** Every plain SQLite database starts with these 16 bytes; an encrypted one never does. */
+	private static final byte[] SQLITE_HEADER = "SQLite format 3\0".getBytes(StandardCharsets.US_ASCII);
+
+	/** For opening a database that is to be copied into another file: see exportTo(). */
+	private static final int EXPORT_OPEN_FLAGS = SQLiteDatabase.OPEN_READWRITE
+			| SQLiteDatabase.CREATE_IF_NECESSARY | SQLiteDatabase.NO_LOCALIZED_COLLATORS;
+
+	/** The database file itself, and the files SQLite may keep beside it. */
+	private static final String[] DATABASE_FILE_SUFFIXES = { "", "-journal", "-wal", "-shm" };
+
+	private static final String LOCK_FILE_NAME = "acal_db.lock";
+
+	private static final Object prepareLock = new Object();
+	// Held for the life of the process: closing the file would drop its locks.
+	private static RandomAccessFile lockFile;
+	private static FileChannel lockChannel;
+	private static FileLock processLock;
+	private static final Object createLock = new Object();
+	private static final ArrayList<Runnable> readyCallbacks = new ArrayList<Runnable>();
+	private static volatile boolean ready = false;
+	private static boolean preparationAttempted = false;
+
+	/** Set by prepare(); null while the database is plain SQLite. */
+	private static volatile byte[] databaseKey = null;
 
 	/**
 	 * The name of the database, which will be stored in:
@@ -303,7 +362,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	 * Called when database is first instantiated. Creates default schema.
 	 * </p>
 	 *
-	 * @see android.database.sqlite.SQLiteOpenHelper#onCreate(android.database.sqlite.SQLiteDatabase)
+	 * @see SQLiteOpenHelper#onCreate(SQLiteDatabase)
 	 * @author Morphoss Ltd
 	 */
 	@Override
@@ -321,7 +380,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	 * and rebuilding our local cache.
 	 * </p>
 	 *
-	 * @see android.database.sqlite.SQLiteOpenHelper#onUpgrade(android.database.sqlite.SQLiteDatabase, int, int)
+	 * @see SQLiteOpenHelper#onUpgrade(SQLiteDatabase, int, int)
 	 * @author Morphoss Ltd
 	 */
 	@Override
@@ -459,8 +518,9 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 
 
 	public SQLiteDatabase getReadableDatabase() {
+		prepare(context);
 		try {
-			SQLiteDatabase db = SQLiteDatabase.openDatabase(context.getDatabasePath(DB_NAME+".db").toString(), null,
+			SQLiteDatabase db = open(context.getDatabasePath(DB_NAME+".db").toString(),
 					SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
 			if ( db.getVersion() == DB_VERSION ) return db;
 			db.close();
@@ -472,8 +532,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	}
 
 	private SQLiteDatabase openWritableDatabase( String dbPath ) {
-		SQLiteDatabase db = SQLiteDatabase.openDatabase( dbPath, null,
-				SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+		SQLiteDatabase db = open( dbPath, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
 		if ( db.getVersion() == DB_VERSION ) return db;
 		db.beginTransaction();
 		onUpgrade(db, db.getVersion(), DB_VERSION);
@@ -483,30 +542,475 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 		return db;
 	}
 
+	private SQLiteDatabase createDatabase( String dbPath ) {
+		new File(dbPath).getParentFile().mkdirs();
+		SQLiteDatabase db = open( dbPath, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY
+				| SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+		db.beginTransaction();
+		try {
+			// Another process may have created it while we waited for the lock.
+			if ( db.getVersion() == 0 ) {
+				onCreate(db);
+				db.setVersion(DB_VERSION);
+			}
+			db.setTransactionSuccessful();
+		}
+		finally {
+			db.endTransaction();
+		}
+		return db;
+	}
+
 	public SQLiteDatabase getWritableDatabase() {
+		prepare(context);
 		String dbPath = context.getDatabasePath(DB_NAME+".db").toString();
 
-		if ( new File(dbPath).exists() ) {
-			int attempts = 0;
-			while( attempts++ < 500 ) {
-				try {
-					return openWritableDatabase(dbPath);
-				}
-				catch( SQLiteException e) {
-					Log.println(Constants.LOGD,TAG,"Unable to get writable database - retrying");
-				}
-				try { Thread.sleep(10); } catch (Exception e) {}
-			}
+		synchronized( createLock ) {
+			// Never hand a new database to the superclass to create: it has no key.
+			if ( new File(dbPath).length() == 0 ) return createDatabase(dbPath);
+		}
 
+		int attempts = 0;
+		while( attempts++ < 500 ) {
 			try {
-				// Once more to catch the failure message...
 				return openWritableDatabase(dbPath);
 			}
+			catch( SQLiteNotADatabaseException e ) {
+				// The key is wrong, which no amount of retrying will fix.
+				throw e;
+			}
 			catch( SQLiteException e) {
-				Log.i(TAG,e.getMessage());
+				Log.println(Constants.LOGD,TAG,"Unable to get writable database - retrying");
+			}
+			try { Thread.sleep(10); } catch (Exception e) {}
+		}
+
+		// Once more, to let the failure propagate.
+		return openWritableDatabase(dbPath);
+	}
+
+
+	/**
+	 * Open a database with the key chosen by prepare(), or as plain SQLite if
+	 * there is none.
+	 */
+	private static SQLiteDatabase open( String dbPath, int flags ) {
+		byte[] key = databaseKey;
+		if ( key == null ) return SQLiteDatabase.openDatabase(dbPath, null, flags);
+		return SQLiteDatabase.openDatabase(dbPath, key, null, flags, null);
+	}
+
+
+	/**
+	 * Write a copy of the database, as plain unencrypted SQLite, to a file of
+	 * our own.  The caller must hand it back to deletePlainCopy() when it has
+	 * finished with it.
+	 *
+	 * @return The file the copy was written to.
+	 */
+	public static File exportPlainCopy( Context context ) {
+		prepare(context);
+		File target = plainCopyFile(context);
+		deleteDatabaseFiles(target);
+		SQLiteDatabase db = open(context.getDatabasePath(DB_NAME+".db").toString(), EXPORT_OPEN_FLAGS);
+		try {
+			exportTo(db, target, "", db.getVersion());
+		}
+		finally {
+			db.close();
+		}
+		return target;
+	}
+
+	public static void deletePlainCopy( Context context ) {
+		deleteDatabaseFiles(plainCopyFile(context));
+	}
+
+	private static File plainCopyFile( Context context ) {
+		return new File(context.getCacheDir(), PLAIN_COPY_DB_NAME);
+	}
+
+
+	/**
+	 * @return true once the database is ready to be opened without waiting,
+	 * which on the first run after an upgrade means it has been encrypted.
+	 */
+	public static boolean isReady() {
+		return ready;
+	}
+
+	/**
+	 * Run something once the database has been prepared: straight away, on the
+	 * calling thread, if it already has been, otherwise later on whichever
+	 * thread did the preparing.
+	 */
+	public static void whenReady( Runnable callback ) {
+		synchronized( readyCallbacks ) {
+			if ( !preparationAttempted ) {
+				readyCallbacks.add(callback);
+				return;
 			}
 		}
-		return super.getWritableDatabase();
+		callback.run();
+	}
+
+	/**
+	 * Prepare the database on a background thread, so that encrypting an
+	 * existing database does not hold up whoever opens it first.  Anything that
+	 * does open the database in the meantime waits for this to finish.
+	 */
+	public static void prepareInBackground( Context context ) {
+		if ( ready ) return;
+		final Context appContext = context.getApplicationContext();
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					prepare(appContext);
+				}
+				catch( RuntimeException e ) {
+					Log.e(TAG,"Could not prepare the database", e);
+				}
+			}
+		}, "aCal database preparation").start();
+	}
+
+	/**
+	 * Decide, once per process, how the database is to be opened.  An existing
+	 * plain SQLite database is encrypted here, and everything else that wants
+	 * the database waits until that is done.
+	 *
+	 * @throws SQLiteException if the database is encrypted and its key cannot
+	 * be fetched at the moment.  That is not remembered, so the next open tries
+	 * again.
+	 */
+	private static void prepare( Context context ) {
+		if ( ready ) return;
+		try {
+			synchronized( prepareLock ) {
+				if ( ready ) return;
+				databaseKey = chooseKey(context.getApplicationContext());
+				ready = true;
+				Log.i(TAG, databaseKey != null ? "The database is encrypted" : "The database is NOT encrypted");
+			}
+		}
+		finally {
+			ArrayList<Runnable> callbacks;
+			synchronized( readyCallbacks ) {
+				preparationAttempted = true;
+				callbacks = new ArrayList<Runnable>(readyCallbacks);
+				readyCallbacks.clear();
+			}
+			for( Runnable callback : callbacks ) {
+				try {
+					callback.run();
+				}
+				catch( RuntimeException e ) {
+					Log.e(TAG,"Error telling a listener that the database is ready", e);
+				}
+			}
+		}
+	}
+
+	/**
+	 * aCal runs in more than one process, and each opens the database for
+	 * itself.  Anything that changes how the database is opened (encrypting it,
+	 * making its key, or replacing it) would pull the rug out from under another
+	 * process that already has it open, so it is only done by a process that is
+	 * the only one running.
+	 *
+	 * That is arranged with two byte ranges of a lock file: one that is held
+	 * while a process works out how to open the database, and one that each
+	 * process then holds, shared, for as long as it lives.  A process that can
+	 * lock the second range exclusively knows it is alone.
+	 *
+	 * @return The key to open the database with, or null to use plain SQLite.
+	 */
+	private static byte[] chooseKey( Context context ) {
+		try {
+			if ( lockChannel == null ) {
+				lockFile = new RandomAccessFile(new File(context.getNoBackupFilesDir(), LOCK_FILE_NAME), "rw");
+				lockChannel = lockFile.getChannel();
+			}
+			FileLock deciding = lockChannel.lock(0, 1, false);
+			try {
+				if ( processLock != null ) {
+					// Left from an earlier attempt that failed.
+					processLock.release();
+					processLock = null;
+				}
+				FileLock alone = lockChannel.tryLock(1, 1, false);
+				if ( alone == null ) {
+					processLock = lockChannel.lock(1, 1, true);
+					return keyChosenByAnotherProcess(context);
+				}
+				try {
+					return chooseKeyAlone(context);
+				}
+				finally {
+					alone.release();
+					processLock = lockChannel.lock(1, 1, true);
+				}
+			}
+			finally {
+				deciding.release();
+			}
+		}
+		catch( IOException e ) {
+			throw new SQLiteException("Could not lock the database between processes: " + e);
+		}
+	}
+
+	/**
+	 * Another aCal process is running, so open the database the way it will
+	 * have: nothing may be changed here.
+	 */
+	private static byte[] keyChosenByAnotherProcess( Context context ) {
+		File dbFile = context.getDatabasePath(DB_NAME+".db");
+		boolean exists = dbFile.length() > 0;
+		if ( exists && isPlainSqlite(dbFile) ) return null;
+
+		byte[] key;
+		try {
+			key = DatabaseKeyManager.getExistingKey(context);
+		}
+		catch( GeneralSecurityException | RuntimeException e ) {
+			throw new SQLiteException("The database key is not available: " + e);
+		}
+		if ( key == null && exists ) throw new SQLiteException("The database is encrypted but has no key");
+		return key;
+	}
+
+	private static byte[] chooseKeyAlone( Context context ) {
+		File dbFile = context.getDatabasePath(DB_NAME+".db");
+		File encrypting = new File(dbFile.getParentFile(), ENCRYPTING_DB_NAME);
+		deleteDatabaseFiles(encrypting);
+		// An unencrypted copy that was being saved when we were last killed.
+		deletePlainCopy(context);
+
+		if ( dbFile.length() == 0 ) {
+			// A new database: encrypt it from the start if we can.
+			try {
+				return DatabaseKeyManager.getOrCreateKey(context);
+			}
+			catch( GeneralSecurityException | RuntimeException e ) {
+				Log.e(TAG,"No database key available: the new database will not be encrypted", e);
+				return null;
+			}
+		}
+
+		if ( isPlainSqlite(dbFile) ) {
+			try {
+				byte[] key = DatabaseKeyManager.getOrCreateKey(context);
+				encryptExistingDatabase(dbFile, encrypting, key);
+				return key;
+			}
+			catch( GeneralSecurityException | RuntimeException e ) {
+				// Carry on unencrypted.  The next process start will try again.
+				Log.e(TAG,"Could not encrypt the database: continuing without encryption", e);
+				deleteDatabaseFiles(encrypting);
+				return null;
+			}
+		}
+
+		byte[] key = null;
+		try {
+			key = DatabaseKeyManager.getExistingKey(context);
+		}
+		catch( DatabaseKeyManager.KeyLostException e ) {
+			Log.e(TAG,"The database key has been lost", e);
+		}
+		catch( GeneralSecurityException | RuntimeException e ) {
+			// Possibly temporary, so the database must not be thrown away.
+			throw new SQLiteException("The database key is not available: " + e);
+		}
+		if ( key != null && opensWithKey(dbFile, key) ) return key;
+
+		return resetUnreadableDatabase(context, dbFile);
+	}
+
+	private static boolean isPlainSqlite( File dbFile ) {
+		byte[] header = new byte[SQLITE_HEADER.length];
+		try ( FileInputStream in = new FileInputStream(dbFile) ) {
+			int count = 0;
+			while( count < header.length ) {
+				int n = in.read(header, count, header.length - count);
+				if ( n < 0 ) break;
+				count += n;
+			}
+			return count == header.length && Arrays.equals(header, SQLITE_HEADER);
+		}
+		catch( IOException e ) {
+			throw new SQLiteException("Could not read the database header: " + e);
+		}
+	}
+
+	private static boolean opensWithKey( File dbFile, byte[] key ) {
+		try {
+			SQLiteDatabase db = SQLiteDatabase.openDatabase(dbFile.getPath(), key, null,
+					SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS, null);
+			try {
+				db.getVersion();
+			}
+			finally {
+				db.close();
+			}
+		}
+		catch( SQLiteNotADatabaseException e ) {
+			Log.e(TAG,"The database cannot be read with the stored key", e);
+			return false;
+		}
+		catch( SQLiteException e ) {
+			// Some other problem, such as a lock, which is not the key's fault.
+			Log.w(TAG,"Unexpected error checking the database key", e);
+		}
+		return true;
+	}
+
+	/**
+	 * Replace a plain SQLite database with an encrypted copy of itself.  The
+	 * copy is built alongside and renamed over the original, so the database
+	 * file is always either the whole original or the whole encrypted copy.
+	 */
+	private static void encryptExistingDatabase( File dbFile, File encrypting, byte[] key ) {
+		long started = System.currentTimeMillis();
+		Log.i(TAG,"Encrypting the existing database (" + dbFile.length() + " bytes)");
+
+		int version;
+		String contents;
+		SQLiteDatabase plain = SQLiteDatabase.openDatabase(dbFile.getPath(), null, EXPORT_OPEN_FLAGS);
+		try {
+			version = plain.getVersion();
+			contents = describeContents(plain);
+			exportTo(plain, encrypting, new String(key, StandardCharsets.US_ASCII), version);
+		}
+		finally {
+			plain.close();
+		}
+
+		if ( isPlainSqlite(encrypting) ) throw new SQLiteException("The encrypted copy is not encrypted");
+		SQLiteDatabase copy = SQLiteDatabase.openDatabase(encrypting.getPath(), key, null,
+				SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS, null);
+		try {
+			if ( copy.getVersion() != version || !describeContents(copy).equals(contents) )
+				throw new SQLiteException("The encrypted copy does not match the original");
+		}
+		finally {
+			copy.close();
+		}
+
+		// A journal left beside the old file must not be applied to the new one.
+		for( String suffix : DATABASE_FILE_SUFFIXES ) {
+			if ( !suffix.isEmpty() ) new File(dbFile.getPath() + suffix).delete();
+		}
+		if ( !encrypting.renameTo(dbFile) ) throw new SQLiteException("Could not move the encrypted copy into place");
+
+		Log.i(TAG,"Database encrypted in " + (System.currentTimeMillis() - started) + "ms");
+	}
+
+	/**
+	 * Copy everything in an open database into another file, which is created.
+	 *
+	 * Two things here were learned the hard way.  The database being copied has
+	 * to have been opened with CREATE_IF_NECESSARY, because SQLite creates an
+	 * attached file only if the connection it is attached to was opened that
+	 * way.  And SQLiteDatabase.rawExecSQL() must not be used: it silently
+	 * ignores a statement that fails when it is run.
+	 *
+	 * @param key The key for the new file, in the form SQLCipher expects, or an
+	 * empty string to write plain SQLite.
+	 */
+	private static void exportTo( SQLiteDatabase db, File target, String key, int version ) {
+		db.execSQL("ATTACH DATABASE ? AS export KEY ?", new Object[] { target.getPath(), key });
+		try {
+			Cursor c = db.rawQuery("SELECT sqlcipher_export('export')", (String[]) null);
+			try {
+				c.moveToFirst();
+			}
+			finally {
+				c.close();
+			}
+			// The export does not carry the schema version across.
+			db.execSQL("PRAGMA export.user_version = " + version);
+		}
+		finally {
+			db.execSQL("DETACH DATABASE export");
+		}
+	}
+
+	/**
+	 * @return The number of things in the schema and of rows in each table, to
+	 * tell whether a copy of a database has everything the original had.
+	 */
+	private static String describeContents( SQLiteDatabase db ) {
+		ArrayList<String> tables = new ArrayList<String>();
+		StringBuilder contents = new StringBuilder();
+		Cursor c = db.rawQuery("SELECT type, name FROM sqlite_master ORDER BY type, name", (String[]) null);
+		try {
+			contents.append(c.getCount()).append(" objects");
+			while( c.moveToNext() ) {
+				if ( "table".equals(c.getString(0)) ) tables.add(c.getString(1));
+			}
+		}
+		finally {
+			c.close();
+		}
+		for( String table : tables ) {
+			c = db.rawQuery("SELECT count(*) FROM \"" + table.replace("\"", "\"\"") + "\"", (String[]) null);
+			try {
+				c.moveToFirst();
+				contents.append(", ").append(table).append('=').append(c.getLong(0));
+			}
+			finally {
+				c.close();
+			}
+		}
+		return contents.toString();
+	}
+
+	/**
+	 * The database is encrypted with a key we no longer have, so nothing in it
+	 * can be read again.  Start afresh: everything except unsynchronised changes
+	 * and the server settings themselves is still on the server.
+	 *
+	 * @return The key for the replacement database, or null to use plain SQLite.
+	 */
+	private static byte[] resetUnreadableDatabase( Context context, File dbFile ) {
+		Log.e(TAG,"The database cannot be decrypted and is being replaced with an empty one");
+		deleteDatabaseFiles(dbFile);
+		DatabaseKeyManager.discardKey(context);
+		notifyDatabaseReset(context);
+		try {
+			return DatabaseKeyManager.getOrCreateKey(context);
+		}
+		catch( GeneralSecurityException | RuntimeException e ) {
+			Log.e(TAG,"No database key available: the new database will not be encrypted", e);
+			return null;
+		}
+	}
+
+	private static void deleteDatabaseFiles( File dbFile ) {
+		for( String suffix : DATABASE_FILE_SUFFIXES ) {
+			new File(dbFile.getPath() + suffix).delete();
+		}
+	}
+
+	private static void notifyDatabaseReset( Context context ) {
+		Intent launch = new Intent(context, aCal.class);
+		launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		PendingIntent pi = PendingIntent.getActivity(context, Constants.DATABASE_RESET_NOTIFICATION_ID, launch,
+				PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+		String text = context.getString(R.string.Database_reset_text);
+		Notification.Builder builder = new Notification.Builder(context, Constants.STATUS_NOTIFICATION_CHANNEL_ID)
+				.setSmallIcon(R.drawable.icon)
+				.setContentTitle(context.getString(R.string.Database_reset_title))
+				.setContentText(text)
+				.setStyle(new Notification.BigTextStyle().bigText(text))
+				.setContentIntent(pi)
+				.setAutoCancel(true);
+		NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+		nm.notify(Constants.DATABASE_RESET_NOTIFICATION_ID, builder.build());
 	}
 
 

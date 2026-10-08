@@ -21,14 +21,14 @@ package org.davical.acal.providers;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
+import net.zetetic.database.sqlcipher.SQLiteQueryBuilder;
 
 import org.davical.acal.database.AcalDBHelper;
 
@@ -63,6 +63,12 @@ public class PathSets extends ContentProvider {
 
     //Database + Table
     private SQLiteDatabase AcalDB;
+
+    private synchronized SQLiteDatabase db() {
+        if ( AcalDB == null ) AcalDB = new AcalDBHelper(getContext()).getWritableDatabase();
+        return AcalDB;
+    }
+
     static final String DATABASE_TABLE = "dav_path_set";
 
     //Path definitions
@@ -108,10 +114,10 @@ public class PathSets extends ContentProvider {
      */
     @Override
     public boolean onCreate() {
-        Context context = getContext();
-        AcalDBHelper dbHelper = new AcalDBHelper(context);
-        AcalDB = dbHelper.getWritableDatabase();
-        return (AcalDB == null)?false:true;
+        // The database is opened on first use, not here: this runs on the main
+        // thread at process start, and the first open may have to wait for the
+        // database to be encrypted.
+        return true;
     }
 
 	/*
@@ -124,14 +130,14 @@ public class PathSets extends ContentProvider {
 		String server_id;
 		switch (uriMatcher.match(uri)){
 		case ALLSETS:
-			count = AcalDB.delete(
+			count = db().delete(
 					DATABASE_TABLE,
 					selection,
 					selectionArgs);
 			break;
 		case ROW_ID_SET:
 			String row_id = uri.getPathSegments().get(0);
-			count = AcalDB.delete(
+			count = db().delete(
 					DATABASE_TABLE,
 					_ID + " = " + row_id +
 					(!TextUtils.isEmpty(selection) ? " AND (" +
@@ -140,7 +146,7 @@ public class PathSets extends ContentProvider {
 			break;
 		case SERVER_ID_SET:
 			server_id = uri.getPathSegments().get(1);
-			count = AcalDB.delete(
+			count = db().delete(
 					DATABASE_TABLE,
 					SERVER_ID + " = " + server_id +
 					(!TextUtils.isEmpty(selection) ? " AND (" +
@@ -150,7 +156,7 @@ public class PathSets extends ContentProvider {
 		case SERVER_ID_TYPE_SET:
 			server_id = uri.getPathSegments().get(1);
 			String set_type = uri.getPathSegments().get(3);
-			count = AcalDB.delete(
+			count = db().delete(
 					DATABASE_TABLE,
 					SERVER_ID + " = " + server_id + " AND " +
 					SET_TYPE + " = " + set_type +
@@ -194,7 +200,7 @@ public class PathSets extends ContentProvider {
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 		//---add a new server---
-		long rowID = AcalDB.insert(
+		long rowID = db().insert(
 				DATABASE_TABLE, "", values);
 
 		//---if added successfully---
@@ -242,7 +248,7 @@ public class PathSets extends ContentProvider {
 //			sortOrder = SERVER_ID + ", " + SET_TYPE;
 
 		Cursor c = sqlBuilder.query(
-				AcalDB,
+				db(),
 				projection,
 				selection,
 				selectionArgs,
@@ -281,14 +287,14 @@ public class PathSets extends ContentProvider {
 
 		switch (uriMatcher.match(uri)){
 		case ALLSETS:
-			count = AcalDB.update(
+			count = db().update(
 					DATABASE_TABLE,
 					values,
 					selection,
 					selectionArgs);
 			break;
 		case ROW_ID_SET:
-			count = AcalDB.update(
+			count = db().update(
 					DATABASE_TABLE,
 					values,
 					_ID + " = " + uri.getPathSegments().get(0) +
@@ -297,7 +303,7 @@ public class PathSets extends ContentProvider {
 							selectionArgs);
 			break;
 		case SERVER_ID_SET:
-			count = AcalDB.update(
+			count = db().update(
 					DATABASE_TABLE,
 					values,
 					SERVER_ID + " = " + uri.getPathSegments().get(1) +
@@ -306,7 +312,7 @@ public class PathSets extends ContentProvider {
 							selectionArgs);
 			break;
 		case SERVER_ID_TYPE_SET:
-			count = AcalDB.update(
+			count = db().update(
 					DATABASE_TABLE,
 					values,
 					SERVER_ID + " = " + uri.getPathSegments().get(1) + " AND " +
@@ -317,19 +323,19 @@ public class PathSets extends ContentProvider {
 			break;
 		case BEGIN_TRANSACTION:	//Return 1 for success or 0 for failure
 				//We are beginning a new transaction only (at this time we wont allow nested tx's)
-				if (AcalDB.inTransaction()) return 0;
-				AcalDB.beginTransaction();
+				if (db().inTransaction()) return 0;
+				db().beginTransaction();
 				return 1;
 
 		case END_TRANSACTION:	//Return 1 for success or 0 for failure
 			//We are ending an existing transaction only
-			if (!AcalDB.inTransaction()) return 0;
-			AcalDB.endTransaction();
+			if (!db().inTransaction()) return 0;
+			db().endTransaction();
 			return 1;
 		case APPROVE_TRANSACTION:	//Return 1 for success or 0 for failure
 			//We are ending an existing transaction only
-			if (!AcalDB.inTransaction()) return 0;
-			AcalDB.setTransactionSuccessful();
+			if (!db().inTransaction()) return 0;
+			db().setTransactionSuccessful();
 			return 1;
 		default: throw new IllegalArgumentException(
 				"Unknown URI " + uri);

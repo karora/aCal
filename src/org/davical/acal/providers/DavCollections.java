@@ -22,16 +22,16 @@ import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
+import net.zetetic.database.sqlcipher.SQLiteQueryBuilder;
 
 import org.davical.acal.Constants;
 import org.davical.acal.database.AcalDBHelper;
@@ -63,6 +63,12 @@ public class DavCollections extends ContentProvider {
     
     //Database + Table
     private SQLiteDatabase AcalDB;
+
+    private synchronized SQLiteDatabase db() {
+        if ( AcalDB == null ) AcalDB = new AcalDBHelper(getContext()).getWritableDatabase();
+        return AcalDB;
+    }
+
     public static final String DATABASE_TABLE = "dav_collection";
 
     // An ID to indicate no ID assigned yet.
@@ -146,10 +152,10 @@ CREATE TABLE dav_collection (
      */
     @Override
     public boolean onCreate() {
-        Context context = getContext();
-        AcalDBHelper dbHelper = new AcalDBHelper(context);
-        AcalDB = dbHelper.getWritableDatabase();
-        return (AcalDB == null)?false:true;
+        // The database is opened on first use, not here: this runs on the main
+        // thread at process start, and the first open may have to wait for the
+        // database to be encrypted.
+        return true;
     }
 
     
@@ -165,23 +171,23 @@ CREATE TABLE dav_collection (
         switch ( uriMatcher.match(uri) ) {
             case ALL_COLLECTIONS:
                 Log.i(TAG,"Deleting "+DATABASE_TABLE+" WHERE "+selection);
-                count = AcalDB.delete(DATABASE_TABLE, selection, selectionArgs);
+                count = db().delete(DATABASE_TABLE, selection, selectionArgs);
                 break;
             case BY_COLLECTION_ID:
                 String id = uri.getPathSegments().get(0);
-                count = AcalDB.delete(DATABASE_TABLE,
+                count = db().delete(DATABASE_TABLE,
                         _ID + " = " + id + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""),
                         selectionArgs);
                 break;
             case BY_SERVER_ID:
                 server_id = uri.getPathSegments().get(1);
-                count = AcalDB.delete(DATABASE_TABLE, SERVER_ID + " = " + server_id +
+                count = db().delete(DATABASE_TABLE, SERVER_ID + " = " + server_id +
                                                       (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
                 break;
             case BY_PATH_AND_SERVER_ID:
                 server_id = uri.getPathSegments().get(1);
                 path = uri.getPathSegments().get(3);
-                count = AcalDB.delete(DATABASE_TABLE, SERVER_ID + " = " + server_id + " AND " + COLLECTION_PATH + " = " + path +
+                count = db().delete(DATABASE_TABLE, SERVER_ID + " = " + server_id + " AND " + COLLECTION_PATH + " = " + path +
                                                       (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
                 break;
             default:
@@ -197,7 +203,7 @@ CREATE TABLE dav_collection (
 				CacheTableManager.TABLE,
 		};
 		for( String table : riTables ) {
-			AcalDB.delete(table, "NOT EXISTS(SELECT 1 FROM "+DATABASE_TABLE+" WHERE "+_ID+"="+table+".collection_id)", null);
+			db().delete(table, "NOT EXISTS(SELECT 1 FROM "+DATABASE_TABLE+" WHERE "+_ID+"="+table+".collection_id)", null);
 		}
 		getContext().getContentResolver().notifyChange(uri, null);
 		return count;      
@@ -233,7 +239,7 @@ CREATE TABLE dav_collection (
 		//---add a new server---
 		long rowID = -1;
 		try {
-		rowID = AcalDB.insertOrThrow(
+		rowID = db().insertOrThrow(
 				DATABASE_TABLE, "", values);
 		} catch (Exception e) {
 			Log.e(TAG,"Error inserting value to DB: "+e.getMessage());
@@ -273,7 +279,7 @@ CREATE TABLE dav_collection (
 		if (sortOrder==null || sortOrder.equals("") )
 			sortOrder = _ID;
 
-		Cursor c = sqlBuilder.query( AcalDB, projection, selection, selectionArgs, null,  null, sortOrder);
+		Cursor c = sqlBuilder.query( db(), projection, selection, selectionArgs, null,  null, sortOrder);
 
 		//---register to watch a content URI for changes---
 		c.setNotificationUri(getContext().getContentResolver(), uri);
@@ -290,22 +296,22 @@ CREATE TABLE dav_collection (
 	
 		switch (uriMatcher.match(uri)){
 		case ALL_COLLECTIONS:
-			count = AcalDB.update( DATABASE_TABLE, values, selection, selectionArgs);
+			count = db().update( DATABASE_TABLE, values, selection, selectionArgs);
 			break;
 		case BY_COLLECTION_ID:                
-			count = AcalDB.update( DATABASE_TABLE, values,
+			count = db().update( DATABASE_TABLE, values,
 					_ID + " = " + uri.getPathSegments().get(0) + 
 					        (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), 
 					selectionArgs);
 			break;
 		case BY_SERVER_ID:                
-			count = AcalDB.update( DATABASE_TABLE, values,
+			count = db().update( DATABASE_TABLE, values,
 					SERVER_ID + " = " + uri.getPathSegments().get(1) + 
 					        (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), 
 					selectionArgs);
 			break;
 		case BY_PATH_AND_SERVER_ID:                
-			count = AcalDB.update( DATABASE_TABLE, values,
+			count = db().update( DATABASE_TABLE, values,
 					SERVER_ID + " = " + uri.getPathSegments().get(1) + 
         					COLLECTION_PATH + " = " + uri.getPathSegments().get(3) +
         					(!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), 
