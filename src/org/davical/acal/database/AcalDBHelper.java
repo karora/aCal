@@ -693,6 +693,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				if ( ready ) return;
 				databaseKey = chooseKey(context.getApplicationContext());
 				ready = true;
+				Log.i(TAG, databaseKey != null ? "The database is encrypted" : "The database is NOT encrypted");
 			}
 		}
 		finally {
