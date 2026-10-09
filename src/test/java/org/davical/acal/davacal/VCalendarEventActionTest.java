@@ -31,7 +31,6 @@ import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.acaltime.AcalRepeatRule;
 import org.davical.acal.activity.EventEdit;
 import org.davical.acal.dataservice.EventInstance;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -199,7 +198,6 @@ public class VCalendarEventActionTest {
 				EventEdit.ACTION_DELETE, EventEdit.INSTANCES_ALL));
 	}
 
-	@Ignore("#56: the master event is lost")
 	@Test
 	public void editingOneInstanceAddsAChangedInstance() throws Exception {
 		String calendar = weekly("");
@@ -216,9 +214,58 @@ public class VCalendarEventActionTest {
 		assertEquals("Just this once", changed.getSummary());
 		assertEquals("20260119T090000", changed.getRecurrenceId().getValue());
 		assertTrue(!changed.getRecurrenceId().isThisAndFuture());
+		assertEquals("20260119T090000", changed.getStart().fmtIcal());
+		// Only the master says how the event repeats
+		assertNull(changed.getProperty(PropertyName.RRULE));
+
+		Masterable master = result.getMasterChild();
+		assertNull(master.getProperty(PropertyName.RECURRENCE_ID));
+		assertEquals("20260105T090000", master.getStart().fmtIcal());
+		assertEquals("FREQ=WEEKLY;COUNT=6", master.getRRule());
 	}
 
-	@Ignore("#56: the master event is lost")
+	@Test
+	public void editingTheFirstInstanceLeavesTheMasterAlone() throws Exception {
+		String calendar = weekly("");
+		EventInstance instance = instanceAt(calendar, "20260105T090000");
+		instance.setSummary("Only the first");
+		String blob = stored(calendar).applyEventAction(instance, EventEdit.ACTION_EDIT, EventEdit.INSTANCES_SINGLE);
+
+		VCalendar result = parse(blob);
+		assertEquals(Arrays.asList("Weekly", "Only the first"), summaries(result));
+		assertEquals("FREQ=WEEKLY;COUNT=6", result.getMasterChild().getRRule());
+	}
+
+	@Test
+	public void editingAnInstanceThatWasAlreadyChangedChangesItAgain() throws Exception {
+		String calendar = weekly("EXDATE;TZID=" + ZONE + ":20260209T090000\r\n",
+				override("20260119T090000", "20260119T140000", "Moved to the afternoon"));
+		EventInstance instance = instanceAt(calendar, "20260119T090000");
+		assertEquals("Moved to the afternoon", instance.getSummary());
+		// Its start is not checked: it is wrongly given as 9am (#57)
+		instance.setSummary("Moved and renamed");
+		String blob = stored(calendar).applyEventAction(instance, EventEdit.ACTION_EDIT, EventEdit.INSTANCES_SINGLE);
+
+		VCalendar result = parse(blob);
+		assertEquals(Arrays.asList("Weekly", "Moved and renamed"), summaries(result));
+		assertEquals(Arrays.asList("0105", "0112", "0119", "0126", "0202"), days(result));
+	}
+
+	@Test
+	public void aNewChangedInstanceDoesNotCopyTheMastersExclusions() throws Exception {
+		String calendar = weekly("EXDATE;TZID=" + ZONE + ":20260209T090000\r\n");
+		EventInstance instance = instanceAt(calendar, "20260119T090000");
+		instance.setSummary("Just this once");
+		String blob = stored(calendar).applyEventAction(instance, EventEdit.ACTION_EDIT, EventEdit.INSTANCES_SINGLE);
+
+		VCalendar result = parse(blob);
+		Masterable changed = result.getChildFromRecurrenceId(
+				RecurrenceId.fromString("RECURRENCE-ID;TZID=" + ZONE + ":20260119T090000"));
+		assertEquals("Just this once", changed.getSummary());
+		assertTrue(changed.getProperties(PropertyName.EXDATE).isEmpty());
+		assertEquals(1, result.getMasterChild().getProperties(PropertyName.EXDATE).size());
+	}
+
 	@Test
 	public void editingThisAndFutureAddsAChangedInstanceWithARange() throws Exception {
 		String calendar = weekly("");
