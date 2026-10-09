@@ -911,6 +911,8 @@ public class AcalRequestor {
 		InputStream result = null;
 		interpretUriString(pathOrUrl);
         this.method = method;
+        // The limit is for this request, not for the life of this object
+        redirectCount = 0;
         do {
     		try {
     			result = sendRequest( headers, entity );
@@ -939,7 +941,7 @@ public class AcalRequestor {
     			}
     		}
 
-    		if ( (statusCode >= 300 && statusCode <= 303) || statusCode == 307 ) {
+    		if ( (statusCode >= 300 && statusCode <= 303) || statusCode == 307 || statusCode == 308 ) {
                 /**
                  * Other than 301/302 these are all pretty unlikely
                  *		300:  Multiple choices, but we take the one in the Location header anyway
@@ -947,6 +949,7 @@ public class AcalRequestor {
                  *		302:  Found (was 'temporary redirect' once in prehistory)
                  *		303:  See other
                  *		307:  Temporary redirect. Meh.
+                 *		308:  Permanent redirect, which some servers use to send http to https
                  */
                 if ( redirectCount++ < redirectLimit ) {
         			String oldUrl = fullUrl();

@@ -102,4 +102,9 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.17'
     testImplementation 'androidx.test:core:1.7.0'
+    // On a device org.apache.http comes from the platform's legacy library; the copy
+    // the SDK gives us to compile against only throws.  This is the real thing.
+    testImplementation 'org.apache.httpcomponents:httpcore:4.4.16'
+    // Keep in step with okhttp above
+    testImplementation 'com.squareup.okhttp3:mockwebserver3:5.5.0'
 }
