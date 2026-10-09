@@ -364,36 +364,58 @@ public class Servers extends ContentProvider {
 	}
 
 	/**
-	 * Encrypt password in ContentValues if present.
+	 * Encrypt password in ContentValues if present.  If it cannot be encrypted
+	 * it is stored as it was given, the same way the database itself carries on
+	 * unencrypted when no key is available, and decryptPassword() will try
+	 * again each time it is read.
 	 */
 	private void encryptPassword(ContentValues values) {
 		if (values != null && values.containsKey(PASSWORD)) {
 			String password = values.getAsString(PASSWORD);
-			if (password != null && !password.isEmpty()) {
-				CredentialManager cm = CredentialManager.getInstance(getContext());
-				// Only encrypt if not already encrypted
-				if (!cm.isEncrypted(password)) {
-					String encrypted = cm.encrypt(password);
-					if (encrypted != null) {
-						values.put(PASSWORD, encrypted);
-					}
+			CredentialManager cm = CredentialManager.getInstance(getContext());
+			if (cm.needsReEncryption(password)) {
+				// Either plaintext, or encrypted the way earlier versions did it
+				String plaintext = cm.decrypt(password);
+				if (plaintext == null) {
+					// An old value we can no longer read
+					return;
 				}
+				String encrypted = cm.encrypt(plaintext);
+				if (encrypted == null) {
+					Log.e(TAG, "Could not encrypt the server password: storing it as it is");
+					return;
+				}
+				values.put(PASSWORD, encrypted);
 			}
 		}
 	}
 
 	/**
-	 * Decrypt password in ContentValues if present.
+	 * Decrypt password in ContentValues if present.  If it was stored as
+	 * plaintext, or encrypted the way earlier versions did it, then the stored
+	 * copy is also brought up to date.
 	 */
 	public static void decryptPassword(Context context, ContentValues values) {
 		if (values != null && values.containsKey(PASSWORD)) {
 			String password = values.getAsString(PASSWORD);
 			if (password != null && !password.isEmpty()) {
 				CredentialManager cm = CredentialManager.getInstance(context);
-				if (cm.isEncrypted(password)) {
-					String decrypted = cm.decrypt(password);
-					if (decrypted != null) {
-						values.put(PASSWORD, decrypted);
+				String decrypted = cm.decrypt(password);
+				if (decrypted == null) return;
+				values.put(PASSWORD, decrypted);
+
+				Long serverId = values.getAsLong(_ID);
+				if (cm.needsReEncryption(password) && serverId != null) {
+					// Encrypting it failed when it was stored, or during the
+					// upgrade to database version 23.  Try again.
+					try {
+						ContentValues update = new ContentValues();
+						update.put(PASSWORD, decrypted);
+						context.getContentResolver().update(
+								ContentUris.withAppendedId(CONTENT_URI, serverId), update, null, null);
+					}
+					catch (Exception e) {
+						Log.w(TAG, "Could not re-encrypt password for server ID: " + serverId, e);
 					}
 				}
 			}
