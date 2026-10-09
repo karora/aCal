@@ -1,7 +1,5 @@
 .gradle/
 build/
-bin/*
-gen/*
 doc/*
 .settings
 design/.*#
@@ -25,13 +23,10 @@ keystore.properties
 *.jks
 *.keystore
 apk/
-custom_rules.xml
-proguard/*
 design/*.odt
 design/*.gnumeric
 design/*.ods
 traces.txt
-Constants.debug
 .idea
 *.ics
 
