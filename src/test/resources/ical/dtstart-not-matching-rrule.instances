@@ -1,0 +1,6 @@
+# aCal always treats DTSTART as the first instance, and counts it, even when
+# it does not match the rule.  RFC 5545 leaves this case undefined, and
+# dateutil leaves DTSTART out, so this file is written by hand.
+20260105T090000 20260104T200000Z
+20260107T090000 20260106T200000Z
+20260114T090000 20260113T200000Z

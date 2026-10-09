@@ -1,0 +1,17 @@
+# Checks that are known to fail, each with the issue that describes why.
+#
+# A check listed here is reported as skipped while it fails, and as a failure
+# once it passes, so that this file cannot go stale.  Remove the line when the
+# issue is fixed.
+#
+# fixture                        check        issue
+daily-until-is-inclusive         instances    #47
+monthly-last-friday              instances    #48
+yearly-leap-day                  instances    #49
+monthly-last-weekday-bysetpos    instances    #50
+rdate-only                       instances    #51
+rdate-with-rrule                 instances    #51
+hourly-interval-6                instances    #52
+text-escaped-semicolon           round-trip   #53
+style-apple                      round-trip   #54
+style-thunderbird                round-trip   #54

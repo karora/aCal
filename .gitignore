@@ -32,3 +32,6 @@ traces.txt
 
 # Local scratch dir (not committed)
 .tmp/
+
+# Test fixtures
+!src/test/resources/**/*.ics

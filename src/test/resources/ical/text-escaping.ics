@@ -1,0 +1,18 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//aCal//test fixture//EN
+BEGIN:VEVENT
+UID:text-escaping
+DTSTAMP:20260101T000000Z
+SUMMARY:Colons: and commas\, in a summary
+DTSTART;TZID=Pacific/Auckland:20260105T090000
+DURATION:PT1H
+DESCRIPTION:Line one\nLine two\, with a comma\, a back\\slash and "quotes".
+  Then a long run of text in te reo Māori to push a multi-byte character a
+ cross a fold: āēīōū āēīōū āēīōū āēīōū āēīōū āē
+ īōū
+LOCATION:Ōtautahi\, Aotearoa
+X-ACAL-TEST;X-PARAM=one;X-OTHER="two; three":value: with a colon
+URL:https://example.com/path?a=1&b=2;c=3
+END:VEVENT
+END:VCALENDAR

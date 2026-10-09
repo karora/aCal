@@ -1,0 +1,2 @@
+# iCalendar files have CRLF line endings, and tests depend on the exact bytes
+*.ics -text
