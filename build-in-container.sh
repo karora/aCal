@@ -26,10 +26,14 @@ if [ -d "${KEYSTORE_DIR}" ]; then
     MOUNTS+=(-v "${KEYSTORE_DIR}:${KEYSTORE_DIR}:ro")
 fi
 
+# The user we run as has no home directory in the container, and Robolectric
+# keeps the Android runtime it downloads under ~/.m2.  Give Java a home in the
+# cache so that is downloaded once, not for every test run.
 docker run --rm \
     --user "$(id -u):$(id -g)" \
     "${MOUNTS[@]}" \
     -e GRADLE_USER_HOME=/gradle-cache \
+    -e JAVA_TOOL_OPTIONS=-Duser.home=/gradle-cache/home \
     -w /workspace \
     "${IMAGE}" \
     ./gradlew "$@"
