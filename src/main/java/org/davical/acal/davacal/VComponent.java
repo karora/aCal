@@ -651,7 +651,8 @@ public abstract class VComponent implements Parcelable {
 		String original = in.readString();
 		ComponentParts origParts = null;
 		if ( original != null ) origParts = new ComponentParts(original);
-		content = new ComponentParts(in.readString());
+		// What was written is folded, and has to be unfolded as it is for any other blob
+		content = new ComponentParts(Constants.rfc5545UnWrapper.matcher(in.readString()).replaceAll(""));
 		setEditable();
 		content = origParts;
 	}

@@ -51,8 +51,8 @@ public class AcalDateRange implements Parcelable, Cloneable {
     };
 
     public AcalDateRange(Parcel in) {
-		this.start = new AcalDateTime(in);
-		this.end = new AcalDateTime(in);
+		this.start = ( in.readByte() == 0 ? null : new AcalDateTime(in) );
+		this.end = ( in.readByte() == 0 ? null : new AcalDateTime(in) );
     }
     
 	@Override
@@ -144,8 +144,11 @@ public class AcalDateRange implements Parcelable, Cloneable {
 	
 	@Override
 	public void writeToParcel(Parcel out, int flags) {
-		start.writeToParcel(out, flags);
-		end.writeToParcel(out, flags);
+		// Either end of a range can be open
+		out.writeByte((byte) (start == null ? 0 : 1));
+		if ( start != null ) start.writeToParcel(out, flags);
+		out.writeByte((byte) (end == null ? 0 : 1));
+		if ( end != null ) end.writeToParcel(out, flags);
 	}
 
 	/**
