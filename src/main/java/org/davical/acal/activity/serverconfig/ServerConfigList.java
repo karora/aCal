@@ -178,12 +178,12 @@ public class ServerConfigList extends AcalAppCompatActivity implements OnClickLi
 		ContentValues server = serverData.get(serverNames[id]);
 		server.put(Servers.FRIENDLY_NAME, serverNames[id]);
 
-		File newxmlfile = new File(Constants.PUBLIC_DATA_DIR+"/"+serverNames[id].replace(' ', '_').replace('/', '-')+".acal");
+		File newxmlfile = new File(Constants.publicDataDir()+"/"+serverNames[id].replace(' ', '_').replace('/', '-')+".acal");
 		if (newxmlfile.exists()) {
 			/** @todo we may wish to handle overwrites here */
 		}
 		try {
-			File publicDataDirectory = new File(Constants.PUBLIC_DATA_DIR);
+			File publicDataDirectory = new File(Constants.publicDataDir());
 			if ( !publicDataDirectory.exists() ) publicDataDirectory.mkdirs();
 
 			newxmlfile.createNewFile();

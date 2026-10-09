@@ -64,7 +64,7 @@ public class AddServerListAdapter extends BaseAdapter {
 
 		//first find all 'acal' files in appropriate directories
 		try {
-			File publicDir = new File(Constants.PUBLIC_DATA_DIR);
+			File publicDir = new File(Constants.publicDataDir());
 			String[] acalFiles = publicDir.list(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
 					return name.substring(name.length()-5).equalsIgnoreCase(".acal");

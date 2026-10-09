@@ -35,7 +35,12 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 public class Constants {
 
-    public static final String PUBLIC_DATA_DIR = Environment.getExternalStorageDirectory() + "/acal/";
+    /**
+     * Not a constant, so that loading this class does not need a device.
+     */
+    public static String publicDataDir() {
+        return Environment.getExternalStorageDirectory() + "/acal/";
+    }
     public static final long MAXIMUM_SERVICE_WORKER_DELAY_MS = 1000 * 60 * 60 * 24;    //maximum time between worker thread runs in ms
     public static final long SERVICE_WORKER_GRACE_PERIOD = 1000 * 60 * 60 * 1;        //Amount of time we will allow worker to be 'late' before assuming its hung
 
