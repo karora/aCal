@@ -83,7 +83,8 @@ public class AlarmRow implements Comparable<AlarmRow> {
 
 	@Override
 	public int compareTo(AlarmRow another) {
-		return (int)(this.timeToFire - another.timeToFire);
+		// Not a subtraction: alarms more than 24 days apart would overflow an int
+		return Long.compare(this.timeToFire, another.timeToFire);
 	}
 
 	public long getTimeToFire() {
