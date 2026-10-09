@@ -140,26 +140,23 @@ public class VCalendar extends VComponent implements Cloneable {
 			childInstance = getMasterChild();
 		}
 		else {
+			// An override of one instance, or of this and future instances.  If
+			// that instance has not been overridden before then the override is
+			// added, starting out as a copy of what the instance is based on.
 			RecurrenceId rrid = RecurrenceId.fromString(calendarInstance.getRecurrenceId());
 			childInstance = getChildFromRecurrenceId(rrid);
-
-			RecurrenceId baseRecurrenceId = null;
-			try {
-				baseRecurrenceId = (RecurrenceId) childInstance.getProperty(PropertyName.RECURRENCE_ID);
-			}
-			catch( ClassCastException e ) {
+			if ( !getChildren().contains(childInstance) ) {
+				addChild(childInstance);
 			}
 			if ( instances == EventEdit.INSTANCES_THIS_FUTURE ) rrid.setThisAndFuture(true);
 
-			if ( baseRecurrenceId == null || !rrid.equals(baseRecurrenceId) ) {
-				childInstance = (Masterable) createComponentFromBlob(childInstance.getCurrentBlob());
-			}
-
-			childInstance.removeProperties(new PropertyName[] { PropertyName.RECURRENCE_ID } );
+			childInstance.setEditable();
+			// Only the master may say how the event repeats
+			childInstance.removeProperties(new PropertyName[] { PropertyName.RECURRENCE_ID,
+					PropertyName.RDATE, PropertyName.EXDATE } );
 			childInstance.addProperty(rrid);
 		}
 
-		childInstance.setEditable();
 		childInstance.removeProperties( new PropertyName[] {PropertyName.DTSTART, PropertyName.DTEND, PropertyName.DURATION,
 				PropertyName.SUMMARY, PropertyName.LOCATION, PropertyName.DESCRIPTION, PropertyName.RRULE } );
 
@@ -184,7 +181,7 @@ public class VCalendar extends VComponent implements Cloneable {
 			childInstance.addProperty(new AcalProperty(PropertyName.DESCRIPTION,description));
 
 		String rrule = calendarInstance.getRRule();
-		if ( rrule != null && !rrule.equals(""))
+		if ( instances == EventEdit.INSTANCES_ALL && rrule != null && !rrule.equals(""))
 			childInstance.addProperty(new AcalProperty(PropertyName.RRULE,rrule));
 
 		childInstance.updateAlarmComponents( calendarInstance.getAlarms() );
@@ -565,50 +562,53 @@ public class VCalendar extends VComponent implements Cloneable {
 	 * @return
 	 */
 	public Masterable getChildFromRecurrenceId(RecurrenceId recurrenceProperty) {
-		Masterable masterInstance = this.getMasterChild();
-		if ( recurrenceProperty == null ) return masterInstance;
+		if ( recurrenceProperty == null ) return this.getMasterChild();
 
-		RecurrenceId testRecurrence = null;
-		boolean recalculateTimes = true;
+		// What the instance is based on: the last RANGE=THISANDFUTURE override
+		// that is before it or, when there isn't one, the master.
+		Masterable base = null;
 		if ( masterHasOverrides() ) {
-			Masterable override = null;
 			try {
 				this.setPersistentOn();
-				List<Masterable> matchingChildren = new ArrayList<Masterable>();
+				RecurrenceId baseRecurrence = null;
 				for (VComponent vc: this.getChildren()) {
-					if (vc.containsPropertyKey(recurrenceProperty.getName()) && vc instanceof Masterable)
-						matchingChildren.add((Masterable) vc);
-				}
-				if (matchingChildren.isEmpty()) {
-					// Won't happen since we test for this in masterHasOverrides()
-					return this.getMasterChild();
-				}
-				Collections.sort(matchingChildren, RecurrenceId.getVComponentComparatorByRecurrenceId());
-				for ( int i = 0; i < matchingChildren.size(); i++ ) {
-					testRecurrence = matchingChildren.get(i).getRecurrenceId();
-					if ( testRecurrence.equals(recurrenceProperty) ) {
-						recalculateTimes = false;
-						override = matchingChildren.get(i);
-						break;
+					if ( !(vc instanceof Masterable) || !vc.containsPropertyKey(recurrenceProperty.getName()) ) continue;
+					Masterable override = (Masterable) vc;
+					RecurrenceId overrideRecurrence = override.getRecurrenceId();
+					if ( overrideRecurrence.equals(recurrenceProperty) ) return override;
+					if ( overrideRecurrence.isThisAndFuture()
+							&& overrideRecurrence.when.before(recurrenceProperty.when)
+							&& ( baseRecurrence == null || overrideRecurrence.when.after(baseRecurrence.when) ) ) {
+						base = override;
+						baseRecurrence = overrideRecurrence;
 					}
-					if ( testRecurrence.overrides(recurrenceProperty) ) {
-						override = matchingChildren.get(i);
-						recalculateTimes = true;
-					}
-					override = matchingChildren.get(i);
 				}
 			} catch (YouMustSurroundThisMethodInTryCatchOrIllEatYouException e) {
 				Log.w(TAG,Log.getStackTraceString(e));
 			} finally {
 				this.setPersistentOff();
 			}
-			if ( !recalculateTimes ) return override;
-			masterInstance = override;
 		}
+		if ( base == null ) base = this.getMasterChild();
+		if ( base == null ) return null;
 
-		masterInstance.setToRecurrence(recurrenceProperty);
+		// While our children are being kept, the base is one of them, and moving
+		// it to this recurrence would change the calendar itself.
+		Masterable instance = ( childrenSet ? detachedCopy(base) : base );
+		instance.setToRecurrence(recurrenceProperty);
 
-		return masterInstance;
+		return instance;
+	}
+
+	/**
+	 * A copy of one of our children, which has us as its parent but is not one of our children.
+	 */
+	private Masterable detachedCopy(Masterable original) {
+		String blob = Constants.rfc5545UnWrapper.matcher(original.getCurrentBlob()).replaceAll("");
+		ComponentParts parts = new ComponentParts(blob);
+		if ( original instanceof VTodo ) return new VTodo(parts, this);
+		if ( original instanceof VJournal ) return new VJournal(parts, this);
+		return new VEvent(parts, this);
 	}
 
 	private static String checkKnownAliases( String tzId ) {
