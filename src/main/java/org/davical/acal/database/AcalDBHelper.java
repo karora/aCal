@@ -112,7 +112,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	/**
 	 * The version of this database. Used to determine if an upgrade is required.
 	 */
-	public static final int DB_VERSION = 22;
+	public static final int DB_VERSION = 23;
 
 
 
@@ -491,6 +491,12 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				Log.i(TAG,"Updating database from version " + oldVersion);
 				oldVersion++;
 				// Migrate plaintext passwords to encrypted storage
+				migratePasswordsToEncrypted(db);
+			}
+			if (oldVersion == 22) {
+				Log.i(TAG,"Updating database from version " + oldVersion);
+				oldVersion++;
+				// Re-encrypt passwords with a key held in the Android Keystore
 				migratePasswordsToEncrypted(db);
 			}
 		}
@@ -1092,8 +1098,9 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	}
 
 	/**
-	 * Migrate existing plaintext passwords to encrypted storage.
-	 * Called during database upgrade to version 22.
+	 * Migrate existing passwords, whether plaintext or encrypted the way
+	 * earlier versions did it, to the current encrypted storage.
+	 * Called during database upgrade to versions 22 and 23.
 	 */
 	private void migratePasswordsToEncrypted(SQLiteDatabase db) {
 		Log.i(TAG, "Migrating passwords to encrypted storage");
@@ -1110,9 +1117,13 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 					long id = cursor.getLong(0);
 					String password = cursor.getString(1);
 
-					if (password != null && !password.isEmpty() && !cm.isEncrypted(password)) {
-						String encrypted = cm.encrypt(password);
-						if (encrypted != null) {
+					if (cm.needsReEncryption(password)) {
+						String plaintext = cm.decrypt(password);
+						String encrypted = plaintext == null ? null : cm.encrypt(plaintext);
+						if (encrypted == null) {
+							Log.w(TAG, "Could not re-encrypt password for server ID: " + id);
+						}
+						else {
 							android.content.ContentValues values = new android.content.ContentValues();
 							values.put(Servers.PASSWORD, encrypted);
 							db.update(Servers.DATABASE_TABLE, values,
