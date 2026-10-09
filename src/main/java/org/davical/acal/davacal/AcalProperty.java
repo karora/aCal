@@ -356,28 +356,29 @@ public class AcalProperty {
 
 	/**
 	 * <p>
-	 * Wrap the inString to have lines at the indicated maxOctets octet length.  This is more
-	 * complex than one might expect, since we're dealing with multi-byte character sets we
-	 * cannot wrap inside a character or we will break it.
+	 * Fold the inString so that no line of it is longer than maxOctets octets, counting the
+	 * space that starts each continuation line.  A line is never folded inside a character:
+	 * doing that would leave something that is not valid UTF-8 on each side of the fold.
 	 * </p>
 	 * @param inString
 	 * @param maxOctets
 	 * @return
 	 */
-	private synchronized String rfc5545Wrap(String inString, int maxOctets) {
-		StringBuilder outString = new StringBuilder();
-		int cutPos;
-		while( inString.getBytes().length >= maxOctets ) {
-			cutPos = maxOctets;
-			while( inString.substring(0, cutPos).getBytes().length >= maxOctets ) cutPos--;
-			if ( outString.length() == 0 )
-				cutPos--; // Allow for the space after we've done the first line
-			else
+	static String rfc5545Wrap(String inString, int maxOctets) {
+		StringBuilder outString = new StringBuilder(inString.length() + 16);
+		int lineOctets = 0;
+		int pos = 0;
+		while( pos < inString.length() ) {
+			int codePoint = inString.codePointAt(pos);
+			int octets = ( codePoint < 0x80 ? 1 : ( codePoint < 0x800 ? 2 : ( codePoint < 0x10000 ? 3 : 4 ) ) );
+			if ( lineOctets + octets > maxOctets ) {
 				outString.append("\r\n ");
-			outString.append(inString.substring(0,cutPos));
-			inString = inString.substring(cutPos);
+				lineOctets = 1;
+			}
+			outString.appendCodePoint(codePoint);
+			lineOctets += octets;
+			pos += Character.charCount(codePoint);
 		}
-		if ( ! inString.equals("") ) outString.append(inString);
 		return outString.toString();
 	}
 }
