@@ -17,6 +17,9 @@ public class SaxDavXmlTreeBuilder  {
 	
 	public static SaxDavNode getXmlTree(InputStream xml) throws IOException {
 		  SAXParserFactory factory = SAXParserFactory.newInstance();
+		  // Android's parser is like this anyway, but others are not unless asked, and
+		  // without it an element is known by its prefix as well: D:href, not href.
+		  factory.setNamespaceAware(true);
 		  SaxDavNode root = new SaxDavNode();
 		  try {
 		        SAXParser saxParser = factory.newSAXParser();

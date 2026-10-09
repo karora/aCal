@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<multistatus xmlns="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+ <response>
+  <href>/caldav.php/user1/home/first-event.ics</href>
+  <propstat>
+   <prop>
+    <getetag>"etag-one"</getetag>
+    <C:calendar-data>BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:first-event
+SUMMARY:Fish &amp; chips &lt;tonight&gt;
+END:VEVENT
+END:VCALENDAR
+</C:calendar-data>
+   </prop>
+   <status>HTTP/1.1 200 OK</status>
+  </propstat>
+ </response>
+ <response>
+  <href>/caldav.php/user1/home/second%20event.ics</href>
+  <propstat>
+   <prop>
+    <getetag>"etag-two"</getetag>
+   </prop>
+   <status>HTTP/1.1 200 OK</status>
+  </propstat>
+  <propstat>
+   <prop>
+    <C:calendar-data/>
+   </prop>
+   <status>HTTP/1.1 404 Not Found</status>
+  </propstat>
+ </response>
+ <response>
+  <href>/caldav.php/user1/home/deleted-event.ics</href>
+  <status>HTTP/1.1 404 Not Found</status>
+ </response>
+ <sync-token>data:,42</sync-token>
+</multistatus>
