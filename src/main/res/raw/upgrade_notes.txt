@@ -131,3 +131,5 @@ Improved repeat rule editing for events
 v69=1.69
 Your calendars, tasks, notes and contacts are now stored encrypted on the device. Existing data is encrypted the first time this version starts.
 aCal's data is no longer included in Android backups or transfers to a new device, so after moving to a new device you will need to add your server again.
+v70=1.70
+Saved server passwords are now encrypted with a key held in the Android Keystore. Existing passwords are converted the first time this version starts.
