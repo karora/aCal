@@ -26,3 +26,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
 
       - run: ./gradlew assembleDebug
+
+      - run: ./gradlew testDebugUnitTest
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: unit-test-reports
+          path: |
+            build/reports/tests/
+            build/test-results/

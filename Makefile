@@ -1,4 +1,4 @@
-.PHONY: bundle debug clean
+.PHONY: bundle release debug test clean
 
 bundle:
 	./build-in-container.sh bundleRelease
@@ -8,6 +8,9 @@ release:
 
 debug:
 	./build-in-container.sh assembleDebug
+
+test:
+	./build-in-container.sh testDebugUnitTest
 
 clean:
 	./build-in-container.sh clean
