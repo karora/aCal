@@ -40,8 +40,11 @@ public class AcalConnectionPool {
 	 * Should be called once during app initialization.
 	 * @param context Application context for certificate storage
 	 */
-	public static void initialize(Context context) {
-		appContext = context.getApplicationContext();
+	public static synchronized void initialize(Context context) {
+		Context newContext = context.getApplicationContext();
+		// A client goes on using the context it was made with
+		if ( newContext != appContext ) httpClient = null;
+		appContext = newContext;
 	}
 
 	/**

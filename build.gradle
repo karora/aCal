@@ -107,4 +107,5 @@ dependencies {
     testImplementation 'org.apache.httpcomponents:httpcore:4.4.16'
     // Keep in step with okhttp above
     testImplementation 'com.squareup.okhttp3:mockwebserver3:5.5.0'
+    testImplementation 'com.squareup.okhttp3:okhttp-tls:5.5.0'
 }

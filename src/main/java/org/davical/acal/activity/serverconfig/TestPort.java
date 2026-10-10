@@ -89,6 +89,8 @@ public class TestPort {
 	 */
 	public TestPort(AcalRequestor requestorIn) {
 		this.requestor = requestorIn;
+		// We are finding out where the server is, so a redirect tells us something
+		requestor.adoptRedirects();
 		this.path = requestor.getPath();
 		this.hostName = requestor.getHostName();
 		this.port = requestor.getPort();

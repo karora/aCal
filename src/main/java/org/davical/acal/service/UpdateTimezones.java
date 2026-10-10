@@ -76,6 +76,8 @@ public class UpdateTimezones extends ServiceJob {
         tzServerBaseUrl = context.getPreferenceString(PrefNames.tzServerBaseUrl, context.getString(R.string.defaultTzServerBaseUrl));
         tzServerBaseUrl = normaliseContext(tzServerBaseUrl);
         this.requestor = new AcalRequestor();
+        // A redirect from the timezone server tells us where it has moved to
+        this.requestor.adoptRedirects();
 
         if (Constants.LOG_DEBUG) Log.d(TAG, "Refreshing Timezone data from " + tzServerBaseUrl);
         refreshTimezoneData();

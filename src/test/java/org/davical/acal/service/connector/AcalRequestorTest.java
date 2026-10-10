@@ -49,6 +49,8 @@ import androidx.test.core.app.ApplicationProvider;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import mockwebserver3.RecordedRequest;
+import okhttp3.tls.HandshakeCertificates;
+import okhttp3.tls.HeldCertificate;
 
 /**
  * The HTTP client, talking to a server on this machine that gives the
@@ -59,6 +61,7 @@ public class AcalRequestorTest {
 
 	private static final String HOST = "127.0.0.1";
 	private static final int HTTP = 0;	// what Servers.USE_SSL holds for plain http
+	private static final int HTTPS = 1;
 	private static final String PROPFIND_BODY = "<?xml version=\"1.0\"?><propfind xmlns=\"DAV:\"><prop><getetag/></prop></propfind>";
 	private static final String MULTISTATUS =
 			"<?xml version=\"1.0\"?><multistatus xmlns=\"DAV:\"><response><href>/cal/a.ics</href></response></multistatus>";
@@ -99,6 +102,21 @@ public class AcalRequestorTest {
 
 	private static MockResponse redirect(int code, String location) {
 		return response(code).addHeader("Location", location).build();
+	}
+
+	private static String urlOn(MockWebServer on, String path) {
+		return "http://" + HOST + ":" + on.getPort() + path;
+	}
+
+	/** An https server with a certificate of its own making, which we are told to accept */
+	private static MockWebServer secureServer() throws IOException {
+		HeldCertificate certificate = new HeldCertificate.Builder().addSubjectAlternativeName(HOST).build();
+		HandshakeCertificates certificates = new HandshakeCertificates.Builder().heldCertificate(certificate).build();
+		MockWebServer secureServer = new MockWebServer();
+		secureServer.useHttps(certificates.sslSocketFactory());
+		secureServer.start(InetAddress.getByName(HOST), 0);
+		EasyX509TrustManager.unpinHost(ApplicationProvider.getApplicationContext(), HOST, secureServer.getPort());
+		return secureServer;
 	}
 
 	private static RecordedRequest next(MockWebServer from) throws InterruptedException {
@@ -278,7 +296,6 @@ public class AcalRequestorTest {
 
 		assertEquals(207, requestor.getStatusCode());
 		assertEquals(MULTISTATUS, body);
-		assertEquals("/caldav.php/user1/", requestor.getPath());
 
 		assertEquals("/.well-known/caldav", next(server).getTarget());
 		RecordedRequest second = next(server);
@@ -289,14 +306,188 @@ public class AcalRequestorTest {
 
 	@Test
 	public void followsARedirectToAnotherServer() throws Exception {
-		server.enqueue(redirect(302, "http://" + HOST + ":" + otherServer.getPort() + "/elsewhere/"));
+		server.enqueue(redirect(302, urlOn(otherServer, "/elsewhere/")));
 		otherServer.enqueue(ok("from the other server"));
 		String body = read(requestor.doRequest("GET", "/cal/", null, null));
 
 		assertEquals("from the other server", body);
-		assertEquals(otherServer.getPort(), requestor.getPort());
+		assertTrue(requestor.wasRedirected());
 		assertEquals("/elsewhere/", next(otherServer).getTarget());
-		assertEquals("http://" + HOST + ":" + otherServer.getPort() + "/elsewhere/", requestor.fullUrl());
+	}
+
+	/**
+	 * A redirect is an answer to one request.  The next request goes to the
+	 * server we were set up with, not to wherever that one was sent.
+	 */
+	@Test
+	public void aRedirectOnlyAppliesToTheRequestThatWasRedirected() throws Exception {
+		server.enqueue(redirect(301, urlOn(otherServer, "/elsewhere/")));
+		otherServer.enqueue(ok("from the other server"));
+		server.enqueue(ok("from our server"));
+
+		requestor.doRequest("GET", "/cal/", null, null);
+		assertEquals(urlOn(server, "/cal/"), requestor.fullUrl());
+
+		assertEquals("from our server", read(requestor.doRequest("GET", null, null, null)));
+		assertEquals(1, otherServer.getRequestCount());
+		next(server);
+		assertEquals("/cal/", next(server).getTarget());
+	}
+
+	@Test
+	public void aRedirectToAnotherPathOnlyAppliesToTheRequestThatWasRedirected() throws Exception {
+		server.enqueue(redirect(301, "/moved/"));
+		server.enqueue(ok("moved"));
+		requestor.doRequest("GET", "/cal/", null, null);
+
+		assertEquals("/cal/", requestor.getPath());
+	}
+
+	@Test
+	public void discoveryCanAdoptWhereARedirectLeads() throws Exception {
+		requestor.adoptRedirects();
+		server.enqueue(redirect(301, urlOn(otherServer, "/caldav.php/")));
+		otherServer.enqueue(ok("one"));
+		otherServer.enqueue(ok("two"));
+
+		requestor.doRequest("GET", "/.well-known/caldav", null, null);
+		assertEquals(urlOn(otherServer, "/caldav.php/"), requestor.fullUrl());
+		assertEquals(otherServer.getPort(), requestor.getPort());
+
+		requestor.doRequest("GET", "/caldav.php/user1/", null, null);
+		assertEquals(2, otherServer.getRequestCount());
+	}
+
+	/**
+	 * Our credentials are for the server we were set up with.  A redirect
+	 * must not hand them to whoever it names.
+	 */
+	@Test
+	public void doesNotSendCredentialsToAnotherServerItIsRedirectedTo() throws Exception {
+		requestor.setAuthType(Servers.AUTH_BASIC);
+		requestor.setAuthRequired();
+		server.enqueue(redirect(302, urlOn(otherServer, "/elsewhere/")));
+		otherServer.enqueue(ok("from the other server"));
+		requestor.doRequest("GET", "/cal/", null, null);
+
+		assertNotNull(next(server).getHeaders().get("Authorization"));
+		assertNull(next(otherServer).getHeaders().get("Authorization"));
+	}
+
+	@Test
+	public void doesNotSendCredentialsToAnotherServerEvenWhenAdoptingRedirects() throws Exception {
+		requestor.adoptRedirects();
+		requestor.setAuthType(Servers.AUTH_BASIC);
+		requestor.setAuthRequired();
+		server.enqueue(redirect(302, urlOn(otherServer, "/elsewhere/")));
+		otherServer.enqueue(ok("one"));
+		otherServer.enqueue(ok("two"));
+		requestor.doRequest("GET", "/cal/", null, null);
+		requestor.doRequest("GET", "/elsewhere/more/", null, null);
+
+		assertNull(next(otherServer).getHeaders().get("Authorization"));
+		assertNull(next(otherServer).getHeaders().get("Authorization"));
+		assertEquals(Servers.AUTH_NONE, requestor.getAuthType());
+	}
+
+	@Test
+	public void answersAnotherServerThatAsksForCredentialsItself() throws Exception {
+		server.enqueue(redirect(301, urlOn(otherServer, "/caldav.php/")));
+		otherServer.enqueue(response(401).addHeader("WWW-Authenticate", "Basic realm=\"other\"").build());
+		otherServer.enqueue(multistatus());
+		requestor.doRequest("PROPFIND", "/.well-known/caldav", null, PROPFIND_BODY);
+
+		assertEquals(207, requestor.getStatusCode());
+		assertNull(next(otherServer).getHeaders().get("Authorization"));
+		assertNotNull(next(otherServer).getHeaders().get("Authorization"));
+	}
+
+	/**
+	 * What another server asked of us is forgotten along with the redirect,
+	 * and what our own server asked of us is remembered.
+	 */
+	@Test
+	public void goesBackToAuthenticatingWithItsOwnServerAfterARedirectElsewhere() throws Exception {
+		requestor.setAuthType(Servers.AUTH_BASIC);
+		requestor.setAuthRequired();
+		server.enqueue(redirect(302, urlOn(otherServer, "/elsewhere/")));
+		otherServer.enqueue(response(401).addHeader("WWW-Authenticate",
+				"Digest realm=\"other\", qop=\"auth\", nonce=\"abc\", opaque=\"def\"").build());
+		otherServer.enqueue(ok("from the other server"));
+		server.enqueue(ok("from our server"));
+
+		requestor.doRequest("GET", "/cal/", null, null);
+		assertEquals(Servers.AUTH_BASIC, requestor.getAuthType());
+
+		requestor.doRequest("GET", "/cal/", null, null);
+		next(server);
+		String authorization = next(server).getHeaders().get("Authorization");
+		assertNotNull(authorization);
+		assertTrue(authorization, authorization.startsWith("Basic "));
+	}
+
+	@Test
+	public void keepsSendingCredentialsAfterARedirectOnTheSameServer() throws Exception {
+		requestor.setAuthType(Servers.AUTH_BASIC);
+		requestor.setAuthRequired();
+		server.enqueue(redirect(301, "/caldav.php/user1/"));
+		server.enqueue(ok("hello"));
+		requestor.doRequest("GET", "/cal/", null, null);
+
+		next(server);
+		assertNotNull(next(server).getHeaders().get("Authorization"));
+	}
+
+	@Test
+	public void aDifferentPortIsADifferentServer() throws Exception {
+		requestor.setAuthType(Servers.AUTH_BASIC);
+		requestor.setAuthRequired();
+		// The same address as our server, so only the port tells them apart
+		server.enqueue(redirect(302, urlOn(otherServer, "/cal/")));
+		otherServer.enqueue(ok("hello"));
+		requestor.doRequest("GET", "/cal/", null, null);
+
+		assertNull(next(otherServer).getHeaders().get("Authorization"));
+	}
+
+	@Test
+	public void neverFollowsARedirectFromHttpsToHttp() throws Exception {
+		MockWebServer secureServer = secureServer();
+		try {
+			AcalRequestor secure = new AcalRequestor(HOST, HTTPS, secureServer.getPort(), "/cal/", "user1", "secret");
+			secure.adoptRedirects();
+			secure.setAuthType(Servers.AUTH_BASIC);
+			secure.setAuthRequired();
+			secureServer.enqueue(redirect(301, urlOn(otherServer, "/cal/")));
+			secure.doRequest("GET", "/cal/", null, null);
+
+			assertEquals("The https server should have been reached", 1, secureServer.getRequestCount());
+			assertEquals(301, secure.getStatusCode());
+			assertEquals(0, otherServer.getRequestCount());
+			assertEquals("https", secure.getProtocol());
+			assertEquals("https://" + HOST + ":" + secureServer.getPort() + "/cal/", secure.fullUrl());
+			assertTrue(!secure.wasRedirected());
+		}
+		finally {
+			secureServer.close();
+		}
+	}
+
+	@Test
+	public void followsARedirectFromHttpToHttpsOnTheSameHostWithItsCredentials() throws Exception {
+		MockWebServer secureServer = secureServer();
+		try {
+			requestor.setAuthType(Servers.AUTH_BASIC);
+			requestor.setAuthRequired();
+			server.enqueue(redirect(308, "https://" + HOST + ":" + secureServer.getPort() + "/cal/"));
+			secureServer.enqueue(ok("securely"));
+
+			assertEquals("securely", read(requestor.doRequest("GET", "/cal/", null, null)));
+			assertNotNull(next(secureServer).getHeaders().get("Authorization"));
+		}
+		finally {
+			secureServer.close();
+		}
 	}
 
 	@Test

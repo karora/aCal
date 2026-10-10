@@ -47,6 +47,7 @@ public class TimezoneServiceDiscovery {
         if (schemeAuthority == null) return null;
         try {
             AcalRequestor requestor = new AcalRequestor();
+            requestor.adoptRedirects();
             requestor.interpretUriString(schemeAuthority + "/.well-known/timezone");
 
             // AcalRequestor follows redirects, so this lands on the service (its capabilities

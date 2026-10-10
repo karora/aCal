@@ -101,6 +101,7 @@ public class AcalRequestor {
 	private int socketTimeOut = 60000;
 	private final int redirectLimit = 5;
 	private int redirectCount = 0;
+	private boolean adoptRedirects = false;
 
 	// For debug logging
 	private Request lastRequest = null;
@@ -892,7 +893,11 @@ public class AcalRequestor {
 	 *
 	 * If the server requests Digest or Basic authentication a second request will be made
 	 * supplying these (if possible).  Likewise the method will follow up to five redirects
-	 * before giving up on a request.
+	 * before giving up on a request, but never one from https to http.  A redirect to
+	 * another server is followed without our credentials, unless that server asks for them.
+	 *
+	 * Unless adoptRedirects() has been called this is left pointing at what was asked
+	 * for, wherever the response came from.
 	 * @param method
 	 * @param pathOrUrl
 	 * @param headers
@@ -913,58 +918,159 @@ public class AcalRequestor {
         this.method = method;
         // The limit is for this request, not for the life of this object
         redirectCount = 0;
-        do {
-    		try {
-    			result = sendRequest( headers, entity );
-    		}
-    		catch (SSLHandshakeException e) 		{ throw e; }
-    		catch (SSLException e) 					{ throw e; }
-    		catch (SendRequestFailedException e)	{ throw e; }
-    		catch (ConnectionFailedException e)		{ throw e; }
-    		catch (AuthenticationFailure e1) 		{ statusCode = 401; }
-    		catch (Exception e) {
-    			Log.e(TAG,Log.getStackTraceString(e));
-    		}
 
-    		if ( statusCode == 401 ) {
-    			// In this case we didn't send auth credentials the first time, so
-    			// we need to try again after we interpret the auth request.
-    			try {
-    				interpretRequestedAuth(getAuthHeader());
-    				return sendRequest( headers, entity );
-    			}
-    			catch (AuthenticationFailure e1) {
-    				throw new SendRequestFailedException("Authentication Failed: "+e1.getMessage());
-    			}
-    			catch (Exception e) {
-    				Log.e(TAG,Log.getStackTraceString(e));
-    			}
-    		}
+        final Location requested = new Location();
+        final Authentication requestedAuth = new Authentication();
+        boolean leftTheServer = false;
+        try {
+        	while( true ) {
+        		try {
+        			result = sendRequest( headers, entity );
+        		}
+        		catch (SSLHandshakeException e) 		{ throw e; }
+        		catch (SSLException e) 					{ throw e; }
+        		catch (SendRequestFailedException e)	{ throw e; }
+        		catch (ConnectionFailedException e)		{ throw e; }
+        		catch (AuthenticationFailure e1) 		{ statusCode = 401; }
+        		catch (Exception e) {
+        			Log.e(TAG,Log.getStackTraceString(e));
+        		}
 
-    		if ( (statusCode >= 300 && statusCode <= 303) || statusCode == 307 || statusCode == 308 ) {
-                /**
-                 * Other than 301/302 these are all pretty unlikely
-                 *		300:  Multiple choices, but we take the one in the Location header anyway
-                 *		301:  Moved permanently
-                 *		302:  Found (was 'temporary redirect' once in prehistory)
-                 *		303:  See other
-                 *		307:  Temporary redirect. Meh.
-                 *		308:  Permanent redirect, which some servers use to send http to https
-                 */
-                if ( redirectCount++ < redirectLimit ) {
-        			String oldUrl = fullUrl();
-        			interpretUriString(getLocationHeader());
-        			if (debugThisRequest)
-        				Log.println(Constants.LOGD,TAG, method + " " +oldUrl+" redirected to: "+fullUrl());
+        		if ( statusCode == 401 ) {
+        			// In this case we didn't send auth credentials the first time, so
+        			// we need to try again after we interpret the auth request.
+        			try {
+        				interpretRequestedAuth(getAuthHeader());
+        				return sendRequest( headers, entity );
+        			}
+        			catch (AuthenticationFailure e1) {
+        				throw new SendRequestFailedException("Authentication Failed: "+e1.getMessage());
+        			}
+        			catch (Exception e) {
+        				Log.e(TAG,Log.getStackTraceString(e));
+        			}
+        		}
 
-        			continue;
-                }
-    		}
-    		else
-    		    break;
-        } while ( redirectCount < redirectLimit );
+        		/**
+        		 * Other than 301/302 these are all pretty unlikely
+        		 *		300:  Multiple choices, but we take the one in the Location header anyway
+        		 *		301:  Moved permanently
+        		 *		302:  Found (was 'temporary redirect' once in prehistory)
+        		 *		303:  See other
+        		 *		307:  Temporary redirect. Meh.
+        		 *		308:  Permanent redirect, which some servers use to send http to https
+        		 */
+        		boolean isRedirect = (statusCode >= 300 && statusCode <= 303) || statusCode == 307 || statusCode == 308;
+        		if ( !isRedirect || redirectCount >= redirectLimit ) break;
+
+        		String location = getLocationHeader();
+        		if ( location.equals("") ) break;
+
+        		Location redirectedFrom = new Location();
+        		interpretUriString(location);
+        		if ( PROTOCOL_HTTPS.equals(redirectedFrom.protocol) && !PROTOCOL_HTTPS.equals(protocol) ) {
+        			// Nothing we were sending securely is ever sent in the clear instead
+        			Log.w(TAG, "Not following a redirect from "+redirectedFrom.url()+" to the insecure "+fullUrl());
+        			redirectedFrom.restore();
+        			break;
+        		}
+        		redirectCount++;
+        		if (debugThisRequest)
+        			Log.println(Constants.LOGD,TAG, method + " " +redirectedFrom.url()+" redirected to: "+fullUrl());
+
+        		if ( !redirectedFrom.isSameServerAsCurrent() ) {
+        			// Another server gets no credentials unless it asks for them itself
+        			leftTheServer = true;
+        			forgetAuthentication();
+        		}
+        	}
+        }
+        finally {
+        	if ( redirectCount > 0 && !adoptRedirects ) {
+        		requested.restore();
+        		if ( leftTheServer ) requestedAuth.restore();
+        	}
+        }
 
 		return result;
+	}
+
+
+	/**
+	 * From now on a redirect changes where this AcalRequestor points, so that
+	 * later requests go there too and fullUrl() says where a request ended up.
+	 * This is for discovering where a server is.  Otherwise a redirect only
+	 * applies to the request that was redirected.
+	 */
+	public void adoptRedirects() {
+		adoptRedirects = true;
+	}
+
+
+	private void forgetAuthentication() {
+		authRequired = false;
+		authType = Servers.AUTH_NONE;
+		authRealm = null;
+		nonce = null;
+		opaque = null;
+		qop = null;
+		algorithm = null;
+		authNC = 0;
+	}
+
+
+	/** Where this AcalRequestor was pointing when this was made */
+	private class Location {
+		final String protocol = AcalRequestor.this.protocol;
+		final String hostName = AcalRequestor.this.hostName;
+		final int port = AcalRequestor.this.port;
+		final String path = AcalRequestor.this.path;
+
+		void restore() {
+			AcalRequestor.this.protocol = protocol;
+			AcalRequestor.this.hostName = hostName;
+			AcalRequestor.this.port = port;
+			AcalRequestor.this.path = path;
+		}
+
+		String url() {
+			return protocol + "://" + hostName + ":" + port + path;
+		}
+
+		/**
+		 * Whether the place we now point at may be sent what this one was: the
+		 * same host on the same port, or the same host moving from http to https.
+		 */
+		boolean isSameServerAsCurrent() {
+			if ( hostName == null || !hostName.equalsIgnoreCase(AcalRequestor.this.hostName) ) return false;
+			if ( protocol == null ) return false;
+			if ( protocol.equals(AcalRequestor.this.protocol) ) return port == AcalRequestor.this.port;
+			return PROTOCOL_HTTPS.equals(AcalRequestor.this.protocol);
+		}
+	}
+
+
+	/** How this AcalRequestor was authenticating when this was made */
+	private class Authentication {
+		final boolean authRequired = AcalRequestor.this.authRequired;
+		final int authType = AcalRequestor.this.authType;
+		final String authRealm = AcalRequestor.this.authRealm;
+		final String nonce = AcalRequestor.this.nonce;
+		final String opaque = AcalRequestor.this.opaque;
+		final String qop = AcalRequestor.this.qop;
+		final String algorithm = AcalRequestor.this.algorithm;
+		final int authNC = AcalRequestor.this.authNC;
+
+		void restore() {
+			AcalRequestor.this.authRequired = authRequired;
+			AcalRequestor.this.authType = authType;
+			AcalRequestor.this.authRealm = authRealm;
+			AcalRequestor.this.nonce = nonce;
+			AcalRequestor.this.opaque = opaque;
+			AcalRequestor.this.qop = qop;
+			AcalRequestor.this.algorithm = algorithm;
+			AcalRequestor.this.authNC = authNC;
+		}
 	}
 
 
