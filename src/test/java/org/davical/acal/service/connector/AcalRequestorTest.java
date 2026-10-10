@@ -462,6 +462,77 @@ public class AcalRequestorTest {
 		assertTrue(authorization, authorization.startsWith("Basic "));
 	}
 
+	/**
+	 * Which server is ours is worked out afresh at every step, so it does
+	 * not matter how many steps a redirect takes to get somewhere else.
+	 */
+	@Test
+	public void aLongerWayRoundToAnotherServerGetsItNoCredentials() throws Exception {
+		MockWebServer secureOther = secureServer();
+		try {
+			requestor.setAuthType(Servers.AUTH_BASIC);
+			requestor.setAuthRequired();
+			server.enqueue(redirect(302, urlOn(otherServer, "/one/")));
+			otherServer.enqueue(redirect(302, "/two/"));
+			// The other server moving to https does not make it ours
+			otherServer.enqueue(redirect(308, "https://" + HOST + ":" + secureOther.getPort() + "/three/"));
+			secureOther.enqueue(response(401).addHeader("WWW-Authenticate", "Basic realm=\"other\"").build());
+			secureOther.enqueue(ok("too late"));
+			requestor.doRequest("GET", "/cal/", null, null);
+
+			assertEquals(401, requestor.getStatusCode());
+			assertNull(next(otherServer).getHeaders().get("Authorization"));
+			assertNull(next(otherServer).getHeaders().get("Authorization"));
+			assertEquals(1, secureOther.getRequestCount());
+			assertNull(next(secureOther).getHeaders().get("Authorization"));
+		}
+		finally {
+			secureOther.close();
+		}
+	}
+
+	@Test
+	public void aRedirectBackToItsOwnServerGetsItsCredentialsAgain() throws Exception {
+		requestor.setAuthType(Servers.AUTH_BASIC);
+		requestor.setAuthRequired();
+		server.enqueue(redirect(302, urlOn(otherServer, "/login-check/")));
+		otherServer.enqueue(redirect(302, urlOn(server, "/cal/home/")));
+		server.enqueue(ok("home"));
+
+		assertEquals("home", read(requestor.doRequest("GET", "/cal/", null, null)));
+		assertNull(next(otherServer).getHeaders().get("Authorization"));
+		next(server);
+		assertNotNull(next(server).getHeaders().get("Authorization"));
+	}
+
+	@Test
+	public void anAdoptedServerMovingToHttpsStillHasToAsk() throws Exception {
+		MockWebServer secureOther = secureServer();
+		try {
+			requestor.adoptRedirects();
+			server.enqueue(redirect(302, urlOn(otherServer, "/one/")));
+			otherServer.enqueue(ok("one"));
+			requestor.doRequest("GET", "/cal/", null, null);
+
+			requestor.setAuthType(Servers.AUTH_BASIC);
+			requestor.setAuthRequired();
+			otherServer.enqueue(redirect(308, "https://" + HOST + ":" + secureOther.getPort() + "/two/"));
+			secureOther.enqueue(ok("two"));
+			secureOther.enqueue(ok("three"));
+			requestor.doRequest("GET", "/one/", null, null);
+			requestor.setAuthRequired();
+			requestor.doRequest("GET", "/two/", null, null);
+
+			next(otherServer);
+			assertNull(next(otherServer).getHeaders().get("Authorization"));
+			assertNull(next(secureOther).getHeaders().get("Authorization"));
+			assertNull(next(secureOther).getHeaders().get("Authorization"));
+		}
+		finally {
+			secureOther.close();
+		}
+	}
+
 	@Test
 	public void keepsSendingCredentialsAfterARedirectOnTheSameServer() throws Exception {
 		requestor.setAuthType(Servers.AUTH_BASIC);
@@ -510,20 +581,33 @@ public class AcalRequestorTest {
 	}
 
 	@Test
-	public void followsARedirectFromHttpToHttpsOnTheSameHostWithItsCredentials() throws Exception {
+	public void followsARedirectFromHttpToHttps() throws Exception {
 		MockWebServer secureServer = secureServer();
 		try {
-			requestor.setAuthType(Servers.AUTH_BASIC);
-			requestor.setAuthRequired();
 			server.enqueue(redirect(308, "https://" + HOST + ":" + secureServer.getPort() + "/cal/"));
 			secureServer.enqueue(ok("securely"));
 
 			assertEquals("securely", read(requestor.doRequest("GET", "/cal/", null, null)));
-			assertNotNull(next(secureServer).getHeaders().get("Authorization"));
 		}
 		finally {
 			secureServer.close();
 		}
+	}
+
+	@Test
+	public void onlyTheSamePlaceOrItsHttpsCounterpartIsTheSameServer() {
+		assertTrue(AcalRequestor.isSameServer("https", "dav.example.net", 443, "https", "dav.example.net", 443));
+		assertTrue(AcalRequestor.isSameServer("https", "dav.example.net", 443, "https", "DAV.example.net", 443));
+		assertTrue(AcalRequestor.isSameServer("http", "dav.example.net", 80, "https", "dav.example.net", 443));
+
+		assertTrue(!AcalRequestor.isSameServer("https", "dav.example.net", 443, "https", "example.net", 443));
+		assertTrue(!AcalRequestor.isSameServer("https", "dav.example.net", 443, "https", "dav.example.net.evil.example", 443));
+		assertTrue(!AcalRequestor.isSameServer("https", "dav.example.net", 443, "https", "dav.example.net", 8443));
+		assertTrue(!AcalRequestor.isSameServer("https", "dav.example.net", 443, "http", "dav.example.net", 80));
+		// Someone else may be running whatever answers on another port
+		assertTrue(!AcalRequestor.isSameServer("http", "dav.example.net", 80, "https", "dav.example.net", 8443));
+		assertTrue(!AcalRequestor.isSameServer("http", "dav.example.net", 8008, "https", "dav.example.net", 443));
+		assertTrue(!AcalRequestor.isSameServer(null, null, 0, "https", "dav.example.net", 443));
 	}
 
 	@Test

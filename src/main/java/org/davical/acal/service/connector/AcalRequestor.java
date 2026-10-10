@@ -102,8 +102,10 @@ public class AcalRequestor {
 	private final int redirectLimit = 5;
 	private int redirectCount = 0;
 	private boolean adoptRedirects = false;
-	// A server a redirect sent us to, which has not asked for our credentials
+	// A server a redirect led us to and left us at, which has not asked for our credentials
 	private Location notAskedForCredentials = null;
+	// Whether the request being sent is going somewhere that must not see our credentials
+	private boolean withholdCredentials = false;
 
 	// For debug logging
 	private Request lastRequest = null;
@@ -766,7 +768,7 @@ public class AcalRequestor {
 			}
 
 			// Add authentication header
-			if ( notAskedForCredentials != null && notAskedForCredentials.isCurrentServer() ) {
+			if ( withholdCredentials ) {
 				// Not even if we have been told to send them without being asked
 			}
 			else if ( authRequired && authType != Servers.AUTH_NONE) {
@@ -926,11 +928,16 @@ public class AcalRequestor {
         // The limit is for this request, not for the life of this object
         redirectCount = 0;
 
+        // Our credentials are for the server we are pointing at now.  Anywhere
+        // a redirect takes us from here is another server, as is where we are
+        // now if an earlier redirect left us here and it has yet to ask for them.
         final Location requested = new Location();
-        final Authentication requestedAuth = new Authentication();
-        boolean leftTheServer = false;
+        final boolean startedElsewhere = notAskedForCredentials != null && notAskedForCredentials.leadsToCurrent();
+        boolean wasAsked = false;
         try {
         	while( true ) {
+        		boolean elsewhere = startedElsewhere || !requested.leadsToCurrent();
+        		withholdCredentials = elsewhere;
         		try {
         			result = sendRequest( headers, entity );
         		}
@@ -943,10 +950,9 @@ public class AcalRequestor {
         			Log.e(TAG,Log.getStackTraceString(e));
         		}
 
-        		if ( statusCode == 401 && !adoptRedirects
-        				&& notAskedForCredentials != null && notAskedForCredentials.isCurrentServer() ) {
-        			// Our credentials are for the server we were set up with.  Only
-        			// setting up a server may give them to one a redirect led to.
+        		if ( statusCode == 401 && elsewhere && !adoptRedirects ) {
+        			// Only setting up a server may give our credentials to one
+        			// that a redirect led to, however it asks.
         			Log.w(TAG, "Not authenticating to "+protocolHostPort()+" which "+requested.url()+" redirected to");
         			break;
         		}
@@ -956,7 +962,8 @@ public class AcalRequestor {
         			// we need to try again after we interpret the auth request.
         			try {
         				interpretRequestedAuth(getAuthHeader());
-        				notAskedForCredentials = null;
+        				wasAsked = true;
+        				withholdCredentials = false;
         				return sendRequest( headers, entity );
         			}
         			catch (AuthenticationFailure e1) {
@@ -994,18 +1001,23 @@ public class AcalRequestor {
         		if (debugThisRequest)
         			Log.println(Constants.LOGD,TAG, method + " " +redirectedFrom.url()+" redirected to: "+fullUrl());
 
-        		if ( !redirectedFrom.isSameServerAsCurrent() ) {
-        			// Another server gets no credentials unless it asks for them itself
-        			leftTheServer = true;
+        		if ( adoptRedirects && !redirectedFrom.leadsToCurrent() ) {
+        			// What we keep is what this server asks of us, not the last one
         			forgetAuthentication();
-        			notAskedForCredentials = new Location();
         		}
         	}
         }
         finally {
-        	if ( redirectCount > 0 && !adoptRedirects ) {
-        		requested.restore();
-        		if ( leftTheServer ) requestedAuth.restore();
+        	withholdCredentials = false;
+        	if ( !adoptRedirects ) {
+        		// Nothing another server said was listened to, so only where we point has changed
+        		if ( redirectCount > 0 ) requested.restore();
+        		notAskedForCredentials = null;
+        	}
+        	else if ( !wasAsked && (startedElsewhere || !requested.leadsToCurrent()) ) {
+        		notAskedForCredentials = new Location();
+        	}
+        	else {
         		notAskedForCredentials = null;
         	}
         }
@@ -1057,46 +1069,25 @@ public class AcalRequestor {
 			return protocol + "://" + hostName + ":" + port + path;
 		}
 
-		boolean isCurrentServer() {
-			return hostName != null && hostName.equalsIgnoreCase(AcalRequestor.this.hostName)
-					&& protocol != null && protocol.equals(AcalRequestor.this.protocol)
-					&& port == AcalRequestor.this.port;
-		}
-
-		/**
-		 * Whether the place we now point at may be sent what this one was: the
-		 * same host on the same port, or the same host moving from http to https.
-		 */
-		boolean isSameServerAsCurrent() {
-			if ( hostName == null || !hostName.equalsIgnoreCase(AcalRequestor.this.hostName) ) return false;
-			if ( protocol == null ) return false;
-			if ( protocol.equals(AcalRequestor.this.protocol) ) return port == AcalRequestor.this.port;
-			return PROTOCOL_HTTPS.equals(AcalRequestor.this.protocol);
+		/** Whether the place we now point at may be sent what this one was */
+		boolean leadsToCurrent() {
+			return isSameServer(protocol, hostName, port,
+					AcalRequestor.this.protocol, AcalRequestor.this.hostName, AcalRequestor.this.port);
 		}
 	}
 
 
-	/** How this AcalRequestor was authenticating when this was made */
-	private class Authentication {
-		final boolean authRequired = AcalRequestor.this.authRequired;
-		final int authType = AcalRequestor.this.authType;
-		final String authRealm = AcalRequestor.this.authRealm;
-		final String nonce = AcalRequestor.this.nonce;
-		final String opaque = AcalRequestor.this.opaque;
-		final String qop = AcalRequestor.this.qop;
-		final String algorithm = AcalRequestor.this.algorithm;
-		final int authNC = AcalRequestor.this.authNC;
-
-		void restore() {
-			AcalRequestor.this.authRequired = authRequired;
-			AcalRequestor.this.authType = authType;
-			AcalRequestor.this.authRealm = authRealm;
-			AcalRequestor.this.nonce = nonce;
-			AcalRequestor.this.opaque = opaque;
-			AcalRequestor.this.qop = qop;
-			AcalRequestor.this.algorithm = algorithm;
-			AcalRequestor.this.authNC = authNC;
-		}
+	/**
+	 * Whether what was being sent to one place may be sent to another: only
+	 * to the same host on the same port and protocol, or to the same host
+	 * moving from http to https on the usual ports for them.
+	 */
+	static boolean isSameServer( String fromProtocol, String fromHost, int fromPort,
+									String toProtocol, String toHost, int toPort ) {
+		if ( fromHost == null || fromProtocol == null || !fromHost.equalsIgnoreCase(toHost) ) return false;
+		if ( fromProtocol.equals(toProtocol) ) return fromPort == toPort;
+		return PROTOCOL_HTTP.equals(fromProtocol) && fromPort == 80
+				&& PROTOCOL_HTTPS.equals(toProtocol) && toPort == 443;
 	}
 
 
