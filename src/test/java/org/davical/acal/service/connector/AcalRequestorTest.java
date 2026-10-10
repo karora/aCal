@@ -383,11 +383,30 @@ public class AcalRequestorTest {
 		otherServer.enqueue(ok("one"));
 		otherServer.enqueue(ok("two"));
 		requestor.doRequest("GET", "/cal/", null, null);
+		assertEquals(Servers.AUTH_NONE, requestor.getAuthType());
+
+		// Server setup does this before each request, and guesses at the type
+		requestor.setAuthType(Servers.AUTH_BASIC);
+		requestor.setAuthRequired();
 		requestor.doRequest("GET", "/elsewhere/more/", null, null);
 
 		assertNull(next(otherServer).getHeaders().get("Authorization"));
 		assertNull(next(otherServer).getHeaders().get("Authorization"));
-		assertEquals(Servers.AUTH_NONE, requestor.getAuthType());
+	}
+
+	@Test
+	public void sendsCredentialsToAnAdoptedServerOnceItHasAskedForThem() throws Exception {
+		requestor.adoptRedirects();
+		server.enqueue(redirect(302, urlOn(otherServer, "/elsewhere/")));
+		otherServer.enqueue(response(401).addHeader("WWW-Authenticate", "Basic realm=\"other\"").build());
+		otherServer.enqueue(ok("one"));
+		otherServer.enqueue(ok("two"));
+		requestor.doRequest("GET", "/cal/", null, null);
+		requestor.doRequest("GET", "/elsewhere/more/", null, null);
+
+		assertNull(next(otherServer).getHeaders().get("Authorization"));
+		assertNotNull(next(otherServer).getHeaders().get("Authorization"));
+		assertNotNull(next(otherServer).getHeaders().get("Authorization"));
 	}
 
 	@Test

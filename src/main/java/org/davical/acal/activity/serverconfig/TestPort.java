@@ -248,6 +248,10 @@ public class TestPort {
 						requestor.setAuthType(Servers.AUTH_DIGEST);
 						if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGD,TAG, "Guessing Digest Authentication");
 					}
+					else {
+						// We have nothing else to offer it
+						return false;
+					}
 					return doPropfindPrincipal(requestPath);
 				}
 

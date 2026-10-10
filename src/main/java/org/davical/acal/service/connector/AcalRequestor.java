@@ -102,6 +102,8 @@ public class AcalRequestor {
 	private final int redirectLimit = 5;
 	private int redirectCount = 0;
 	private boolean adoptRedirects = false;
+	// A server a redirect sent us to, which has not asked for our credentials
+	private Location notAskedForCredentials = null;
 
 	// For debug logging
 	private Request lastRequest = null;
@@ -578,7 +580,8 @@ public class AcalRequestor {
 
 
 	/**
-	 * Force the next request to use authentication pre-emptively.
+	 * Force the next request to use authentication pre-emptively.  This has no
+	 * effect on a server that a redirect led to, until that server asks for it.
 	 */
 	public void setAuthRequired() {
 		authRequired = true;
@@ -763,7 +766,10 @@ public class AcalRequestor {
 			}
 
 			// Add authentication header
-			if ( authRequired && authType != Servers.AUTH_NONE) {
+			if ( notAskedForCredentials != null && notAskedForCredentials.isCurrentServer() ) {
+				// Not even if we have been told to send them without being asked
+			}
+			else if ( authRequired && authType != Servers.AUTH_NONE) {
 				Header authHeader = buildAuthHeader();
 				requestBuilder.header(authHeader.getName(), authHeader.getValue());
 			}
@@ -941,6 +947,7 @@ public class AcalRequestor {
         			// we need to try again after we interpret the auth request.
         			try {
         				interpretRequestedAuth(getAuthHeader());
+        				notAskedForCredentials = null;
         				return sendRequest( headers, entity );
         			}
         			catch (AuthenticationFailure e1) {
@@ -982,6 +989,7 @@ public class AcalRequestor {
         			// Another server gets no credentials unless it asks for them itself
         			leftTheServer = true;
         			forgetAuthentication();
+        			notAskedForCredentials = new Location();
         		}
         	}
         }
@@ -989,6 +997,7 @@ public class AcalRequestor {
         	if ( redirectCount > 0 && !adoptRedirects ) {
         		requested.restore();
         		if ( leftTheServer ) requestedAuth.restore();
+        		notAskedForCredentials = null;
         	}
         }
 
@@ -1035,6 +1044,12 @@ public class AcalRequestor {
 
 		String url() {
 			return protocol + "://" + hostName + ":" + port + path;
+		}
+
+		boolean isCurrentServer() {
+			return hostName != null && hostName.equalsIgnoreCase(AcalRequestor.this.hostName)
+					&& protocol != null && protocol.equals(AcalRequestor.this.protocol)
+					&& port == AcalRequestor.this.port;
 		}
 
 		/**
