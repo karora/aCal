@@ -900,7 +900,8 @@ public class AcalRequestor {
 	 * If the server requests Digest or Basic authentication a second request will be made
 	 * supplying these (if possible).  Likewise the method will follow up to five redirects
 	 * before giving up on a request, but never one from https to http.  A redirect to
-	 * another server is followed without our credentials, unless that server asks for them.
+	 * another server is followed without our credentials.  If that server asks for them
+	 * it only gets them when adoptRedirects() has been called.
 	 *
 	 * Unless adoptRedirects() has been called this is left pointing at what was asked
 	 * for, wherever the response came from.
@@ -940,6 +941,14 @@ public class AcalRequestor {
         		catch (AuthenticationFailure e1) 		{ statusCode = 401; }
         		catch (Exception e) {
         			Log.e(TAG,Log.getStackTraceString(e));
+        		}
+
+        		if ( statusCode == 401 && !adoptRedirects
+        				&& notAskedForCredentials != null && notAskedForCredentials.isCurrentServer() ) {
+        			// Our credentials are for the server we were set up with.  Only
+        			// setting up a server may give them to one a redirect led to.
+        			Log.w(TAG, "Not authenticating to "+protocolHostPort()+" which "+requested.url()+" redirected to");
+        			break;
         		}
 
         		if ( statusCode == 401 ) {
@@ -1008,8 +1017,10 @@ public class AcalRequestor {
 	/**
 	 * From now on a redirect changes where this AcalRequestor points, so that
 	 * later requests go there too and fullUrl() says where a request ended up.
-	 * This is for discovering where a server is.  Otherwise a redirect only
-	 * applies to the request that was redirected.
+	 * A server that a redirect leads to will also be given our credentials if it
+	 * asks for them.  This is for discovering where a server is.  Otherwise a
+	 * redirect only applies to the request that was redirected, and our credentials
+	 * only go to the server we were pointed at.
 	 */
 	public void adoptRedirects() {
 		adoptRedirects = true;

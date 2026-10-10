@@ -409,8 +409,26 @@ public class AcalRequestorTest {
 		assertNotNull(next(otherServer).getHeaders().get("Authorization"));
 	}
 
+	/**
+	 * Asking is not enough.  Whoever can redirect us could ask, so outside
+	 * of setting up a server the answer is no.
+	 */
 	@Test
-	public void answersAnotherServerThatAsksForCredentialsItself() throws Exception {
+	public void doesNotAnswerAnotherServerThatAsksForCredentials() throws Exception {
+		server.enqueue(redirect(301, urlOn(otherServer, "/caldav.php/")));
+		otherServer.enqueue(response(401).addHeader("WWW-Authenticate", "Basic realm=\"other\"").build());
+		otherServer.enqueue(multistatus());
+		requestor.doRequest("PROPFIND", "/cal/", null, PROPFIND_BODY);
+
+		assertEquals(401, requestor.getStatusCode());
+		assertEquals(1, otherServer.getRequestCount());
+		assertNull(next(otherServer).getHeaders().get("Authorization"));
+		assertEquals(urlOn(server, "/cal/"), requestor.fullUrl());
+	}
+
+	@Test
+	public void discoveryAnswersAnotherServerThatAsksForCredentialsItself() throws Exception {
+		requestor.adoptRedirects();
 		server.enqueue(redirect(301, urlOn(otherServer, "/caldav.php/")));
 		otherServer.enqueue(response(401).addHeader("WWW-Authenticate", "Basic realm=\"other\"").build());
 		otherServer.enqueue(multistatus());
@@ -432,7 +450,6 @@ public class AcalRequestorTest {
 		server.enqueue(redirect(302, urlOn(otherServer, "/elsewhere/")));
 		otherServer.enqueue(response(401).addHeader("WWW-Authenticate",
 				"Digest realm=\"other\", qop=\"auth\", nonce=\"abc\", opaque=\"def\"").build());
-		otherServer.enqueue(ok("from the other server"));
 		server.enqueue(ok("from our server"));
 
 		requestor.doRequest("GET", "/cal/", null, null);
