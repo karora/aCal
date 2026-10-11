@@ -196,6 +196,9 @@ public abstract class AcalRepeatRuleParser {
 			case WEEKLY:	return new AcalRepeatWeekly(rRule, f);
 			case MONTHLY:	return new AcalRepeatMonthly(rRule, f);
 			case YEARLY:	return new AcalRepeatYearly(rRule, f);
+			case HOURLY:
+			case MINUTELY:
+			case SECONDLY:	return new AcalRepeatSubDaily(rRule, f);
 		}
 		return null;
 	}
@@ -392,6 +395,14 @@ public abstract class AcalRepeatRuleParser {
 	}
 
 	protected abstract void nextFrequency();
+
+	/**
+	 * How many sets in a row may be empty before the rule is taken to have no more
+	 * instances, which is what stops a rule that can never be met from going on for ever.
+	 */
+	protected int mostEmptySets() {
+		return 50;
+	}
 	public abstract List<AcalDateTime> buildSet();
 	public abstract String getFrequencyName();
 	public abstract String getPrettyFrequencyName(Context cx);
@@ -573,7 +584,7 @@ public abstract class AcalRepeatRuleParser {
 
 
 	protected void expandByHour() {
-		if ( byday == null ) return;
+		if ( byhour == null ) return;
 		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
 		for( AcalDateTime c : currentSet ) {
 			for( int h :  byhour ) {
@@ -587,7 +598,7 @@ public abstract class AcalRepeatRuleParser {
 
 
 	protected void expandByMinute() {
-		if ( byday == null ) return;
+		if ( byminute == null ) return;
 		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
 		for( AcalDateTime c : currentSet ) {
 			for( int m :  byminute ) {
@@ -601,7 +612,7 @@ public abstract class AcalRepeatRuleParser {
 
 
 	protected void expandBySecond() {
-		if ( byday == null ) return;
+		if ( bysecond == null ) return;
 		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
 		for( AcalDateTime c : currentSet ) {
 			for( int s :  bysecond ) {
@@ -641,6 +652,22 @@ public abstract class AcalRepeatRuleParser {
 		for( int month : bymonth ) {
 			for( AcalDateTime c : currentSet ) {
 				if ( c.get(AcalDateTime.MONTH) == month ) finalSet.add(c);
+			}
+		}
+		currentSet = finalSet;
+	}
+
+
+	/** Keeps the members of the set which have one of the values allowed in the field given. */
+	protected void limitBy( short field, int[] allowed ) {
+		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
+		for( AcalDateTime c : currentSet ) {
+			int value = c.get(field);
+			for( int each : allowed ) {
+				if ( each == value ) {
+					finalSet.add(c);
+					break;
+				}
 			}
 		}
 		currentSet = finalSet;

@@ -219,14 +219,13 @@ public class AcalRepeatRule {
 	/**
 	 * <h3>Internal enum for types of FREQ=type</h3>
 	 * <p>
-	 * At present we only support Yearly, Monthly, Weekly Daily.  Hourly, Minutely and Secondly are
-	 * omitted, although the code is fairly trivial, and we should probably write it for completeness.
+	 * The frequencies of a repeat rule.
 	 * </p>
 	 *
 	 * @author Morphoss Ltd
 	 */
 	public enum RRuleFreqType {
-		YEARLY, MONTHLY, WEEKLY, DAILY; //, HOURLY, MINUTELY, SECONDLY;
+		YEARLY, MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY, SECONDLY;
 
 		private final static Pattern	freqPattern	= Pattern.compile(
 						".*FREQ=((?:WEEK|DAI|YEAR|MONTH|HOUR|MINUTE|SECOND)LY).*",
@@ -253,17 +252,12 @@ public class AcalRepeatRule {
 					return WEEKLY;
 				case 'D':
 					return DAILY;
-//				case 'H':
-//					return HOURLY;
-//				case 'S':
-//					return SECONDLY;
+				case 'H':
+					return HOURLY;
+				case 'S':
+					return SECONDLY;
 				case 'M':
-//					switch (m.group(1).charAt(1)) {
-//						case 'O':
-							return MONTHLY;
-//						case 'I':
-//							return MINUTELY;
-//					}
+					return ( m.group(1).charAt(1) == 'I' ? MINUTELY : MONTHLY );
 			}
 			throw new IllegalArgumentException("Invalid frequency 'FREQ="+m.group(1)+"' in RRULE definition: "+stFreq);
 		}
@@ -352,7 +346,7 @@ public class AcalRepeatRule {
 		   	repeatRule.nextBaseDate(baseDate);
 	    	List<AcalDateTime> newSet = repeatRule.buildSet();
 	    	if ( newSet.isEmpty() ) {
-	    		if ( emptySets++ > 50 ) {
+	    		if ( emptySets++ > repeatRule.mostEmptySets() ) {
 	    			finished = true;
 	    			Log.e(TAG,"Too many empty sets processing "+repeatRule.toString());
 	    		}

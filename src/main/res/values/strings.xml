@@ -188,6 +188,12 @@
     <string name="EveryMonth">Monthly</string>
     <string name="EveryYear">Yearly</string>
     <string name="EveryNDays">Every %s days</string>
+    <string name="EveryHour">Hourly</string>
+    <string name="EveryNHours">Every %s hours</string>
+    <string name="EveryMinute">Every minute</string>
+    <string name="EveryNMinutes">Every %s minutes</string>
+    <string name="EverySecond">Every second</string>
+    <string name="EveryNSeconds">Every %s seconds</string>
     <string name="RepeatCustom">Custom…</string>
     <string name="RepeatRuleTitle">Repeat rule</string>
     <string name="RepeatEvery">Repeat every</string>

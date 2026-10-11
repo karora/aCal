@@ -281,6 +281,54 @@ public class AcalRepeatRuleTest {
 						"EXDATE;TZID=" + ZONE + ":20260108T140000")));
 	}
 
+	/** A rule more frequent than daily used not to be read at all, and the event had no instances (#52). */
+	@Test
+	public void hourlyMinutelyAndSecondly() {
+		assertEquals(Arrays.asList("20260105T090000", "20260105T150000", "20260105T210000", "20260106T030000"),
+				floatingInstances("20260105T090000", "FREQ=HOURLY;INTERVAL=6;COUNT=4"));
+		assertEquals(Arrays.asList("20260105T090000", "20260105T091500", "20260105T093000", "20260105T094500"),
+				floatingInstances("20260105T090000", "FREQ=MINUTELY;INTERVAL=15;COUNT=4"));
+		assertEquals(Arrays.asList("20260105T090000", "20260105T090030", "20260105T090100"),
+				floatingInstances("20260105T090000", "FREQ=SECONDLY;INTERVAL=30;COUNT=3"));
+	}
+
+	/**
+	 * Every two hours, on Mondays.  The six days between are more steps with
+	 * nothing in them than a rule is allowed at the longer frequencies.
+	 */
+	@Test
+	public void hourlyOnOneDayOfTheWeekCarriesOnToTheNextWeek() {
+		assertEquals(Arrays.asList("20260105T090000", "20260105T110000", "20260105T130000", "20260105T150000",
+						"20260105T170000", "20260105T190000", "20260105T210000", "20260105T230000",
+						"20260112T010000", "20260112T030000"),
+				floatingInstances("20260105T090000", "FREQ=HOURLY;INTERVAL=2;BYDAY=MO;COUNT=10"));
+	}
+
+	/** BYHOUR chooses among the instances of a rule by the minute, and BYMINUTE adds to those of one by the hour. */
+	@Test
+	public void byHourAndByMinuteWithTheShortFrequencies() {
+		assertEquals(Arrays.asList("20260105T090000", "20260105T093000", "20260105T100000", "20260105T103000",
+						"20260106T090000", "20260106T093000"),
+				floatingInstances("20260105T090000", "FREQ=MINUTELY;INTERVAL=30;BYHOUR=9,10;COUNT=6"));
+		assertEquals(Arrays.asList("20260105T090000", "20260105T093000", "20260105T100000", "20260105T103000"),
+				floatingInstances("20260105T090000", "FREQ=HOURLY;BYMINUTE=0,30;COUNT=4"));
+	}
+
+	/** BYHOUR used to be ignored unless the rule had a BYDAY as well. */
+	@Test
+	public void byHourAddsInstancesToADailyRule() {
+		assertEquals(Arrays.asList("20260105T090000", "20260105T170000", "20260106T090000", "20260106T170000"),
+				floatingInstances("20260105T090000", "FREQ=DAILY;BYHOUR=9,17;COUNT=4"));
+	}
+
+	@Test
+	public void theShortFrequenciesAreWrittenBackAsTheyWereRead() {
+		for( String rule : new String[] { "RRULE:FREQ=HOURLY;INTERVAL=6", "RRULE:FREQ=MINUTELY;COUNT=3",
+				"RRULE:FREQ=SECONDLY;INTERVAL=30" } ) {
+			assertEquals(rule, AcalRepeatRuleParser.parseRepeatRule(rule).toString());
+		}
+	}
+
 	/**
 	 * Each EXDATE line has to be obeyed, not only the last, and an excluded
 	 * instance still counts towards COUNT.
