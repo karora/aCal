@@ -75,7 +75,9 @@ public class AcalRepeatMonthly extends AcalRepeatRuleParser {
 			expandByMonthDay();
 //			debugCurrentSet( "Monthly, after BYMONTHDAY expansion");
 		}
-		else if ( originalBase.get(AcalDateTime.DAY_OF_MONTH) > 28 ) {
+		else if ( byday == null && originalBase.get(AcalDateTime.DAY_OF_MONTH) > 28 ) {
+			// The day of the month DTSTART is on only matters when nothing else chooses
+			// the days: with BYDAY, a month too short to have that day still has instances.
 			expandByMonthDay(new int[] { originalBase.get(AcalDateTime.DAY_OF_MONTH) });
 //			debugCurrentSet( "Monthly, after BYMONTHDAY expansion");
 		}

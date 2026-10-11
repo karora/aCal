@@ -60,6 +60,17 @@ public class AcalRepeatRuleTest {
 		return found;
 	}
 
+	/** The instances in 2026 of a floating event with only a rule, in iCalendar format. */
+	private static List<String> floatingInstances(String dtStart, String rrule) {
+		AcalRepeatRule rule = new AcalRepeatRule(AcalDateTime.fromString(dtStart), rrule);
+		List<String> found = new ArrayList<String>();
+		for( AcalDateTime instance : rule.getInstancesInRange(
+				AcalDateTime.fromString("20260101T000000"), AcalDateTime.fromString("20270101T000000")) ) {
+			found.add(instance.fmtIcal());
+		}
+		return found;
+	}
+
 	@Test
 	public void dailyWithCount() {
 		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000"),
@@ -99,14 +110,8 @@ public class AcalRepeatRuleTest {
 	/** A floating event has no moment to compare with, so the clock times are compared. */
 	@Test
 	public void untilInUtcOnAFloatingEventIsComparedAsAClockTime() {
-		AcalRepeatRule rule = new AcalRepeatRule(AcalDateTime.fromString("20260105T090000"),
-				"FREQ=DAILY;UNTIL=20260107T235959Z");
-		List<String> found = new ArrayList<String>();
-		for( AcalDateTime instance : rule.getInstancesInRange(
-				AcalDateTime.fromString("20260101T000000"), AcalDateTime.fromString("20260201T000000")) ) {
-			found.add(instance.fmtIcal());
-		}
-		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000"), found);
+		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000"),
+				floatingInstances("20260105T090000", "FREQ=DAILY;UNTIL=20260107T235959Z"));
 	}
 
 	@Test
@@ -153,6 +158,30 @@ public class AcalRepeatRuleTest {
 				AcalDateTime.fromIcalendar("20260105T090000", null, ZONE), 2026, 1, 7);
 		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000"),
 				instances(event("RRULE:FREQ=DAILY;UNTIL=" + until)));
+	}
+
+	/**
+	 * With BYDAY it does not matter which day of the month DTSTART is on.  A
+	 * month without that day, as February is without a 30th, used to be left
+	 * out (#48).
+	 */
+	@Test
+	public void monthlyByDayIncludesMonthsShorterThanTheDayOfDtStart() {
+		assertEquals(Arrays.asList("20260130T090000", "20260227T090000", "20260327T090000", "20260424T090000"),
+				floatingInstances("20260130T090000", "FREQ=MONTHLY;BYDAY=-1FR;COUNT=4"));
+		// 30 January is not a first Friday, but DTSTART is always the first instance
+		assertEquals(Arrays.asList("20260130T090000", "20260206T090000", "20260306T090000", "20260403T090000"),
+				floatingInstances("20260130T090000", "FREQ=MONTHLY;BYDAY=1FR;COUNT=4"));
+		assertEquals(Arrays.asList("20260131T090000", "20260203T090000", "20260210T090000", "20260217T090000",
+						"20260224T090000", "20260303T090000"),
+				floatingInstances("20260131T090000", "FREQ=MONTHLY;BYDAY=TU;COUNT=6"));
+	}
+
+	/** Without BYDAY, a month that has no such day still has no instance. */
+	@Test
+	public void monthlyOnThe30thStillSkipsFebruary() {
+		assertEquals(Arrays.asList("20260130T090000", "20260330T090000", "20260430T090000"),
+				floatingInstances("20260130T090000", "FREQ=MONTHLY;COUNT=3"));
 	}
 
 	/**
