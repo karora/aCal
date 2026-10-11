@@ -19,7 +19,11 @@
 package org.davical.acal.acaltime;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -340,6 +344,102 @@ public class AcalRepeatRuleTest {
 		for( int i = 0; i < 60; i++ ) all.append(i == 0 ? "" : ",").append(i);
 		floatingInstances("20260105T090000", "FREQ=DAILY;BYHOUR=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,"
 				+ "20,21,22,23;BYMINUTE=" + all + ";BYSECOND=" + all);
+	}
+
+	private static final DateTimeFormatter ICAL = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+
+	/** One of the parts of a rule that choose among the steps of a short frequency. */
+	private interface Chooser {
+		boolean keeps(LocalDateTime step);
+	}
+
+	/**
+	 * Steps which cannot hold an instance are passed over many at a time.  This
+	 * works the instances out the slow way, looking at every step, and expects
+	 * the same.  It is done in Auckland across the days the clocks change, when
+	 * the steps are still made on the clock and not in time that has passed.
+	 */
+	private static void assertSameAsLookingAtEveryStep(String dtStart, String rrule, Duration step,
+			String rangeEnd, Chooser chooser) {
+		LocalDateTime start = LocalDateTime.parse(dtStart, ICAL);
+		LocalDateTime end = LocalDateTime.parse(rangeEnd, ICAL);
+		List<String> expected = new ArrayList<String>();
+		for( LocalDateTime at = start; at.isBefore(end); at = at.plus(step) ) {
+			// DTSTART is always the first instance
+			if ( at.equals(start) || chooser.keeps(at) ) expected.add(at.format(ICAL));
+		}
+
+		AcalRepeatRule rule = new AcalRepeatRule(AcalDateTime.fromIcalendar(dtStart, null, ZONE), rrule);
+		List<String> found = new ArrayList<String>();
+		for( AcalDateTime instance : rule.getInstancesInRange(AcalDateTime.fromIcalendar(dtStart, null, ZONE),
+				AcalDateTime.fromIcalendar(rangeEnd, null, ZONE)) ) {
+			assertEquals(ZONE, instance.getTimeZoneId());
+			found.add(instance.fmtIcal());
+		}
+		assertEquals(rrule, expected, found);
+		assertTrue(rrule + " should have some instances", found.size() > 20);
+	}
+
+	@Test
+	public void passingOverStepsLosesNoInstances() {
+		// The clocks go forward on 27 September 2026, and back on 5 April: both are Sundays
+		assertSameAsLookingAtEveryStep("20260920T001500", "FREQ=MINUTELY;INTERVAL=30;BYDAY=SU;BYHOUR=0,1,2,3",
+				Duration.ofMinutes(30), "20261012T000000", at -> at.getDayOfWeek().getValue() == 7 && at.getHour() <= 3);
+		assertSameAsLookingAtEveryStep("20260401T000300", "FREQ=MINUTELY;INTERVAL=7;BYDAY=SU",
+				Duration.ofMinutes(7), "20260420T000000", at -> at.getDayOfWeek().getValue() == 7);
+		assertSameAsLookingAtEveryStep("20260301T000000", "FREQ=HOURLY;INTERVAL=5;BYMONTH=4",
+				Duration.ofHours(5), "20260601T000000", at -> at.getMonthValue() == 4);
+		assertSameAsLookingAtEveryStep("20260920T000001", "FREQ=SECONDLY;INTERVAL=7;BYMONTHDAY=5,27,28;BYHOUR=1,2,3;BYMINUTE=0,30",
+				Duration.ofSeconds(7), "20261010T000000",
+				at -> (at.getDayOfMonth() == 5 || at.getDayOfMonth() == 27 || at.getDayOfMonth() == 28)
+						&& at.getHour() >= 1 && at.getHour() <= 3 && (at.getMinute() == 0 || at.getMinute() == 30));
+		assertSameAsLookingAtEveryStep("20260401T000000", "FREQ=SECONDLY;INTERVAL=5;BYDAY=SU;BYHOUR=2;BYMINUTE=59",
+				Duration.ofSeconds(5), "20260420T000000",
+				at -> at.getDayOfWeek().getValue() == 7 && at.getHour() == 2 && at.getMinute() == 59);
+	}
+
+	/**
+	 * Every second, but only at midnight, is one instance for 86400 steps.  Three
+	 * years of that took ten seconds here when every step was looked at, and
+	 * anyone who can send an invitation could ask for it.
+	 */
+	@Test(timeout = 2000)
+	public void aRuleWithFewInstancesAmongManyStepsIsQuick() {
+		List<String> found = floatingInstances("20240101T000000", "FREQ=SECONDLY;BYHOUR=0;BYMINUTE=0;BYSECOND=0");
+		assertEquals(365, found.size());
+		assertEquals("20260101T000000", found.get(0));
+		assertEquals("20261231T000000", found.get(364));
+	}
+
+	/** Every six hours from 3am is still at 3am when the clocks have gone back, as they do on 5 April. */
+	@Test
+	public void hourlyKeepsToTheClockWhenTheClocksChange() {
+		VCalendar calendar = (VCalendar) VComponent.createComponentFromBlob(
+				event("RRULE:FREQ=HOURLY;INTERVAL=6").replace("20260105T090000", "20260404T030000"));
+		List<String> found = new ArrayList<String>();
+		for( AcalDateTime instance : AcalRepeatRule.fromVCalendar(calendar, 1, 1).getInstancesInRange(
+				AcalDateTime.fromIcalendar("20260404T000000", null, ZONE),
+				AcalDateTime.fromIcalendar("20260406T000000", null, ZONE)) ) {
+			found.add(instance.fmtIcal() + " " + instance.clone().shiftTimeZone("UTC").fmtIcal());
+		}
+		assertEquals(Arrays.asList(
+				"20260404T030000 20260403T140000Z", "20260404T090000 20260403T200000Z",
+				"20260404T150000 20260404T020000Z", "20260404T210000 20260404T080000Z",
+				"20260405T030000 20260404T150000Z", "20260405T090000 20260404T210000Z",
+				"20260405T150000 20260405T030000Z", "20260405T210000 20260405T090000Z"), found);
+	}
+
+	/**
+	 * A rule that can never be met is given up on, and not after long.  DTSTART is
+	 * an instance whatever the rule says, and used to be left out when the rule
+	 * never gave one after it.
+	 */
+	@Test(timeout = 2000)
+	public void aRuleThatCanNeverBeMetStopsAtItsFirstInstance() {
+		assertEquals(Arrays.asList("20260105T090000"),
+				floatingInstances("20260105T090000", "FREQ=SECONDLY;BYMONTH=2;BYMONTHDAY=30"));
+		assertEquals(Arrays.asList("20260105T090000"),
+				floatingInstances("20260105T090000", "FREQ=SECONDLY;INTERVAL=86399;BYHOUR=3;BYMINUTE=0;BYSECOND=0"));
 	}
 
 	@Test

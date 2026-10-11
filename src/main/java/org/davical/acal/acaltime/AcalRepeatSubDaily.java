@@ -33,10 +33,18 @@ import org.davical.acal.acaltime.AcalRepeatRule.RRuleFreqType;
 
 public class AcalRepeatSubDaily extends AcalRepeatRuleParser {
 
-	/** No more steps than this are taken looking for the next instance. */
-	private static final int	MOST_EMPTY_SETS	= 100000;
+	/**
+	 * No more steps than this are taken looking for the next instance.  Steps which
+	 * cannot hold one are passed over many at a time (see nextFrequency()), so it takes
+	 * about 1500 to get from one 29 February to the next, which is as far as a rule that
+	 * makes any sense has to go.
+	 */
+	private static final int	MOST_EMPTY_SETS	= 5000;
 
 	private final int	secondsInStep;
+
+	/** The base date as a floating time, which is what the steps are made on. */
+	private AcalDateTime	clock = null;
 
 	protected AcalRepeatSubDaily(String rRuleValue, RRuleFreqType f) {
 		super(rRuleValue,f);
@@ -67,21 +75,79 @@ public class AcalRepeatSubDaily extends AcalRepeatRuleParser {
 		return cx.getString(one);
 	}
 
-	/** The steps are of time that passes, so one across a change of daylight saving is no longer or shorter. */
+	/**
+	 * The steps are made on the clock where the event is, as RFC 5545 has it, and not in
+	 * time that has passed: every six hours from 3am is still at 3am after the clocks have
+	 * changed.  So they are worked out on a floating time, which is then read in the zone
+	 * of the event as DTSTART would be.
+	 *
+	 * A rule comes from whoever wrote the calendar, and "every second, but only at
+	 * midnight" would be 86400 steps for each instance if each were looked at.  When the
+	 * step arrived at is on a day the rule leaves out, the rest of that day is passed
+	 * over at once, and so is the rest of an hour or a minute it leaves out.
+	 */
 	@Override
 	protected void nextFrequency() {
-		currentBase.addSeconds((long) interval * secondsInStep);
+		if ( clock == null ) clock = originalBase.clone().setTimeZone(null);
+		clock.addSeconds(stepLength());
+		if ( dayIsLeftOut(clock) )
+			skipRestOf(AcalDateTime.SECONDS_IN_DAY);
+		else if ( frequency != RRuleFreqType.HOURLY && byhour != null && !contains(byhour, clock.getHour()) )
+			skipRestOf(AcalDateTime.SECONDS_IN_HOUR);
+		else if ( frequency == RRuleFreqType.SECONDLY && byminute != null && !contains(byminute, clock.getMinute()) )
+			skipRestOf(AcalDateTime.SECONDS_IN_MINUTE);
+		currentBase = clock.clone().setTimeZone(originalBase.getTimeZoneId());
+	}
+
+	@Override
+	public void resetBaseDate() {
+		super.resetBaseDate();
+		clock = null;
+	}
+
+	private long stepLength() {
+		return (long) interval * secondsInStep;
+	}
+
+	/** Whether the parts of the rule that choose days leave out the day this is on, as buildSet() will find. */
+	private boolean dayIsLeftOut( AcalDateTime c ) {
+		if ( bymonth    != null && !contains(bymonth, c.get(AcalDateTime.MONTH)) ) return true;
+		if ( byyearday  != null && !contains(byyearday, c.get(AcalDateTime.DAY_OF_YEAR)) ) return true;
+		if ( bymonthday != null && !contains(bymonthday, c.get(AcalDateTime.DAY_OF_MONTH)) ) return true;
+		if ( byday != null ) {
+			int weekDay = c.get(AcalDateTime.DAY_OF_WEEK);
+			for( AcalRepeatRuleDay day : byday ) {
+				if ( day.wDay == weekDay ) return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private static boolean contains( int[] values, int wanted ) {
+		for( int value : values ) {
+			if ( value == wanted ) return true;
+		}
+		return false;
 	}
 
 	/**
-	 * A rule such as "every hour, on Mondays" has six days of steps with nothing in them
-	 * between one instance and the next, so many more empty sets are allowed for than at
-	 * the longer frequencies: a year of them, up to a limit on the work done.
+	 * Moves the clock on to the last step of the day, hour or minute it is in, which is
+	 * given as its length in seconds, so that the step after is the first of the next.
+	 */
+	private void skipRestOf( int unit ) {
+		long steps = (unit - (clock.getDaySecond() % unit)) / stepLength();
+		if ( steps > 0 ) clock.addSeconds(steps * stepLength());
+	}
+
+	/**
+	 * A rule such as "every hour, on 29 February" has years of steps with nothing in them
+	 * between one instance and the next, so more empty sets are allowed for than at the
+	 * longer frequencies.
 	 */
 	@Override
 	protected int mostEmptySets() {
-		long stepsInAYear = (366L * AcalDateTime.SECONDS_IN_DAY) / ((long) interval * secondsInStep);
-		return (int) Math.min(MOST_EMPTY_SETS, stepsInAYear + 1);
+		return MOST_EMPTY_SETS;
 	}
 
 

@@ -76,6 +76,14 @@ public class AcalRepeatRule {
 
 	final private static int			MAX_REPEAT_INSTANCES	= 100;
 
+	/**
+	 * The most steps of a rule that will ever be looked at.  The limit on empty sets in a
+	 * row starts again at every instance, so by itself it lets a rule made for the purpose
+	 * use that many steps for each of its instances.
+	 */
+	final private static int			MAX_SETS				= 200000;
+	private int							setsBuilt				= 0;
+
 	public AcalRepeatRule(AcalDateTime dtStart, String rRule) {
 		baseDate = dtStart.clone();
 		if ( rRule == null || rRule.equals("")) {
@@ -343,6 +351,11 @@ public class AcalRepeatRule {
 	    int emptySets = 0;
 
 		while ( !finished && currentPos >= lastCalc ) {
+	    	if ( setsBuilt++ >= MAX_SETS ) {
+	    		finished = true;
+	    		Log.e(TAG,"Too many steps processing "+repeatRule.toString());
+	    		break;
+	    	}
 		   	repeatRule.nextBaseDate(baseDate);
 	    	List<AcalDateTime> newSet = repeatRule.buildSet();
 	    	if ( newSet.isEmpty() ) {
@@ -403,6 +416,16 @@ public class AcalRepeatRule {
 			// The rule has ended, but RDATE can add instances after the last one it gave,
 			// and they are all there are when there is no rule.
 			if ( recurrences == null ) recurrences = new ArrayList<AcalDateTime>();
+			if ( !started ) {
+				// The rule gave nothing at or after DTSTART, which is an instance all the same
+				started = true;
+				if ( addRDatesBefore(baseDate) ) foundSome = true;
+				if ( !isExcluded(baseDate) ) {
+					recurrences.add(baseDate);
+					lastCalc = recurrences.size() - 1;
+					foundSome = true;
+				}
+			}
 			if ( addRDatesBefore(null) ) foundSome = true;
 		}
 //		debugInstanceList("Got More Instances");
