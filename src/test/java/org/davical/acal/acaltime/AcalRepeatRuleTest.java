@@ -230,6 +230,57 @@ public class AcalRepeatRuleTest {
 		assertEquals(rule, AcalRepeatRuleParser.parseRepeatRule(rule).toString());
 	}
 
+	/** Without a rule, the instances are DTSTART and each RDATE.  Only DTSTART used to be found (#51). */
+	@Test
+	public void rdateWithoutARule() {
+		assertEquals(Arrays.asList("20260105T090000", "20260108T140000", "20260220T090000"),
+				instances(event("RDATE;TZID=" + ZONE + ":20260220T090000",
+						"RDATE;TZID=" + ZONE + ":20260108T140000")));
+	}
+
+	/** An RDATE after the rule has ended used to be dropped, whether it ended by COUNT or by UNTIL (#51). */
+	@Test
+	public void rdateAfterTheRuleHasEnded() {
+		List<String> expected = Arrays.asList("20260105T090000", "20260108T140000", "20260112T090000",
+				"20260220T090000");
+		String rdate = "RDATE;TZID=" + ZONE + ":20260108T140000,20260220T090000";
+		assertEquals(expected, instances(event("RRULE:FREQ=WEEKLY;COUNT=2", rdate)));
+		assertEquals(expected, instances(event("RRULE:FREQ=WEEKLY;UNTIL=20260112T090000", rdate)));
+	}
+
+	/** It has to be found as well when the period asked about starts after the rule has ended. */
+	@Test
+	public void rdateAfterUntilIsFoundInALaterPeriod() {
+		VCalendar calendar = (VCalendar) VComponent.createComponentFromBlob(event(
+				"RRULE:FREQ=WEEKLY;UNTIL=20260112T090000", "RDATE;TZID=" + ZONE + ":20260220T090000"));
+		AcalRepeatRule rule = AcalRepeatRule.fromVCalendar(calendar, 1, 1);
+		List<AcalDateTime> found = rule.getInstancesInRange(
+				AcalDateTime.fromIcalendar("20260201T000000", null, ZONE),
+				AcalDateTime.fromIcalendar("20260301T000000", null, ZONE));
+		assertEquals(1, found.size());
+		assertEquals("20260220T090000", found.get(0).fmtIcal());
+
+		// The event lasts an hour, so everything is over at 10am on 20 February
+		assertEquals("20260220T100000", calendar.getInstancesRange().end.fmtIcal());
+	}
+
+	/** An RDATE at the time of DTSTART, or of an instance the rule gives, is that instance and not another. */
+	@Test
+	public void rdateAtTheTimeOfAnInstanceIsNotASecondOne() {
+		assertEquals(Arrays.asList("20260105T090000", "20260112T090000", "20260114T090000", "20260119T090000"),
+				instances(event("RRULE:FREQ=WEEKLY;COUNT=3",
+						"RDATE;TZID=" + ZONE + ":20260105T090000,20260112T090000,20260114T090000,20260114T090000",
+						"RDATE:20260118T200000Z")));
+	}
+
+	/** EXDATE removes an RDATE as it does any other instance. */
+	@Test
+	public void excludedRdateIsLeftOut() {
+		assertEquals(Arrays.asList("20260105T090000", "20260220T090000"),
+				instances(event("RDATE;TZID=" + ZONE + ":20260108T140000,20260220T090000",
+						"EXDATE;TZID=" + ZONE + ":20260108T140000")));
+	}
+
 	/**
 	 * Each EXDATE line has to be obeyed, not only the last, and an excluded
 	 * instance still counts towards COUNT.
