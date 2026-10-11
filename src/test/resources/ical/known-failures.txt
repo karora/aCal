@@ -5,7 +5,6 @@
 # issue is fixed.
 #
 # fixture                        check        issue
-yearly-leap-day                  instances    #49
 rdate-only                       instances    #51
 rdate-with-rrule                 instances    #51
 hourly-interval-6                instances    #52

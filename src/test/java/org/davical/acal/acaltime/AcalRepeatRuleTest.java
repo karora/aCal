@@ -185,6 +185,16 @@ public class AcalRepeatRuleTest {
 	}
 
 	/**
+	 * An end a long way off is common, and one after 2038 used to be taken for
+	 * a date before the event began, which left it with no instances (#49).
+	 */
+	@Test
+	public void aRuleEndingAfter2038HasInstancesNow() {
+		assertEquals(Arrays.asList("20261207T090000", "20261214T090000", "20261221T090000", "20261228T090000"),
+				floatingInstances("20261207T090000", "FREQ=WEEKLY;UNTIL=20991231T235959Z"));
+	}
+
+	/**
 	 * Each EXDATE line has to be obeyed, not only the last, and an excluded
 	 * instance still counts towards COUNT.
 	 */

@@ -107,4 +107,20 @@ public class AcalDateTimeTest {
 		assertTrue(auckland.before(utc));
 		assertTrue(utc.after(auckland));
 	}
+
+	/**
+	 * The seconds since 1970 no longer fit in an int after 19 January 2038, and
+	 * a date later than that used to come out as one in 1901 or so (#49).
+	 */
+	@Test
+	public void datesAfter2038HaveTheRightEpoch() {
+		assertEquals(2147483647L, AcalDateTime.fromString("20380119T031407Z").getEpoch());
+		assertEquals(2147483648L, AcalDateTime.fromString("20380119T031408Z").getEpoch());
+		assertEquals(2208988800L, AcalDateTime.fromString("20400101T000000Z").getEpoch());
+		assertEquals(4102444800L, AcalDateTime.fromString("21000101T000000Z").getEpoch());
+
+		AcalDateTime later = AcalDateTime.fromString("20400101T000000Z");
+		assertTrue(AcalDateTime.fromString("20260115T000000Z").before(later));
+		assertEquals("20400101T130000", later.shiftTimeZone("Pacific/Auckland").fmtIcal());
+	}
 }

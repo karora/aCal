@@ -1147,7 +1147,10 @@ public class AcalDateTime implements Parcelable, Serializable, Cloneable, Compar
 	 */
 	protected synchronized void calculateEpoch() {
 		if ( year == YEAR_NOT_SET ) throw new IllegalStateException("Uninitialised object");
-		epoch = (((year - 1970) * DAYS_IN_YEAR) + epochLeapDays(year) + ( getYearDay() - 1 )) * SECONDS_IN_DAY;
+		// The days have to be a long before they are multiplied: as an int, the seconds
+		// overflowed for any date after 19 January 2038.
+		long epochDay = ((year - 1970) * DAYS_IN_YEAR) + epochLeapDays(year) + ( getYearDay() - 1 );
+		epoch = epochDay * SECONDS_IN_DAY;
 		epoch += (hour * SECONDS_IN_HOUR) + (minute * 60) + second;
 		if ( tz == null ) return;
 		long offset = tz.getOffset(this.getMillis()) / 1000;
