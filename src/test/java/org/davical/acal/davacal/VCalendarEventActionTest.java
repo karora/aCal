@@ -155,7 +155,8 @@ public class VCalendarEventActionTest {
 		VCalendar result = parse(blob);
 		assertEquals(Arrays.asList("0105", "0112"), days(result));
 		String rrule = result.getMasterChild().getRRule();
-		assertTrue("Rule should end with UNTIL: " + rrule, rrule.contains("UNTIL="));
+		// A second before 9am on the 19th in Auckland, written in UTC as RFC 5545 asks
+		assertTrue("Rule should end with UNTIL in UTC: " + rrule, rrule.contains("UNTIL=20260118T195959Z"));
 		assertTrue("Rule should no longer have COUNT: " + rrule, !rrule.contains("COUNT="));
 	}
 

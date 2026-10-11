@@ -68,6 +68,8 @@ public class RepeatRuleEdit extends AcalAppCompatActivity {
 
 	public static final String EXTRA_RRULE = "RepeatRule";
 	public static final String EXTRA_DTSTART = "DtStart";
+	/** The time zone of DTSTART, which decides the moment that "ends on" a day means. */
+	public static final String EXTRA_TZID = "DtStartTzId";
 
 	private static final int PREVIEW_INSTANCES = 4;
 
@@ -128,7 +130,8 @@ public class RepeatRuleEdit extends AcalAppCompatActivity {
 
 		String startString = getIntent().getStringExtra(EXTRA_DTSTART);
 		try {
-			dtStart = AcalDateTime.fromString(startString);
+			dtStart = AcalDateTime.fromIcalendar(startString, null,
+					getIntent().getStringExtra(EXTRA_TZID));
 		}
 		catch (Exception e) {
 			dtStart = new AcalDateTime();
@@ -511,7 +514,7 @@ public class RepeatRuleEdit extends AcalAppCompatActivity {
 			setEndsMode(endsAfter);
 		}
 		else if (p.getUntil() != null) {
-			untilDate = p.getUntil();
+			untilDate = p.getUntilDay(dtStart);
 			showUntilDate();
 			setEndsMode(endsOnDate);
 		}
@@ -655,8 +658,8 @@ public class RepeatRuleEdit extends AcalAppCompatActivity {
 		}
 		else if (endsOnDate.isChecked()) {
 			if (untilDate == null) return null;
-			rule.append(";UNTIL=").append(String.format("%04d%02d%02dT235959Z",
-					(int) untilDate.getYear(), (int) untilDate.getMonth(), (int) untilDate.getMonthDay()));
+			rule.append(";UNTIL=").append(AcalRepeatRuleParser.untilForLastDay(dtStart,
+					untilDate.getYear(), untilDate.getMonth(), untilDate.getMonthDay()));
 		}
 
 		return rule.toString();

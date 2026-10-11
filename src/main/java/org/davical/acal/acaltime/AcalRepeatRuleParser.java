@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import android.content.Context;
@@ -135,8 +136,8 @@ public abstract class AcalRepeatRuleParser {
 					// The non-abstract instances know what they do for this
 					break;
 				case UNTIL:
-					// TODO: we should get the timezone && isDate here.
-					until = AcalDateTime.fromIcalendar(values[1], "", "");
+					// Keeps the Z of a time in UTC, and tells a date from a date and time
+					until = AcalDateTime.fromString(values[1]);
 					break;
 				case COUNT:
 					preCount = values[1];
@@ -201,6 +202,30 @@ public abstract class AcalRepeatRuleParser {
 
 	public AcalDateTime getUntil() {
 		return ( until == null ? null : until.clone() );
+	}
+
+	/**
+	 * The last day that UNTIL allows an instance on, for an event starting at dtStart: a
+	 * moment in UTC is a different day in a zone far enough from Greenwich.
+	 * @return a floating date, or null if the rule has no UNTIL.
+	 */
+	public AcalDateTime getUntilDay( AcalDateTime dtStart ) {
+		if ( until == null ) return null;
+		AcalDateTime last = until.clone();
+		if ( !last.isFloating() && !dtStart.isFloating() ) last.shiftTimeZone(dtStart.getTimeZoneId());
+		return new AcalDateTime(last.getYear(), last.getMonth(), last.getMonthDay(), 0, 0, 0, null);
+	}
+
+	/**
+	 * The value of UNTIL which ends a rule on the given day, for an event starting at
+	 * dtStart.  RFC 5545 wants a date for an all-day event, a floating time for a floating
+	 * event, and otherwise a time in UTC: here, the end of that day where the event is.
+	 */
+	public static String untilForLastDay( AcalDateTime dtStart, int year, int month, int day ) {
+		if ( dtStart.isDate() ) return String.format(Locale.US, "%04d%02d%02d", year, month, day);
+		AcalDateTime endOfDay = new AcalDateTime(year, month, day, 23, 59, 59, dtStart.getTimeZoneId());
+		if ( !endOfDay.isFloating() ) endOfDay.shiftTimeZone(AcalDateTime.UTC_NAME);
+		return endOfDay.fmtIcal();
 	}
 
 	public RRuleFreqType getFrequency() {
@@ -379,7 +404,11 @@ public abstract class AcalRepeatRuleParser {
 		if ( originalBase == null || currentBase == null ) {
 			originalBase = c.clone();
 			currentBase = c.clone();
-			if ( until != null ) until.setTimeZone(originalBase.getTimeZoneId());
+			// An UNTIL in UTC is a moment in time, and is compared as one.  Only where one
+			// of the two is floating is there nothing to convert, and the clock times are
+			// compared in the zone of the base date.
+			if ( until != null && (until.isFloating() || originalBase.isFloating()) )
+				until.setTimeZone(originalBase.getTimeZoneId());
 		}
 		else {
 			nextFrequency();

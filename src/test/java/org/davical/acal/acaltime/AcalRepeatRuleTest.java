@@ -75,6 +75,87 @@ public class AcalRepeatRuleTest {
 	}
 
 	/**
+	 * UNTIL in UTC is a moment, and the instance at that moment is the last one.
+	 * 9am on 8 January in Auckland is 8pm on the 7th in UTC.  It used to be read
+	 * as 8pm on the 7th in Auckland, which lost the last instance (#47).
+	 */
+	@Test
+	public void untilInUtcIsComparedAsAMoment() {
+		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000", "20260108T090000"),
+				instances(event("RRULE:FREQ=DAILY;UNTIL=20260107T200000Z")));
+		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000"),
+				instances(event("RRULE:FREQ=DAILY;UNTIL=20260107T195959Z")));
+	}
+
+	/** UNTIL with no zone is a clock time where the event is. */
+	@Test
+	public void floatingUntilIsComparedInTheZoneOfTheEvent() {
+		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000"),
+				instances(event("RRULE:FREQ=DAILY;UNTIL=20260107T090000")));
+		assertEquals(Arrays.asList("20260105T090000", "20260106T090000"),
+				instances(event("RRULE:FREQ=DAILY;UNTIL=20260107T085959")));
+	}
+
+	/** A floating event has no moment to compare with, so the clock times are compared. */
+	@Test
+	public void untilInUtcOnAFloatingEventIsComparedAsAClockTime() {
+		AcalRepeatRule rule = new AcalRepeatRule(AcalDateTime.fromString("20260105T090000"),
+				"FREQ=DAILY;UNTIL=20260107T235959Z");
+		List<String> found = new ArrayList<String>();
+		for( AcalDateTime instance : rule.getInstancesInRange(
+				AcalDateTime.fromString("20260101T000000"), AcalDateTime.fromString("20260201T000000")) ) {
+			found.add(instance.fmtIcal());
+		}
+		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000"), found);
+	}
+
+	@Test
+	public void untilIsWrittenBackAsItWasRead() {
+		for( String rule : new String[] { "RRULE:FREQ=DAILY;UNTIL=20260107T200000Z",
+				"RRULE:FREQ=DAILY;UNTIL=20260107T200000", "RRULE:FREQ=DAILY;UNTIL=20260107" } ) {
+			AcalRepeatRuleParser parsed = AcalRepeatRuleParser.parseRepeatRule(rule);
+			parsed.nextBaseDate(AcalDateTime.fromIcalendar("20260105T090000", null, ZONE));
+			assertEquals(rule, parsed.toString());
+		}
+	}
+
+	/** What the repeat rule editor writes for "ends on 14 January". */
+	@Test
+	public void untilForADayIsTheEndOfThatDayWhereTheEventIs() {
+		// Auckland is 13 hours ahead of UTC in January
+		assertEquals("20260114T105959Z", AcalRepeatRuleParser.untilForLastDay(
+				AcalDateTime.fromIcalendar("20260105T090000", null, ZONE), 2026, 1, 14));
+		assertEquals("20260114T235959Z", AcalRepeatRuleParser.untilForLastDay(
+				AcalDateTime.fromString("20260105T090000Z"), 2026, 1, 14));
+		assertEquals("20260114T235959", AcalRepeatRuleParser.untilForLastDay(
+				AcalDateTime.fromString("20260105T090000"), 2026, 1, 14));
+		assertEquals("20260114", AcalRepeatRuleParser.untilForLastDay(
+				AcalDateTime.fromString("20260105"), 2026, 1, 14));
+	}
+
+	/** ...and what it shows for a rule it is given, which is the same day back again. */
+	@Test
+	public void untilDayIsTheDayWhereTheEventIs() {
+		AcalDateTime auckland = AcalDateTime.fromIcalendar("20260105T090000", null, ZONE);
+		assertEquals("20260114T000000", AcalRepeatRuleParser
+				.parseRepeatRule("FREQ=DAILY;UNTIL=20260114T105959Z").getUntilDay(auckland).fmtIcal());
+		// 8pm on the 13th in UTC is 9am on the 14th in Auckland
+		assertEquals("20260114T000000", AcalRepeatRuleParser
+				.parseRepeatRule("FREQ=DAILY;UNTIL=20260113T200000Z").getUntilDay(auckland).fmtIcal());
+		assertEquals("20260114T000000", AcalRepeatRuleParser
+				.parseRepeatRule("FREQ=DAILY;UNTIL=20260114").getUntilDay(AcalDateTime.fromString("20260105")).fmtIcal());
+	}
+
+	/** An event ending on a day in the editor has its last instance on that day. */
+	@Test
+	public void aRuleEndingOnADayIncludesThatDayAndNoLater() {
+		String until = AcalRepeatRuleParser.untilForLastDay(
+				AcalDateTime.fromIcalendar("20260105T090000", null, ZONE), 2026, 1, 7);
+		assertEquals(Arrays.asList("20260105T090000", "20260106T090000", "20260107T090000"),
+				instances(event("RRULE:FREQ=DAILY;UNTIL=" + until)));
+	}
+
+	/**
 	 * Each EXDATE line has to be obeyed, not only the last, and an excluded
 	 * instance still counts towards COUNT.
 	 */

@@ -220,6 +220,8 @@ public class VCalendar extends VComponent implements Cloneable {
 				AcalDateTime cutoff = calendarInstance.getStart().clone();
 				AcalDateTime until = cutoff.clone();
 				until.addSeconds(-1);
+				// RFC 5545 wants UNTIL in UTC unless the event is floating
+				if ( !until.isFloating() ) until.shiftTimeZone(AcalDateTime.UTC_NAME);
 				parsedRule.setUntil(until);
 				String rrule = parsedRule.toString();
 				m.removeProperties( new PropertyName[] {PropertyName.RRULE} );

@@ -5,7 +5,6 @@
 # issue is fixed.
 #
 # fixture                        check        issue
-daily-until-is-inclusive         instances    #47
 monthly-last-friday              instances    #48
 yearly-leap-day                  instances    #49
 monthly-last-weekday-bysetpos    instances    #50

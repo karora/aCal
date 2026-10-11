@@ -886,6 +886,7 @@ public class EventEdit extends AcalActivity implements  OnClickListener, OnCheck
 						Intent intent = new Intent(EventEdit.this, RepeatRuleEdit.class);
 						intent.putExtra(RepeatRuleEdit.EXTRA_RRULE, event.getRRule());
 						intent.putExtra(RepeatRuleEdit.EXTRA_DTSTART, event.getStart().fmtIcal());
+						intent.putExtra(RepeatRuleEdit.EXTRA_TZID, event.getStart().getTimeZoneId());
 						startActivityForResult(intent, REPEAT_RULE_REQUEST);
 						return;
 					}

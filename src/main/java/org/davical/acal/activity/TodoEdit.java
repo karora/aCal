@@ -929,6 +929,7 @@ public class TodoEdit extends AcalActivity
 							Intent intent = new Intent(TodoEdit.this, RepeatRuleEdit.class);
 							intent.putExtra(RepeatRuleEdit.EXTRA_RRULE, todo.getRRule());
 							intent.putExtra(RepeatRuleEdit.EXTRA_DTSTART, relativeTo.fmtIcal());
+							intent.putExtra(RepeatRuleEdit.EXTRA_TZID, relativeTo.getTimeZoneId());
 							startActivityForResult(intent, REPEAT_RULE_REQUEST);
 							return;
 						}
