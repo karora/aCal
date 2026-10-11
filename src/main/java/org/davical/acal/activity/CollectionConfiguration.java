@@ -38,8 +38,9 @@ import org.davical.acal.providers.DavCollections;
 import org.davical.acal.service.ServiceJob;
 import org.davical.acal.service.ServiceRequest;
 import org.davical.acal.service.SyncChangesToServer;
-import org.davical.acal.service.SyncCollectionContents;
 import org.davical.acal.service.WorkerClass;
+import org.davical.acal.storage.StorageBackend;
+import org.davical.acal.storage.StorageBackends;
 
 /**
  * <p>This activity allows the user to configure a single collection. It MUST be handed a ContentValues object with as
@@ -187,10 +188,14 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 		if (collectionData.getAsInteger(DavCollections.SYNC_METADATA) != null
 				&& collectionData.getAsInteger(DavCollections.SYNC_METADATA) == 1)
 			job = new SyncChangesToServer();
-		else
-			job = new SyncCollectionContents(collectionData.getAsInteger(DavCollections._ID));
+		else {
+			StorageBackend backend = StorageBackends.forServer(
+						collectionData.getAsInteger(DavCollections.SERVER_ID), getContentResolver());
+			job = (backend == null ? null
+						: backend.refreshCollection(collectionData.getAsInteger(DavCollections._ID), false));
+		}
 
-		WorkerClass.getExistingInstance().addJobAndWake(job);
+		if ( job != null ) WorkerClass.getExistingInstance().addJobAndWake(job);
 	}
 
 	ContentValues getCollectionData() {

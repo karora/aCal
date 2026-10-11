@@ -112,7 +112,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	/**
 	 * The version of this database. Used to determine if an upgrade is required.
 	 */
-	public static final int DB_VERSION = 23;
+	public static final int DB_VERSION = 24;
 
 
 
@@ -141,8 +141,16 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				+",last_checked DATETIME"
 				+",use_advanced BOOLEAN"
 				+",prepared_config TEXT"
+				+",backend_type INTEGER NOT NULL DEFAULT 0"
 				+",UNIQUE(use_ssl,hostname,port,principal_path,username)"
 			+")";
+
+	/**
+	 * <p>Version 24 gave each dav_server row the type of storage backend its
+	 * collections are kept in.  Everything from before then is CalDAV, which is 0.</p>
+	 */
+	public static final String ADD_SERVER_BACKEND_TYPE_SQL =
+			"ALTER TABLE dav_server ADD COLUMN backend_type INTEGER NOT NULL DEFAULT 0";
 
 	/**
 	 * <p>The dav_path_set table holds the paths which are collections containing
@@ -498,6 +506,11 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				oldVersion++;
 				// Re-encrypt passwords with a key held in the Android Keystore
 				migratePasswordsToEncrypted(db);
+			}
+			if (oldVersion == 23) {
+				Log.i(TAG,"Updating database from version " + oldVersion);
+				oldVersion++;
+				db.execSQL(ADD_SERVER_BACKEND_TYPE_SQL);
 			}
 		}
 		catch( Exception e ) {

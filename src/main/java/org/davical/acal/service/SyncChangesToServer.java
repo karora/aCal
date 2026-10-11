@@ -19,16 +19,10 @@
 package org.davical.acal.service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.net.ssl.SSLException;
-
-import org.apache.http.Header;
-import org.apache.http.message.BasicHeader;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -40,20 +34,21 @@ import android.net.NetworkInfo;
 import android.util.Log;
 
 import org.davical.acal.Constants;
-import org.davical.acal.database.DMAction;
-import org.davical.acal.database.DMQueryBuilder;
-import org.davical.acal.database.TableManager.QUERY_ACTION;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.ResourceTableManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.WriteableResourceTableManager;
 import org.davical.acal.database.resourcesmanager.ResourceProcessingException;
 import org.davical.acal.database.resourcesmanager.requesttypes.BlockingResourceRequest;
 import org.davical.acal.providers.DavCollections;
-import org.davical.acal.providers.Servers;
-import org.davical.acal.service.connector.AcalRequestor;
-import org.davical.acal.service.connector.ConnectionFailedException;
-import org.davical.acal.service.connector.SendRequestFailedException;
+import org.davical.acal.storage.BackendType;
+import org.davical.acal.storage.StorageBackend;
+import org.davical.acal.storage.StorageBackends;
 
+/**
+ * Commits the local changes waiting in pending_change, and the collections
+ * with changed properties, through the storage backend of the account each
+ * belongs to.
+ */
 public class SyncChangesToServer extends ServiceJob implements BlockingResourceRequest {
 
 	public static final String	TAG					= "aCal SyncChangesToServer";
@@ -63,9 +58,13 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 	private final long timeToWait = 90000;
 	private aCalService acalService;
 
-	private AcalRequestor requestor;
+	// One backend of each type for the whole run, so a backend can keep hold
+	// of things like its connection between one change and the next.
+	private Map<BackendType, StorageBackend> backends;
 
-	private Set<Long> collectionsToSync = null;
+	private Map<Long, StorageBackend> collectionsToRefresh = null;
+
+	private boolean online;
 
 	private boolean updateSyncStatus = false;
 
@@ -96,8 +95,8 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 	@Override
 	public void process(WriteableResourceTableManager processor) throws ResourceProcessingException {
 		this.processor = processor;
-		this.requestor = new AcalRequestor();
 		this.cr = acalService.getContentResolver();
+		this.backends = new EnumMap<BackendType, StorageBackend>(BackendType.class);
 
 		ArrayList<ContentValues> pendingChangesList = processor.getPendingResources();
 		ArrayList<ContentValues> syncCollectionMetadataList = syncCollectionList();
@@ -107,37 +106,29 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 			setProcessed();
 			return; // without rescheduling
 		}
-		else if ( !connectivityAvailable() ) {
-			if (DEBUG) Log.println(Constants.LOGD,TAG, "No connectivity available to sync local changes.");
-		}
-		else {
+
+		online = connectivityAvailable();
+		if ( online )
 			Log.println(Constants.LOGI,TAG, "Starting sync of "+pendingChangesList.size()+" local changes");
+		else if (DEBUG)
+			Log.println(Constants.LOGD,TAG, "No connectivity available to sync local changes.");
 
-			collectionsToSync = new HashSet<Long>();
+		collectionsToRefresh = new HashMap<Long, StorageBackend>();
 
-			try {
-			    for( ContentValues collectionData : syncCollectionMetadataList ) {
-			        updateCollectionProperties(collectionData);
-			    }
-				for( ContentValues pendingChange :  pendingChangesList )
-					syncOneChange(pendingChange);
+		try {
+		    for( ContentValues collectionData : syncCollectionMetadataList ) {
+		        commitCollectionProperties(collectionData);
+		    }
+			for( ContentValues pendingChange :  pendingChangesList )
+				commitOneChange(pendingChange);
 
-				if ( collectionsToSync.size() > 0 ) {
-					for( Long collectionId : collectionsToSync ) {
-						acalService.addWorkerJob(new SyncCollectionContents(collectionId, true) );
-					}
-
-//					// Fallback hack to really make sure the updated event actually gets displayed.
-//					// Push this out 30 seconds in the future to nag us to fix it properly!
-//					ServiceJob job = new SynchronisationJobs(SynchronisationJobs.CACHE_RESYNC);
-//					job.TIME_TO_EXECUTE = 3000L;
-//					acalService.addWorkerJob(job);
-				}
+			for( Map.Entry<Long, StorageBackend> toRefresh : collectionsToRefresh.entrySet() ) {
+				ServiceJob job = toRefresh.getValue().refreshCollection(toRefresh.getKey(), true);
+				if ( job != null ) acalService.addWorkerJob(job);
 			}
-			catch( Exception e ) {
-				Log.e(TAG,Log.getStackTraceString(e));
-			}
-
+		}
+		catch( Exception e ) {
+			Log.e(TAG,Log.getStackTraceString(e));
 		}
 
 		updateSyncStatus = updateSyncStatus();
@@ -173,8 +164,28 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
     }
 
 
+	/**
+	 * @return the backend to commit through for this account right now, or
+	 *         null to leave its changes waiting: when the account is of a type
+	 *         we do not know, or needs a network we do not have.
+	 */
+	private StorageBackend backendToCommitWith(ContentValues serverData) {
+		BackendType type = BackendType.fromServerRow(serverData);
+		if ( type == null ) {
+			Log.w(TAG, "Leaving changes for an account with an unknown storage backend.");
+			return null;
+		}
+		StorageBackend backend = backends.get(type);
+		if ( backend == null ) {
+			backend = StorageBackends.forType(type);
+			backends.put(type, backend);
+		}
+		if ( backend.needsNetwork() && !online ) return null;
+		return backend;
+	}
 
-	private void syncOneChange(ContentValues pending) throws SSLException {
+
+	private void commitOneChange(ContentValues pending) throws IOException {
 
 		long collectionId = pending.getAsLong(ResourceTableManager.PEND_COLLECTION_ID);
 		ContentValues collectionData = processor.getCollectionRow(collectionId);
@@ -193,207 +204,24 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 			processor.deleteInvalidCollectionRecord(collectionId);
 			return;
 		}
-		Servers.decryptPassword(processor.getContext(), serverData);
-		requestor.applyFromServer(serverData);
 
-		String collectionPath = collectionData.getAsString(DavCollections.COLLECTION_PATH);
+		StorageBackend backend = backendToCommitWith(serverData);
+		if ( backend == null ) return;
 
-		String newData = pending.getAsString(ResourceTableManager.NEW_DATA);
-		String oldData = pending.getAsString(ResourceTableManager.OLD_DATA);
-		String latestDbData = pending.getAsString(ResourceTableManager.RESOURCE_DATA);
-		Long resourceId = pending.getAsLong(ResourceTableManager.PEND_RESOURCE_ID);
-		Long pendingId = pending.getAsLong(ResourceTableManager.PENDING_ID);
-		String resourcePath = pending.getAsString(ResourceTableManager.RESOURCE_NAME);
-
-		DMQueryBuilder builder = processor.getNewQueryBuilder().setAction(QUERY_ACTION.UPDATE);
-
-		BasicHeader eTagHeader = null;
-		BasicHeader contentHeader = new BasicHeader("Content-type", getContentType(newData) );
-
-		if ( oldData == null ) {
-			eTagHeader = new BasicHeader("If-None-Match", "*" );
-
-			if ( resourcePath == null || resourcePath.equals("null") ) {
-				String contentExtension = getContentType(newData);
-				if ( contentExtension.length() > 14 && contentExtension.substring(0,13).equals("text/calendar") )
-					contentExtension = ".ics";
-				else if ( contentExtension.substring(0,10).equals("text/vcard") )
-					contentExtension = ".vcf";
-				else
-					contentExtension = ".txt";
-
-				try {
-					resourcePath = pending.getAsString(ResourceTableManager.UID) + contentExtension;
-				}
-				catch ( Exception e ) {
-					if ( DEBUG )
-						Log.println(Constants.LOGD,TAG,"Unable to get UID from resource");
-					if ( Constants.LOG_VERBOSE )
-						Log.println(Constants.LOGV,TAG,Log.getStackTraceString(e));
-				};
-				if ( resourcePath == null ) {
-					resourcePath = UUID.randomUUID().toString() + contentExtension;
-				}
-			}
-            if ( DEBUG && Constants.LOG_DEBUG )
-                Log.println(Constants.LOGD, TAG, "Writing new resource to "+resourcePath );
-		}
-		else {
-			String eTag = pending.getAsString(ResourceTableManager.ETAG);
-			if ( eTag != null ) eTagHeader = new BasicHeader("If-Match", eTag );
-			if ( DEBUG && Constants.LOG_DEBUG ) {
-				Log.println(Constants.LOGD, TAG,
-						"Writing existing resource to "+resourcePath+", isNull: "+(resourcePath == null)+", etag: "+eTag+"\n"+
-						"\tResource: "+(oldData == null)+", latestDbData:\n" +
-						"=============================\n"+
-						latestDbData+
-						"============\n"
-						);
-			}
-
-			if ( newData == null ) {
-				builder.setAction(QUERY_ACTION.DELETE);
-			}
-			else {
-				if ( oldData != null && latestDbData != null && oldData.equals(latestDbData) ) {
-					newData = mergeAsyncChanges( oldData, latestDbData, newData );
-				}
-				if ( DEBUG && Constants.LOG_DEBUG ) {
-					Log.println(Constants.LOGD, TAG,
-							"newData:\n" +
-							"=============================\n"+
-							newData+
-							"============\n"
-							);
-				}
-			}
-		}
-
-		String path = collectionPath + resourcePath;
-
-		Header[] headers;
-		if ( builder.getAction() == QUERY_ACTION.DELETE )
-            headers = new Header[] {
-                                    eTagHeader,
-                                    contentHeader
-                             };
-		else
-            headers = new Header[] {
-                                    eTagHeader,
-                                    contentHeader,
-                                    new BasicHeader("Prefer","return=representation")
-                             };
-
-		InputStream in = null;
-		String method = (builder.getAction() == QUERY_ACTION.DELETE ? "DELETE" : "PUT");
-
-		try {
-			in = requestor.doRequest( method, path, headers, newData);
-		}
-		catch (ConnectionFailedException e) {
-			Log.w(TAG,"HTTP Connection failed: "+e.getMessage());
-			return;
-		}
-		catch (SendRequestFailedException e) {
-			Log.w(TAG,"HTTP Request failed: "+e.getMessage());
-			return;
-		}
-
-        Log.println(Constants.LOGI,TAG, method+" got "+requestor.getStatusCode()+" response from "+requestor.fullUrl());
-
-        // If we made it this far we should do a sync on this collection ASAP after we're done
-        collectionsToSync.add(collectionId);
-
-		int status = requestor.getStatusCode();
-        String responseData = null;
-        boolean useResponseData = false;
-        if ( builder.getAction() != QUERY_ACTION.DELETE ) try {
-            responseData = AcalRequestor.convertStreamToString(in);
-            useResponseData = contentHeader.getValue().equals(getContentType(responseData));
-        }
-        catch ( IOException e ) { }
-
-		if (DEBUG) Log.println(Constants.LOGD,TAG, "Response "+status+" for "+method+" "+path);
-		switch (status) {
-			case 201: // Status Created (normal for INSERT).
-			case 204: // Status No Content (normal for DELETE).
-			case 200: // Status OK. (normal for UPDATE)
-				ContentValues resourceData = new ContentValues();
-				resourceData.put(ResourceTableManager.RESOURCE_ID, resourceId);
-				resourceData.put(ResourceTableManager.COLLECTION_ID, collectionId);
-				resourceData.put(ResourceTableManager.RESOURCE_NAME, resourcePath);
-				resourceData.put(ResourceTableManager.RESOURCE_DATA, newData);
-				resourceData.put(ResourceTableManager.NEEDS_SYNC, 1);
-				resourceData.put(ResourceTableManager.ETAG, "unknown etag after PUT before sync");
-
-                for (Header hdr : requestor.getResponseHeaders()) {
-					if (hdr.getName().equalsIgnoreCase("ETag")) {
-						resourceData.put(ResourceTableManager.ETAG, hdr.getValue());
-						resourceData.put(ResourceTableManager.NEEDS_SYNC, 0);
-						break;
-					}
-				}
-                if ( responseData != null && useResponseData ) {
-                    resourceData.put(ResourceTableManager.RESOURCE_DATA, responseData);
-                }
-
-				if ( DEBUG ) Log.println(Constants.LOGD,TAG,
-						"Applying resource modification to local database");
-				builder.setValues(resourceData);
-				builder.setWhereClause(ResourceTableManager.RESOURCE_ID + " = "+resourceId);
-
-				DMAction action = builder.build();
-
-				try {
-					processor.syncToServer(action, resourceId, pendingId);
-				}
-				catch (Exception e) {
-					Log.w(TAG, action.toString()+": Exception applying resource modification: " + e.getMessage());
-					Log.println(Constants.LOGD,TAG, Log.getStackTraceString(e));
-				}
-				break;
-
-			case 412: // Server won't accept it
-			case 403: // Server won't accept it
-			case 404: // DELETE on something that's not there.
-			case 405: // Server won't accept it - Method not allowed
-            case 409: // conflict with If-Match
-				Log.w(TAG, builder.getAction().toString()+": Status " + status + " for " +method+" "+ path + " - giving up on change.");
-                Log.i(TAG,"Full server response was:\n"+responseData);
-				processor.deletePendingChange(pendingId);
-				break;
-
-			default: // Unknown code
-				Log.w(TAG, builder.getAction().toString()+": Status " + status + " for " +method+" "+ path);
-				Log.i(TAG,"Full server response was:\n"+responseData);
-				if ( status < 500 ) {
-				    processor.deletePendingChange(pendingId);
-				}
-		}
+		if ( backend.commitPendingChange(processor, serverData, collectionData, pending) )
+			collectionsToRefresh.put(collectionId, backend);
 	}
 
 
-	private String mergeAsyncChanges(String oldData, String latestDbData, String newData) {
-		/**
-		 * @todo Around here is where we should handle the case where latestDbData != oldData. We
-		 * need to parse out both objects and work out what the differences are between oldData
-		 * and newData, and see if we can apply them to latestDbData without them overwriting
-		 * differences between oldData and latestDbData...
-		 */
-		return newData;
-	}
-
-
-	private String getContentType(String fromData) {
-		if ( fromData == null || fromData.length() < 15 ) return "text/plain";
-
-		if ( fromData.substring(6, 15).equalsIgnoreCase("vcalendar") ) {
-			return "text/calendar; charset=\"utf-8\"";
+	private void commitCollectionProperties(ContentValues collectionData) {
+		ContentValues serverData = processor.getServerRow(collectionData.getAsInteger(DavCollections.SERVER_ID));
+		if ( serverData == null ) {
+			Log.e(TAG,"No server for collection "+collectionData.getAsString(DavCollections.COLLECTION_PATH)
+						+" to send its properties to.");
+			return;
 		}
-		else if ( fromData.substring(6, 11).equalsIgnoreCase("vcard") ) {
-			return "text/vcard; charset=\"utf-8\"";
-		}
-		return "text/plain";
+		StorageBackend backend = backendToCommitWith(serverData);
+		if ( backend != null ) backend.commitCollectionProperties(processor, serverData, collectionData);
 	}
 
 
@@ -405,60 +233,6 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 
 	private boolean updateSyncStatus() {
 		return true;
-	}
-
-
-
-	final private static Header[] proppatchHeaders = new Header[] {
-		new BasicHeader("Content-Type","text/xml; charset=utf-8")
-	};
-
-	final static String baseProppatch = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"+
-		"<propertyupdate xmlns=\""+Constants.NS_DAV+"\"\n"+
-		"    xmlns:ACAL=\""+Constants.NS_ACAL+"\"\n"+
-		"    xmlns:ICAL=\""+Constants.NS_ICAL+"\">\n"+
-		"<set>\n"+
-		"  <prop>\n"+
-		"%s\n"+
-		"  </prop>\n"+
-		" </set>\n"+
-		"</propertyupdate>\n";
-
-
-	private void updateCollectionProperties( ContentValues collectionData ) {
-	    StringBuilder settings = new StringBuilder();
-	    settings.append("<displayname><![CDATA["+collectionData.getAsString(DavCollections.DISPLAYNAME)+"]]></displayname>");
-	    String colour = collectionData.getAsString(DavCollections.COLOUR);
-	    if ( colour != null ) {
-	        try {
-	            String rgb = String.format("#%06X", android.graphics.Color.parseColor(colour) & 0xFFFFFF);
-	            settings.append("<ACAL:collection-colour>"+rgb+"</ACAL:collection-colour>");
-	            // Dead property in the format Apple clients use (#RRGGBBAA), so the
-	            // colour is shared with other CalDAV clients and survives any local
-	            // rebuild of the collection list.
-	            settings.append("<ICAL:calendar-color>"+rgb+"FF</ICAL:calendar-color>");
-	        }
-	        catch ( IllegalArgumentException e ) {
-	            Log.w(TAG,"Not sending unparseable collection colour '"+colour+"' to server.");
-	        }
-	    }
-		String proppatchRequest = String.format(baseProppatch, settings.toString() );
-
-		try {
-			ContentValues serverData = processor.getServerRow(collectionData.getAsInteger(DavCollections.SERVER_ID));
-			Servers.decryptPassword(processor.getContext(), serverData);
-			requestor.applyFromServer(serverData);
-			requestor.doRequest("PROPPATCH", collectionData.getAsString(DavCollections.COLLECTION_PATH),
-						proppatchHeaders, proppatchRequest);
-
-			collectionData.put(DavCollections.SYNC_METADATA, 0);
-			processor.updateCollection(collectionData.getAsLong(DavCollections._ID),collectionData);
-		}
-		catch (Exception e) {
-			Log.e(TAG,"Error with proppatch to "+requestor.fullUrl());
-			Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
-		}
-
 	}
 
 

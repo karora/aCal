@@ -21,6 +21,9 @@ package org.davical.acal.service;
 import android.content.Context;
 import android.os.RemoteException;
 
+import org.davical.acal.storage.StorageBackend;
+import org.davical.acal.storage.StorageBackends;
+
 /**
  * Handles AIDL service requests for IPC communication.
  * Extracted from aCalService to promote single responsibility principle.
@@ -74,19 +77,22 @@ public class ServiceRequestHandlerImpl extends ServiceRequest.Stub {
 
     @Override
     public void homeSetDiscovery(int server) throws RemoteException {
-        HomeSetDiscovery job = new HomeSetDiscovery(server);
-        worker.addJobAndWake(job);
+        StorageBackend backend = StorageBackends.forServer(server, context.getContentResolver());
+        ServiceJob job = (backend == null ? null : backend.discoverCollections(server));
+        if ( job != null ) worker.addJobAndWake(job);
     }
 
     @Override
     public void syncCollectionNow(long collectionId) throws RemoteException {
-        SyncCollectionContents job = new SyncCollectionContents(collectionId, true);
-        worker.addJobAndWake(job);
+        StorageBackend backend = StorageBackends.forCollection(collectionId, context.getContentResolver());
+        ServiceJob job = (backend == null ? null : backend.refreshCollection(collectionId, true));
+        if ( job != null ) worker.addJobAndWake(job);
     }
 
     @Override
     public void fullCollectionResync(long collectionId) throws RemoteException {
-        InitialCollectionSync job = new InitialCollectionSync(collectionId);
-        worker.addJobAndWake(job);
+        StorageBackend backend = StorageBackends.forCollection(collectionId, context.getContentResolver());
+        ServiceJob job = (backend == null ? null : backend.reloadCollection(collectionId));
+        if ( job != null ) worker.addJobAndWake(job);
     }
 }

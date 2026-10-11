@@ -18,18 +18,27 @@
 
 package org.davical.acal.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.util.Log;
 
 import org.davical.acal.Constants;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.providers.Servers;
+import org.davical.acal.storage.StorageBackend;
+import org.davical.acal.storage.StorageBackends;
 
 public class SynchronisationJobs extends ServiceJob {
 
@@ -70,33 +79,34 @@ public class SynchronisationJobs extends ServiceJob {
 	}
 
 	public synchronized void refreshHomeSets() {
-		Cursor mCursor = context.getContentResolver().query(Servers.CONTENT_URI,
-					new String[] { Servers._ID, Servers.ACTIVE }, null, null, null);
-		mCursor.moveToFirst();
-		//Set<HomeSetDiscovery> hsd = new HashSet<HomeSetDiscovery>();
-		while (!mCursor.isAfterLast()) {
-			if (mCursor.getInt(1) == 1) {
-				ServiceJob sj = new HomeSetDiscovery(mCursor.getInt(0));
-				context.addWorkerJob(sj);
-			}
-			mCursor.moveToNext();
+		for ( ContentValues serverData : activeServers() ) {
+			StorageBackend backend = StorageBackends.forServerRow(serverData);
+			if ( backend == null ) continue;
+			ServiceJob sj = backend.discoverCollections(serverData.getAsInteger(Servers._ID));
+			if ( sj != null ) context.addWorkerJob(sj);
 		}
-		mCursor.close();
 	}
 
 	public synchronized void refreshCollectionsFromHomeSets() {
-		Cursor mCursor = context.getContentResolver().query(Servers.CONTENT_URI,
-					new String[] { Servers._ID, Servers.ACTIVE }, null, null, null);
-		mCursor.moveToFirst();
-		while (!mCursor.isAfterLast()) {
-			if (mCursor.getInt(1) == 1) {
-				ServiceJob sj = new HomeSetsUpdate(mCursor.getInt(0));
-				context.addWorkerJob(sj);
-			}
-			mCursor.moveToNext();
+		for ( ContentValues serverData : activeServers() ) {
+			StorageBackend backend = StorageBackends.forServerRow(serverData);
+			if ( backend == null ) continue;
+			ServiceJob sj = backend.updateCollections(serverData.getAsInteger(Servers._ID));
+			if ( sj != null ) context.addWorkerJob(sj);
+		}
+	}
+
+	private List<ContentValues> activeServers() {
+		List<ContentValues> servers = new ArrayList<ContentValues>();
+		Cursor mCursor = context.getContentResolver().query(Servers.CONTENT_URI, null, null, null, null);
+		for ( mCursor.moveToFirst(); !mCursor.isAfterLast(); mCursor.moveToNext() ) {
+			ContentValues serverData = new ContentValues();
+			DatabaseUtils.cursorRowToContentValues(mCursor, serverData);
+			Integer active = serverData.getAsInteger(Servers.ACTIVE);
+			if ( active != null && active == 1 ) servers.add(serverData);
 		}
 		mCursor.close();
-
+		return servers;
 	}
 
 	/**
@@ -109,13 +119,20 @@ public class SynchronisationJobs extends ServiceJob {
 	 * @param context
 	 */
 	public static void startCollectionSync(IWorkerClass worker, Context context, long startInMillis) {
-		ContentValues[] collectionsList = DavCollections.getCollections(context.getContentResolver(),
-					DavCollections.INCLUDE_ALL_ACTIVE);
+		ContentResolver cr = context.getContentResolver();
+		ContentValues[] collectionsList = DavCollections.getCollections(cr, DavCollections.INCLUDE_ALL_ACTIVE);
+		Map<Integer, StorageBackend> backends = new HashMap<Integer, StorageBackend>();
 		String lastSyncString;
 		AcalDateTime lastSync;
 		int collectionId;
 
 		for (ContentValues collectionValues : collectionsList) {
+			Integer serverId = collectionValues.getAsInteger(DavCollections.SERVER_ID);
+			if ( serverId == null ) continue;
+			if ( !backends.containsKey(serverId) ) backends.put(serverId, StorageBackends.forServer(serverId, cr));
+			StorageBackend backend = backends.get(serverId);
+			if ( backend == null ) continue;
+
 			collectionId = collectionValues.getAsInteger(DavCollections._ID);
 			lastSyncString = collectionValues.getAsString(DavCollections.LAST_SYNCHRONISED);
 			if (lastSyncString != null) {
@@ -123,14 +140,16 @@ public class SynchronisationJobs extends ServiceJob {
 				if (lastSync.addDays(14).getMillis() > System.currentTimeMillis()) {
 					// In this case we will schedule a normal sync on the collection
 					// which will hopefully be *much* lighter weight.
-					SyncCollectionContents job = new SyncCollectionContents(collectionId);
+					ServiceJob job = backend.refreshCollection(collectionId, false);
+					if ( job == null ) continue;
 					job.TIME_TO_EXECUTE = startInMillis;
 					worker.addJobAndWake(job);
 					startInMillis += 5000;
 				}
 			}
 			else {
-				InitialCollectionSync job = new InitialCollectionSync(collectionId);
+				ServiceJob job = backend.reloadCollection(collectionId);
+				if ( job == null ) continue;
 				job.TIME_TO_EXECUTE = startInMillis;
 				worker.addJobAndWake(job);
 				startInMillis += 15000;

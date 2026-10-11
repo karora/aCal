@@ -101,6 +101,8 @@ public class Servers extends ContentProvider {
 	public static final String		USE_SSL				= "use_ssl";
 	public static final String		USE_ADVANCED		= "use_advanced";
 	public static final String		PREPARED_CONFIG		= "prepared_config";
+	/** One of the values of {@link org.davical.acal.storage.BackendType} */
+	public static final String		BACKEND_TYPE		= "backend_type";
 
 	// Possible values for authentication
 	public static final int			AUTH_NONE		= 0;
@@ -327,6 +329,7 @@ public class Servers extends ContentProvider {
 		StaticHelpers.copyContentValue(cloned, serverData, USE_SSL);
 		StaticHelpers.copyContentValue(cloned, serverData, USE_ADVANCED);
 		StaticHelpers.copyContentValue(cloned, serverData, PREPARED_CONFIG);
+		StaticHelpers.copyContentValue(cloned, serverData, BACKEND_TYPE);
 		return cloned;
 	}
 
