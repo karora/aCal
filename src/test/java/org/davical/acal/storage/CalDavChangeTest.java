@@ -71,6 +71,24 @@ public class CalDavChangeTest {
 	}
 
 	@Test
+	public void anOrdinaryUidIsUsedAsTheName() {
+		for ( String uid : new String[] { "abc", "20261012T101500Z-1234@example.net",
+					"5f1c2a9e-0b7d-4c57-9a50-3a1f0c2b7d11", "a.b_c-d" } ) {
+			assertEquals(uid + ".ics", CalDavChange.plan(null, EVENT, null, uid, null).resourceName);
+		}
+	}
+
+	/** The name goes on the end of the collection's path, so these would go somewhere else. */
+	@Test
+	public void aUidThatWouldChangeThePathIsNotUsedAsTheName() {
+		for ( String uid : new String[] { "../other/calendar/abc", "a/b", "..", ".hidden", "abc?x=1", "abc#frag",
+					"abc%2F..%2Fx", "a b", "a\\b", "abc\r\nX-Header: 1", "" } ) {
+			String name = CalDavChange.plan(null, EVENT, null, uid, null).resourceName;
+			assertTrue(uid + " gave " + name, name.matches("[0-9a-f-]{36}\\.ics"));
+		}
+	}
+
+	@Test
 	public void anUpdateIsPutOnlyIfTheServerStillHasWhatWeLastSaw() {
 		CalDavChange change = CalDavChange.plan(EVENT, EVENT.replace("abc", "abd"), "abc.ics", "abc", "\"etag-1\"");
 

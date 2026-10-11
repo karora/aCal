@@ -68,12 +68,22 @@ final class CalDavChange {
 
 		if ( oldData == null ) {
 			if ( resourceName == null || resourceName.equals("null") ) {
-				resourceName = (uid == null ? UUID.randomUUID().toString() : uid) + extensionFor(contentType);
+				resourceName = (isSafeName(uid) ? uid : UUID.randomUUID().toString()) + extensionFor(contentType);
 			}
 			return new CalDavChange(false, resourceName, "If-None-Match", "*", contentType);
 		}
 
 		return new CalDavChange(newData == null, resourceName, (etag == null ? null : "If-Match"), etag, contentType);
+	}
+
+	/**
+	 * The UID is whatever the writer of the calendar data chose, and the name
+	 * goes on the end of the path of the collection.  One with a slash, a
+	 * question mark or the like in it would send the request somewhere else,
+	 * so only a UID of plain characters is used as a name.
+	 */
+	static boolean isSafeName(String uid) {
+		return uid != null && uid.matches("[A-Za-z0-9][A-Za-z0-9._@-]*");
 	}
 
 	static Outcome outcomeOf(int status) {

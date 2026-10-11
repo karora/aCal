@@ -252,11 +252,21 @@ public class CalDavBackend implements StorageBackend {
 		"</propertyupdate>\n";
 
 
+	/**
+	 * @return the text as CDATA.  A "]]>" in it would end the section early
+	 *         and let the rest be read as XML, so the section is ended and
+	 *         started again in the middle of each one.
+	 */
+	static String cdata(String text) {
+		return "<![CDATA[" + String.valueOf(text).replace("]]>", "]]]]><![CDATA[>") + "]]>";
+	}
+
+
 	@Override
 	public void commitCollectionProperties(WriteableResourceTableManager processor, ContentValues serverData,
 				ContentValues collectionData) {
 	    StringBuilder settings = new StringBuilder();
-	    settings.append("<displayname><![CDATA["+collectionData.getAsString(DavCollections.DISPLAYNAME)+"]]></displayname>");
+	    settings.append("<displayname>"+cdata(collectionData.getAsString(DavCollections.DISPLAYNAME))+"</displayname>");
 	    String colour = collectionData.getAsString(DavCollections.COLOUR);
 	    if ( colour != null ) {
 	        try {
