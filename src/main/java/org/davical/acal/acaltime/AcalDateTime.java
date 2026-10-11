@@ -1421,6 +1421,18 @@ public class AcalDateTime implements Parcelable, Serializable, Cloneable, Compar
 
 
 	/**
+	 * Checks whether this is on the same day of the calendar as another date, each as it
+	 * reads in its own time zone.
+	 * @param another AcalDateTime
+	 * @return true, iff the year and the day of the year are the same, false otherwise, including if the other date is null
+	 */
+	public boolean isSameDay( AcalDateTime another ) {
+		if ( another == null ) return false;
+		return ( getYear() == another.getYear() && getYearDay() == another.getYearDay() );
+	}
+
+
+	/**
 	 * Checks whether this date is before some other date.
 	 * @param another AcalDateTime
 	 * @return true, iff this date is earlier than the other date, false otherwise, including if the other date is null

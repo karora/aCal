@@ -33,6 +33,7 @@
 	<color name="WeekViewSidebarBorder">#333333</color>
 	<color name="WeekViewDayGridBorder">#AAAAAA</color>
 	<color name="WeekViewDayGridWorkTimeBG">#90F6F6D0</color>
+	<color name="WeekViewDayGridTodayBG">#3010D747</color>
 	<color name="OverdueTask">#FFE03010</color>
 	<color name="CompletedTask">#FF007010</color>
 	<string name="placeholderDateAndTime">7:00pm, 29 October 2011</string>

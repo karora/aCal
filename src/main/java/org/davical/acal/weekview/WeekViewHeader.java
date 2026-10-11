@@ -30,6 +30,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
+
 import org.davical.acal.R;
 import org.davical.acal.acaltime.AcalDateTime;
 
@@ -93,13 +95,27 @@ public class WeekViewHeader extends ImageView {
 		
 		int dayHeight = this.getHeight();
 		int totalWidth = this.getWidth();
+		AcalDateTime today = new AcalDateTime().applyLocalTimeZone();
 		while(x<(totalWidth+dayWidth)) {		//continue until we have draw one past screen edge
 			drawBox (x, y,dayWidth,dayHeight,canvas,startDate);
+			if ( startDate.isSameDay(today) ) drawTodayBox(x, y, dayWidth, dayHeight, canvas);
 			startDate.addDays(1);
 			x+=dayWidth;
 		}
 		
 		
+	}
+
+	/** Puts a box around the heading of today, in the colour the month view uses for it. */
+	private void drawTodayBox(int x, int y, int w, int h, Canvas c) {
+		int thickness = Math.max(2, Math.round(2 * getResources().getDisplayMetrics().density));
+		Paint p = new Paint();
+		p.setStyle(Paint.Style.FILL);
+		p.setColor(ContextCompat.getColor(context, R.color.MonthDayTodayBox));
+		c.drawRect(x, y, x + w, y + thickness, p);
+		c.drawRect(x, y + h - thickness, x + w, y + h, p);
+		c.drawRect(x, y, x + thickness, y + h, p);
+		c.drawRect(x + w - thickness, y, x + w, y + h, p);
 	}
 
 	//TODO move to image cache

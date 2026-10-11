@@ -123,4 +123,20 @@ public class AcalDateTimeTest {
 		assertTrue(AcalDateTime.fromString("20260115T000000Z").before(later));
 		assertEquals("20400101T130000", later.shiftTimeZone("Pacific/Auckland").fmtIcal());
 	}
+
+	/** What the week view asks, to mark today (#6). */
+	@Test
+	public void knowsWhetherTwoTimesAreOnTheSameDay() {
+		AcalDateTime morning = AcalDateTime.fromIcalendar("20260115T000000", null, "Pacific/Auckland");
+		assertTrue(morning.isSameDay(AcalDateTime.fromIcalendar("20260115T235959", null, "Pacific/Auckland")));
+		assertFalse(morning.isSameDay(AcalDateTime.fromIcalendar("20260116T000000", null, "Pacific/Auckland")));
+		assertFalse(morning.isSameDay(AcalDateTime.fromIcalendar("20250115T000000", null, "Pacific/Auckland")));
+		assertTrue(morning.isSameDay(AcalDateTime.fromString("20260115")));
+		assertFalse(morning.isSameDay(null));
+
+		// The same moment is a different day in another zone, and the day is as each one reads
+		AcalDateTime inUtc = morning.clone().shiftTimeZone("UTC");
+		assertEquals("20260114T110000Z", inUtc.fmtIcal());
+		assertFalse(morning.isSameDay(inUtc));
+	}
 }

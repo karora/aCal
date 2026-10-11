@@ -90,6 +90,7 @@ public class WeekViewDays extends ImageView implements OnTouchListener {
     private List<Rectangle> eventsDisplayed;
 
     private Paint workPaint;
+    private Paint todayPaint;
 
     /**
      * Default Constructor
@@ -187,6 +188,10 @@ public class WeekViewDays extends ImageView implements OnTouchListener {
         workPaint = new Paint();
         workPaint.setStyle(Paint.Style.FILL);
         workPaint.setColor(ContextCompat.getColor(context, R.color.WeekViewDayGridWorkTimeBG));
+
+        todayPaint = new Paint();
+        todayPaint.setStyle(Paint.Style.FILL);
+        todayPaint.setColor(ContextCompat.getColor(context, R.color.WeekViewDayGridTodayBG));
 
         this.dimensionCalculated = true;
         context.refresh();
@@ -334,6 +339,7 @@ public class WeekViewDays extends ImageView implements OnTouchListener {
         int dayX = (int) (-WeekViewActivity.DAY_WIDTH + scrollx);
         AcalDateTime currentDay = context.getCurrentDate().clone();
         currentDay.addDays(-1);
+        AcalDateTime today = new AcalDateTime().applyLocalTimeZone();
 
         //get the grid for each day
         Bitmap dayGrid = context.getImageCache().getDayBox(TpX + (3600 / WeekViewActivity.SECONDS_PER_PIXEL));
@@ -356,6 +362,10 @@ public class WeekViewDays extends ImageView implements OnTouchListener {
             if (!(currentDay.getWeekDay() == AcalDateTime.SATURDAY || currentDay.getWeekDay() == AcalDateTime.SUNDAY)) {
                 //add a yellow background around to the work hours
                 canvas.drawRect(dayX, workTop, dayX + WeekViewActivity.DAY_WIDTH, workBot, workPaint);
+            }
+            if (currentDay.isSameDay(today)) {
+                //tint the whole of today, to go with the box around its heading
+                canvas.drawRect(dayX, y, dayX + WeekViewActivity.DAY_WIDTH, y + PxD, todayPaint);
             }
 
             Rect dst = new Rect(dayX, y, dayX + dayGrid.getWidth(), y + PxD);
