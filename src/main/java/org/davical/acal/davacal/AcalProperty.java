@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.util.Log;
@@ -43,7 +42,6 @@ import org.davical.acal.Constants;
 public class AcalProperty {
 	public static final String TAG = "aCal AcalProperty";
 	private static boolean DEBUG = false;
-	private static final Pattern valueReplaceEscaped = Pattern.compile("\\\\([,;'\"\\\\])");
 	private static final Pattern propertiesUnescaped = Pattern.compile(
 				"^(ATTACH|GEO|PERCENT-COMPLETE|PRIORITY|DURATION|FREEBUSY|TZOFFSETFROM|TZOFFSETTO|TZURL" +
 				"|ATTENDEE|ORGANIZER|RECURRENCE-ID|URL|EXRULE|SEQUENCE|CREATED|RRULE|REPEAT" +
@@ -54,6 +52,13 @@ public class AcalProperty {
 	private boolean paramsSet = false;
 	public final String name;
 	private final String value;
+	/**
+	 * The value exactly as it was read, for a property which was.  Reading takes the
+	 * backslashes out, and what they said cannot be worked out again from the name of the
+	 * property: "A,B" in CATEGORIES is two categories and "A\,B" is one.  So what is written
+	 * back is what was read.
+	 */
+	private final String rawValue;
 	private String paramsBlob[];
 
 	// These parameters are quite common so we'll use string parameters
@@ -71,23 +76,17 @@ public class AcalProperty {
 		if ( blob == null ) throw new NullPointerException();
 		String tmpblob;
 		String value;
+		String rawValue;
 		String[] paramsBlob;
 
 		int splitPos = findNextUnescaped(':',0,blob);
 		if ( splitPos < blob.length() ) {
-			if ( (splitPos+1) == blob.length() ) {
-				value = "";
-			}
-			else {
-				value = blob.substring(splitPos + 1);
-				Matcher m2 = valueReplaceEscaped.matcher(value);
-				value = m2.replaceAll("$1");
-				value = value.replace("\\n", "\n");
-				value = value.replace("\\N", "\n");
-			}
+			rawValue = blob.substring(splitPos + 1);
+			value = unescape(rawValue);
 			tmpblob = blob.substring(0,splitPos);
 		}
 		else {
+			rawValue = "";
 			value = "";
 			tmpblob = blob;
 		}
@@ -119,7 +118,52 @@ public class AcalProperty {
 		paramsBlob = ( params.size() > 0 ? params.toArray(new String[params.size()]) : new String[0]);
 
 		if (name.equals("RECURRENCE-ID")) return new RecurrenceId(value,paramsBlob);
-		return new AcalProperty(name,value,paramsBlob);
+		return new AcalProperty(name,value,paramsBlob,rawValue);
+	}
+
+	/**
+	 * Takes the backslashes out of a value as it was read: "\n" or "\N" is a new line, and
+	 * a backslash before a comma, semicolon, quote or backslash gives that character.  Any
+	 * other backslash is left where it is.
+	 */
+	static String unescape(String raw) {
+		if ( raw.indexOf('\\') < 0 ) return raw;
+		StringBuilder plain = new StringBuilder(raw.length());
+		for( int i=0; i < raw.length(); i++ ) {
+			char ch = raw.charAt(i);
+			if ( ch == '\\' && i + 1 < raw.length() ) {
+				char next = raw.charAt(i + 1);
+				if ( next == 'n' || next == 'N' ) {
+					plain.append('\n');
+					i++;
+					continue;
+				}
+				if ( next == ',' || next == ';' || next == '\'' || next == '"' || next == '\\' ) {
+					plain.append(next);
+					i++;
+					continue;
+				}
+			}
+			plain.append(ch);
+		}
+		return plain.toString();
+	}
+
+	/**
+	 * Puts the backslashes that RFC 5545 asks for into a TEXT value: before a backslash, a
+	 * comma or a semicolon, and "\n" for a new line.
+	 */
+	static String escapeText(String plain) {
+		StringBuilder escaped = new StringBuilder(plain.length() + 8);
+		for( int i=0; i < plain.length(); i++ ) {
+			char ch = plain.charAt(i);
+			if ( ch == '\n' ) escaped.append("\\n");
+			else {
+				if ( ch == '\\' || ch == ',' || ch == ';' ) escaped.append('\\');
+				escaped.append(ch);
+			}
+		}
+		return escaped.toString();
 	}
 
 	/**
@@ -154,8 +198,13 @@ public class AcalProperty {
 	 * @param paramsBlob
 	 */
 	protected AcalProperty(String name, String value, String[] paramsBlob) {
+		this(name, value, paramsBlob, null);
+	}
+
+	private AcalProperty(String name, String value, String[] paramsBlob, String rawValue) {
 		this.name = name;
 		this.value = value;
+		this.rawValue = rawValue;
 		this.paramsBlob = paramsBlob;
 	}
 
@@ -167,6 +216,7 @@ public class AcalProperty {
 	public AcalProperty(String name, String value) {
 		this.name = name;
 		this.value = value;
+		this.rawValue = null;
 		this.paramsBlob = new String[] { };
 		this.params = new HashMap<String,String>();
 	}
@@ -331,8 +381,10 @@ public class AcalProperty {
 			paramBuilder.append(';');
 			paramBuilder.append(paramsBlob[i]);
 		}
-		Matcher m = propertiesUnescaped.matcher(name);
-		String escaped_value = (m.matches() ? value : value.replaceAll("([,\\\\])", "\\\\$1").replaceAll("\n", "\\\\N"));
+		String escaped_value;
+		if ( rawValue != null ) escaped_value = rawValue;
+		else if ( propertiesUnescaped.matcher(name).matches() ) escaped_value = value;
+		else escaped_value = escapeText(value);
 
 		int paramLength = paramBuilder.toString().getBytes(StandardCharsets.UTF_8).length;
 		int valueLength = escaped_value.getBytes(StandardCharsets.UTF_8).length;

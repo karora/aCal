@@ -297,4 +297,28 @@ public class VCalendarEventActionTest {
 
 		assertEquals(Arrays.asList("Renamed"), summaries(parse(blob)));
 	}
+
+	/**
+	 * Editing an event must leave alone what other programs wrote in it.  The
+	 * commas here used to be given backslashes, which made the two categories
+	 * one and broke the geo: address (#54).  What is typed in aCal does need
+	 * them, and a semicolon used to go without (#53).
+	 */
+	@Test
+	public void editingKeepsValuesFromOtherProgramsAsTheyWere() throws Exception {
+		String categories = "CATEGORIES:Work,Meetings";
+		String location = "X-APPLE-STRUCTURED-LOCATION;VALUE=URI:geo:-41.290450,174.782100";
+		String description = "DESCRIPTION:One\\; two\\, three\\nfour";
+		String calendar = weekly(categories + "\r\n" + location + "\r\n" + description + "\r\n");
+		EventInstance instance = instanceAt(calendar, "20260119T090000");
+		instance.setSummary("Lunch; then a walk, perhaps");
+		String blob = stored(calendar).applyEventAction(instance, EventEdit.ACTION_EDIT, EventEdit.INSTANCES_ALL);
+
+		List<String> lines = Arrays.asList(blob.split("\r\n"));
+		assertTrue(blob, lines.contains(categories));
+		assertTrue(blob, lines.contains(location));
+		assertTrue(blob, lines.contains(description));
+		assertTrue(blob, lines.contains("SUMMARY:Lunch\\; then a walk\\, perhaps"));
+		assertEquals(Arrays.asList("Lunch; then a walk, perhaps"), summaries(parse(blob)));
+	}
 }

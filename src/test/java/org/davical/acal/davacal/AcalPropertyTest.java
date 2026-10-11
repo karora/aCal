@@ -94,4 +94,60 @@ public class AcalPropertyTest {
 		VCalendar reread = (VCalendar) VComponent.createComponentFromBlob(written);
 		assertEquals(description, reread.getMasterChild().safePropertyValue(PropertyName.DESCRIPTION));
 	}
+
+	@Test
+	public void readingTakesTheBackslashesOut() {
+		assertEquals("One; two, three\nfour \\ five",
+				AcalProperty.fromString("DESCRIPTION:One\\; two\\, three\\nfour \\\\ five").getValue());
+		assertEquals("Line one\nLine two", AcalProperty.fromString("DESCRIPTION:Line one\\NLine two").getValue());
+	}
+
+	/**
+	 * A backslash that was itself escaped is only a backslash.  With an n after
+	 * it, it used to be taken for a new line.
+	 */
+	@Test
+	public void anEscapedBackslashBeforeAnNIsNotANewLine() {
+		assertEquals("C:\\new folder", AcalProperty.fromString("DESCRIPTION:C:\\\\new folder").getValue());
+	}
+
+	/** Text typed in aCal gets the backslashes RFC 5545 asks for, which a semicolon used not to (#53). */
+	@Test
+	public void writingTextPutsTheBackslashesIn() {
+		assertEquals("SUMMARY:One\\; two\\, three\\nfour \\\\ five",
+				new AcalProperty(PropertyName.SUMMARY, "One; two, three\nfour \\ five").toRfcString());
+		assertEquals("One; two, three\nfour \\ five", AcalProperty.fromString(
+				new AcalProperty(PropertyName.SUMMARY, "One; two, three\nfour \\ five").toRfcString()).getValue());
+	}
+
+	/** A value which is not text is written as it is. */
+	@Test
+	public void writingARuleLeavesItsCommasAndSemicolonsAlone() {
+		assertEquals("RRULE:FREQ=WEEKLY;BYDAY=MO,WE",
+				new AcalProperty(PropertyName.RRULE, "FREQ=WEEKLY;BYDAY=MO,WE").toRfcString());
+	}
+
+	/**
+	 * What was read is written back as it was, whatever kind of value it is:
+	 * the commas here are not part of any text (#54).
+	 */
+	@Test
+	public void aPropertyThatWasReadIsWrittenBackUnchanged() {
+		for( String line : new String[] {
+				"CATEGORIES:Work,Meetings",
+				"CATEGORIES:Work\\, and play,Meetings",
+				"X-APPLE-STRUCTURED-LOCATION;VALUE=URI:geo:-41.290450,174.782100",
+				"REQUEST-STATUS:2.0;Success",
+				"DESCRIPTION:One\\; two\\, three\\nfour",
+				"SUMMARY:" } ) {
+			assertEquals(line, AcalProperty.fromString(line).toRfcString());
+		}
+	}
+
+	@Test
+	public void changingAParameterLeavesTheValueAsItWasRead() {
+		AcalProperty property = AcalProperty.fromString("CATEGORIES:Work,Meetings");
+		property.setParam("LANGUAGE", "en");
+		assertEquals("CATEGORIES;LANGUAGE=en:Work,Meetings", property.toRfcString());
+	}
 }

@@ -6,6 +6,3 @@
 #
 # fixture                        check        issue
 hourly-interval-6                instances    #52
-text-escaped-semicolon           round-trip   #53
-style-apple                      round-trip   #54
-style-thunderbird                round-trip   #54
