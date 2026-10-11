@@ -321,6 +321,27 @@ public class AcalRepeatRuleTest {
 				floatingInstances("20260105T090000", "FREQ=DAILY;BYHOUR=9,17;COUNT=4"));
 	}
 
+	/**
+	 * A rule is written by whoever wrote the calendar.  Repeating a value must
+	 * not repeat the instance, and a value that is no hour at all is left out.
+	 */
+	@Test
+	public void repeatedAndImpossibleTimesInARuleAreLeftOut() {
+		assertEquals(Arrays.asList("20260105T090000", "20260105T170000", "20260106T090000", "20260106T170000"),
+				floatingInstances("20260105T090000", "FREQ=DAILY;BYHOUR=17,9,9,24,-1,x,17;COUNT=4"));
+		assertEquals("RRULE:FREQ=DAILY;BYHOUR=9,17",
+				AcalRepeatRuleParser.parseRepeatRule("FREQ=DAILY;BYHOUR=17,9,9,24,-1,x,17").toString());
+	}
+
+	/** Every second of every day, from a daily rule, is more than one step may hold. */
+	@Test(expected = IllegalStateException.class)
+	public void aRuleMakingTooManyInstancesOfOneStepIsRefused() {
+		StringBuilder all = new StringBuilder();
+		for( int i = 0; i < 60; i++ ) all.append(i == 0 ? "" : ",").append(i);
+		floatingInstances("20260105T090000", "FREQ=DAILY;BYHOUR=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,"
+				+ "20,21,22,23;BYMINUTE=" + all + ";BYSECOND=" + all);
+	}
+
 	@Test
 	public void theShortFrequenciesAreWrittenBackAsTheyWereRead() {
 		for( String rule : new String[] { "RRULE:FREQ=HOURLY;INTERVAL=6", "RRULE:FREQ=MINUTELY;COUNT=3",

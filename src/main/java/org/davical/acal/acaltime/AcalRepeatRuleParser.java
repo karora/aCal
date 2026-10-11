@@ -56,6 +56,13 @@ public abstract class AcalRepeatRuleParser {
 	final public static String TAG = "AcalRepeatRuleParser";
 
 	protected final static int MAX_REPEAT_COUNT = 1000;
+
+	/**
+	 * The most instances that BYHOUR, BYMINUTE and BYSECOND may make of one step of a
+	 * rule.  A rule comes from whoever wrote the calendar, and each of these multiplies
+	 * the set by the length of its list.
+	 */
+	protected final static int MAX_SET_SIZE = 10000;
 	protected final static int INFINITE_REPEAT_COUNT = -1;
 
 	public enum RScale {
@@ -159,9 +166,9 @@ public abstract class AcalRepeatRuleParser {
 				case BYMONTHDAY:	preBymonthday = parseIntArray(values);		break;
 				case BYYEARDAY:		preByyearday = parseIntArray(values);		break;
 				case BYWEEKNO:		preByweekno = parseIntArray(values);		break;
-				case BYHOUR:		preByhour = parseIntArray(values);			break;
-				case BYMINUTE:		preByminute = parseIntArray(values);		break;
-				case BYSECOND:		preBysecond = parseIntArray(values);		break;
+				case BYHOUR:		preByhour = parseTimeParts(values, 23);		break;
+				case BYMINUTE:		preByminute = parseTimeParts(values, 59);	break;
+				case BYSECOND:		preBysecond = parseTimeParts(values, 59);	break;
 				case BYDAY:
 					preByday = new AcalRepeatRuleDay[values.length-1];
 					for ( int i=1, j=0; i<values.length; i++,j++ ) {
@@ -585,6 +592,7 @@ public abstract class AcalRepeatRuleParser {
 
 	protected void expandByHour() {
 		if ( byhour == null ) return;
+		checkExpansion(byhour);
 		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
 		for( AcalDateTime c : currentSet ) {
 			for( int h :  byhour ) {
@@ -599,6 +607,7 @@ public abstract class AcalRepeatRuleParser {
 
 	protected void expandByMinute() {
 		if ( byminute == null ) return;
+		checkExpansion(byminute);
 		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
 		for( AcalDateTime c : currentSet ) {
 			for( int m :  byminute ) {
@@ -613,6 +622,7 @@ public abstract class AcalRepeatRuleParser {
 
 	protected void expandBySecond() {
 		if ( bysecond == null ) return;
+		checkExpansion(bysecond);
 		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
 		for( AcalDateTime c : currentSet ) {
 			for( int s :  bysecond ) {
@@ -710,6 +720,39 @@ public abstract class AcalRepeatRuleParser {
 			}
 		}
 		return ret;
+	}
+
+	/**
+	 * Like parseIntArray, for BYHOUR, BYMINUTE and BYSECOND: each value once only, in
+	 * order, and none that is not a number from 0 to the highest allowed.
+	 * @return the values, or null if none of them is usable.
+	 */
+	private static int[] parseTimeParts( String[] strValues, int highest ) {
+		boolean[] present = new boolean[highest + 1];
+		int found = 0;
+		for ( int i=1; i<strValues.length; i++ ) {
+			try {
+				int value = Integer.parseInt(strValues[i].trim());
+				if ( value < 0 || value > highest || present[value] ) continue;
+				present[value] = true;
+				found++;
+			}
+			catch ( NumberFormatException e ) {
+				Log.w(TAG,"Ignoring '"+strValues[i]+"' in "+strValues[0]);
+			}
+		}
+		if ( found == 0 ) return null;
+		int[] ret = new int[found];
+		for ( int value=0, j=0; value<present.length; value++ ) {
+			if ( present[value] ) ret[j++] = value;
+		}
+		return ret;
+	}
+
+	/** Refuses an expansion that would leave the set larger than MAX_SET_SIZE. */
+	private void checkExpansion( int[] by ) {
+		if ( (long) currentSet.size() * by.length > MAX_SET_SIZE )
+			throw new IllegalStateException("Too many instances in one step of "+toString());
 	}
 
 	/**
