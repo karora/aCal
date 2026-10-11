@@ -194,6 +194,42 @@ public class AcalRepeatRuleTest {
 				floatingInstances("20261207T090000", "FREQ=WEEKLY;UNTIL=20991231T235959Z"));
 	}
 
+	/** The first and the last weekday of each month, which Apple Calendar and Outlook both offer. */
+	@Test
+	public void bySetPosChoosesFromTheStartOrTheEndOfTheSet() {
+		// 5 January is not the first weekday of the month, but DTSTART is always the first instance
+		assertEquals(Arrays.asList("20260105T090000", "20260202T090000", "20260302T090000", "20260401T090000"),
+				floatingInstances("20260105T090000", "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=1;COUNT=4"));
+		assertEquals(Arrays.asList("20260105T090000", "20260130T090000", "20260227T090000", "20260331T090000"),
+				floatingInstances("20260105T090000", "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1;COUNT=4"));
+	}
+
+	/** Several positions give their instances in order of time, whatever order they are asked for in. */
+	@Test
+	public void bySetPosWithSeveralPositionsIsInOrderOfTime() {
+		assertEquals(Arrays.asList("20260105T090000", "20260130T090000", "20260202T090000", "20260227T090000"),
+				floatingInstances("20260105T090000", "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1,1,-1;COUNT=4"));
+	}
+
+	/**
+	 * Only four months of 2026 have a fifth Friday.  Asking for one in a month
+	 * that has four used to throw IndexOutOfBoundsException (#50).
+	 */
+	@Test
+	public void bySetPosBeyondTheSetChoosesNothing() {
+		assertEquals(Arrays.asList("20260130T090000", "20260529T090000", "20260731T090000", "20261030T090000"),
+				floatingInstances("20260130T090000", "FREQ=MONTHLY;BYDAY=FR;BYSETPOS=5"));
+		assertEquals(Arrays.asList("20260102T090000", "20260501T090000", "20260703T090000", "20261002T090000"),
+				floatingInstances("20260102T090000", "FREQ=MONTHLY;BYDAY=FR;BYSETPOS=-5"));
+	}
+
+	/** A negative BYSETPOS used to be written one too high, so -1 became 0. */
+	@Test
+	public void bySetPosIsWrittenBackAsItWasRead() {
+		String rule = "RRULE:FREQ=MONTHLY;BYSETPOS=-1,2;BYDAY=MO,TU";
+		assertEquals(rule, AcalRepeatRuleParser.parseRepeatRule(rule).toString());
+	}
+
 	/**
 	 * Each EXDATE line has to be obeyed, not only the last, and an excluded
 	 * instance still counts towards COUNT.

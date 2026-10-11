@@ -385,7 +385,8 @@ public abstract class AcalRepeatRuleParser {
 	private String commaListIntsPlusOne(int[] intList) {
 		int[] myList = new int[intList.length];
 		for( int i=0; i<intList.length; i++ ) {
-			myList[i] = intList[i] + 1;	// Since Java months are 0-based.
+			// Undoes parseIntArrayMinusOne(), which leaves a negative position as it is
+			myList[i] = ( intList[i] < 0 ? intList[i] : intList[i] + 1 );
 		}
 		return commaListInts(myList);
 	}
@@ -613,15 +614,22 @@ public abstract class AcalRepeatRuleParser {
 	}
 
 
+	/**
+	 * Keeps the instances at the positions BYSETPOS asks for, counting from the end of
+	 * the set for a negative one.  A position the set is too short to have chooses nothing.
+	 */
 	protected void limitBySetPos() {
 		if ( bysetpos == null ) return;
 		Collections.sort(currentSet, new AcalDateTime.AcalDateTimeSorter());
-		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
+		boolean[] chosen = new boolean[currentSet.size()];
 		for( int pos : bysetpos ) {
-			if ( pos < 0 )
-				finalSet.add(currentSet.get(currentSet.size() + pos ));
-			else
-				finalSet.add(currentSet.get(pos));
+			// Positive positions are held zero-based: see parseIntArrayMinusOne()
+			int index = ( pos < 0 ? currentSet.size() + pos : pos );
+			if ( index >= 0 && index < chosen.length ) chosen[index] = true;
+		}
+		List<AcalDateTime> finalSet = new ArrayList<AcalDateTime>();
+		for( int i=0; i<chosen.length; i++ ) {
+			if ( chosen[i] ) finalSet.add(currentSet.get(i));
 		}
 		currentSet = finalSet;
 	}
