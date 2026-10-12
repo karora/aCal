@@ -30,9 +30,6 @@ import android.content.ContentValues;
 import android.util.Log;
 
 import org.davical.acal.Constants;
-import org.davical.acal.database.DMAction;
-import org.davical.acal.database.DMQueryBuilder;
-import org.davical.acal.database.TableManager.QUERY_ACTION;
 import org.davical.acal.database.resourcesmanager.ResourceManager.ResourceTableManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.WriteableResourceTableManager;
 import org.davical.acal.providers.DavCollections;
@@ -116,7 +113,7 @@ public class CalDavBackend implements StorageBackend {
 
 		if ( change.localOnly ) {
 			Log.i(TAG, "Deleting resource "+resourceId+" which the server never had.");
-			applyLocally(processor, change, new ContentValues(), resourceId, pendingId);
+			CommittedChange.record(processor, true, new ContentValues(), resourceId, pendingId);
 			return new CommitResult(Outcome.APPLIED, 0, false);
 		}
 
@@ -159,7 +156,7 @@ public class CalDavBackend implements StorageBackend {
         boolean useResponseData = false;
         if ( !change.isDelete ) try {
             responseData = AcalRequestor.convertStreamToString(in);
-            useResponseData = change.contentType.equals(CalDavChange.contentTypeOf(responseData));
+            useResponseData = change.contentType.equals(ResourceNaming.contentTypeOf(responseData));
         }
         catch ( IOException e ) { }
 
@@ -185,7 +182,7 @@ public class CalDavBackend implements StorageBackend {
                     resourceData.put(ResourceTableManager.RESOURCE_DATA, responseData);
                 }
 
-				applyLocally(processor, change, resourceData, resourceId, pendingId);
+				CommittedChange.record(processor, change.isDelete, resourceData, resourceId, pendingId);
 				break;
 
 			case REFUSED:
@@ -201,31 +198,6 @@ public class CalDavBackend implements StorageBackend {
 
 		// The server answered, so look at what it now has as soon as we are done.
 		return new CommitResult(outcome, status, true);
-	}
-
-
-	/**
-	 * Make the resource in the database what the change made it, and retire
-	 * the pending change.
-	 */
-	private void applyLocally(WriteableResourceTableManager processor, CalDavChange change,
-				ContentValues resourceData, long resourceId, long pendingId) {
-		if ( DEBUG ) Log.println(Constants.LOGD,TAG,
-				"Applying resource modification to local database");
-		DMQueryBuilder builder = processor.getNewQueryBuilder()
-					.setAction(change.isDelete ? QUERY_ACTION.DELETE : QUERY_ACTION.UPDATE);
-		builder.setValues(resourceData);
-		builder.setWhereClause(ResourceTableManager.RESOURCE_ID + " = "+resourceId);
-
-		DMAction action = builder.build();
-
-		try {
-			processor.syncToServer(action, resourceId, pendingId);
-		}
-		catch (Exception e) {
-			Log.w(TAG, action.toString()+": Exception applying resource modification: " + e.getMessage());
-			Log.println(Constants.LOGD,TAG, Log.getStackTraceString(e));
-		}
 	}
 
 

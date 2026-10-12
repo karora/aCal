@@ -306,6 +306,20 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 	}
 
 
+	// One of these waiting in the queue does for any number of requests for
+	// one: whichever is due sooner is kept.
+	@Override
+	public boolean equals(Object that) {
+		return that instanceof SyncChangesToServer
+					&& ((SyncChangesToServer) that).tryEverythingNow == this.tryEverythingNow;
+	}
+
+	@Override
+	public int hashCode() {
+		return (tryEverythingNow ? 1 : 0);
+	}
+
+
 	@Override
 	public String getDescription() {
 		return "Syncing local changes back to the server.";

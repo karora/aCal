@@ -112,7 +112,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	/**
 	 * The version of this database. Used to determine if an upgrade is required.
 	 */
-	public static final int DB_VERSION = 26;
+	public static final int DB_VERSION = 27;
 
 
 
@@ -151,6 +151,16 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	 */
 	public static final String ADD_SERVER_BACKEND_TYPE_SQL =
 			"ALTER TABLE dav_server ADD COLUMN backend_type INTEGER NOT NULL DEFAULT 0";
+
+	/**
+	 * <p>Version 27 gave every database an account for the collections kept
+	 * on the phone itself: a dav_server row with a backend_type of 1.  A new
+	 * database gets it too.</p>
+	 */
+	public static final String ENSURE_LOCAL_ACCOUNT_SQL =
+			"INSERT INTO dav_server (friendly_name, active, backend_type)"
+			+" SELECT 'This phone', 1, 1"
+			+" WHERE NOT EXISTS (SELECT 1 FROM dav_server WHERE backend_type = 1)";
 
 	/**
 	 * <p>The dav_path_set table holds the paths which are collections containing
@@ -432,6 +442,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase db) {
 		// Create Database:
 		db.execSQL(DAV_SERVER_TABLE_SQL);
+		db.execSQL(ENSURE_LOCAL_ACCOUNT_SQL);
 		createMostTables(db,false);
 	}
 
@@ -576,6 +587,11 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				Log.i(TAG,"Updating database from version " + oldVersion);
 				oldVersion++;
 				for ( String sql : PendingChangeProgress.ADD_COLUMNS_SQL ) db.execSQL(sql);
+			}
+			if (oldVersion == 26) {
+				Log.i(TAG,"Updating database from version " + oldVersion);
+				oldVersion++;
+				db.execSQL(ENSURE_LOCAL_ACCOUNT_SQL);
 			}
 		}
 		catch( Exception e ) {

@@ -155,12 +155,12 @@ public class CalDavChangeTest {
 
 	@Test
 	public void theContentTypeComesFromHowTheDataBegins() {
-		assertEquals("text/calendar; charset=\"utf-8\"", CalDavChange.contentTypeOf(EVENT));
-		assertEquals("text/calendar; charset=\"utf-8\"", CalDavChange.contentTypeOf(EVENT.toLowerCase()));
-		assertEquals("text/vcard; charset=\"utf-8\"", CalDavChange.contentTypeOf(CARD));
-		assertEquals("text/plain", CalDavChange.contentTypeOf("<html>not what was asked for</html>"));
-		assertEquals("text/plain", CalDavChange.contentTypeOf("short"));
-		assertEquals("text/plain", CalDavChange.contentTypeOf(null));
+		assertEquals("text/calendar; charset=\"utf-8\"", ResourceNaming.contentTypeOf(EVENT));
+		assertEquals("text/calendar; charset=\"utf-8\"", ResourceNaming.contentTypeOf(EVENT.toLowerCase()));
+		assertEquals("text/vcard; charset=\"utf-8\"", ResourceNaming.contentTypeOf(CARD));
+		assertEquals("text/plain", ResourceNaming.contentTypeOf("<html>not what was asked for</html>"));
+		assertEquals("text/plain", ResourceNaming.contentTypeOf("short"));
+		assertEquals("text/plain", ResourceNaming.contentTypeOf(null));
 	}
 
 	private static final CalDavChange CREATE = CalDavChange.plan(null, EVENT, null, "abc", null);

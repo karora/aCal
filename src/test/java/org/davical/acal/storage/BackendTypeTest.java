@@ -68,6 +68,8 @@ public class BackendTypeTest {
 	public void theStoredNumbersStayAsTheyAre() {
 		assertEquals(0, BackendType.CALDAV.value);
 		assertEquals(BackendType.CALDAV, BackendType.fromValue(0));
+		assertEquals(1, BackendType.LOCAL.value);
+		assertEquals(BackendType.LOCAL, BackendType.fromValue(1));
 	}
 
 	@Test
@@ -102,6 +104,41 @@ public class BackendTypeTest {
 		assertTrue(StorageBackends.forServerRow(serverData) instanceof CalDavBackend);
 		assertTrue(StorageBackends.forServerRow(new ContentValues()) instanceof CalDavBackend);
 		assertNull(StorageBackends.forServerRow(null));
+	}
+
+	@Test
+	public void aLocalAccountGetsTheLocalBackend() {
+		ContentValues serverData = new ContentValues();
+		serverData.put(Servers.BACKEND_TYPE, BackendType.LOCAL.value);
+
+		assertTrue(StorageBackends.forServerRow(serverData) instanceof LocalBackend);
+	}
+
+	@Test
+	public void theUpgradeToVersion27AddsTheAccountForThisPhoneOnce() {
+		SQLiteDatabase db = SQLiteDatabase.create(null);
+		try {
+			db.execSQL(AcalDBHelper.DAV_SERVER_TABLE_SQL);
+			db.execSQL("INSERT INTO dav_server (friendly_name, hostname, active) VALUES ('Home', 'dav.example.net', 1)");
+
+			db.execSQL(AcalDBHelper.ENSURE_LOCAL_ACCOUNT_SQL);
+			db.execSQL(AcalDBHelper.ENSURE_LOCAL_ACCOUNT_SQL);
+
+			Cursor c = db.rawQuery("SELECT friendly_name, active, backend_type FROM dav_server ORDER BY _id", null);
+			try {
+				assertEquals(2, c.getCount());
+				c.moveToFirst();
+				assertEquals("Home|1|0", c.getString(0) + "|" + c.getInt(1) + "|" + c.getInt(2));
+				c.moveToNext();
+				assertEquals(LocalCalendars.ACCOUNT_NAME + "|1|1", c.getString(0) + "|" + c.getInt(1) + "|" + c.getInt(2));
+			}
+			finally {
+				c.close();
+			}
+		}
+		finally {
+			db.close();
+		}
 	}
 
 	@Test

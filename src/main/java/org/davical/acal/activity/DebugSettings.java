@@ -41,6 +41,7 @@ import org.davical.acal.ServiceManager;
 import org.davical.acal.database.alarmmanager.AlarmQueueManager;
 import org.davical.acal.database.cachemanager.CacheManager;
 import org.davical.acal.database.cachemanager.requests.CRClearCacheRequest;
+import org.davical.acal.storage.LocalCalendars;
 import org.davical.acal.service.DebugDatabase;
 import org.davical.acal.service.SyncChangesToServer;
 import org.davical.acal.service.WorkerClass;
@@ -59,7 +60,8 @@ public static final String TAG = "aCal Settings";
 		"Clear Cache",
 		"Sync local changes to server",
 		"Log current alarm queue",
-		"Rebuild alarm queue"
+		"Rebuild alarm queue",
+		"Create a calendar on this phone"
 	};
 
 	private ServiceManager serviceManager;
@@ -189,6 +191,14 @@ public static final String TAG = "aCal Settings";
 	    	}
 	    	else if ( task.equals("Sync local changes to server") ) {
 				WorkerClass.getExistingInstance().addJobAndWake(new SyncChangesToServer());
+	    	}
+	    	else if ( task.equals("Create a calendar on this phone") ) {
+	    		// Until there is a proper way to make one (#64)
+	    		new Thread(() -> {
+	    			final long collectionId = LocalCalendars.create(getContentResolver(), "On this phone", null, true, true, true);
+	    			runOnUiThread(() -> Toast.makeText(DebugSettings.this,
+	    					"Created local calendar "+collectionId, Toast.LENGTH_SHORT).show());
+	    		}).start();
 	    	}
 	    	else if ( task.equals("Log current alarm queue") ) {
 	    	    AlarmQueueManager.logCurrentAlarms(DebugSettings.this);

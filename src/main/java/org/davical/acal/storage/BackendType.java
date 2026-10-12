@@ -27,7 +27,10 @@ import org.davical.acal.providers.Servers;
  * account, and its backend_type column holds one of these.
  */
 public enum BackendType {
-	CALDAV(0);
+	/** On a CalDAV or CardDAV server */
+	CALDAV(0),
+	/** In our own database on the phone, and nowhere else */
+	LOCAL(1);
 
 	/** The number stored in the database, which must never change. */
 	public final int value;

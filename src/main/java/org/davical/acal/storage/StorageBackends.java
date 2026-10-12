@@ -39,6 +39,8 @@ public final class StorageBackends {
 		switch ( type ) {
 			case CALDAV:
 				return new CalDavBackend();
+			case LOCAL:
+				return new LocalBackend();
 		}
 		return null;
 	}

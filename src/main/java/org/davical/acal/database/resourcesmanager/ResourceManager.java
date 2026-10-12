@@ -41,6 +41,8 @@ import org.davical.acal.davacal.VComponent;
 import org.davical.acal.di.ServiceRegistry;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.providers.Servers;
+import org.davical.acal.storage.StorageBackend;
+import org.davical.acal.storage.StorageBackends;
 import org.davical.acal.service.CallbackExecutor;
 import org.davical.acal.service.ServiceJob;
 import org.davical.acal.service.SyncChangesToServer;
@@ -858,7 +860,10 @@ public class ResourceManager implements Runnable, IResourceManager {
 			}
 
 			ServiceJob syncChanges = new SyncChangesToServer();
-			syncChanges.TIME_TO_EXECUTE = 2000;	// Wait two seconds before trying to sync to server.
+			// Wait two seconds before trying to sync to a server, in case there is
+			// more to come.  What is kept on the phone has nothing to wait for.
+			StorageBackend backend = StorageBackends.forCollection(cid, context.getContentResolver());
+			if ( backend == null || backend.needsNetwork() ) syncChanges.TIME_TO_EXECUTE = 2000;
 			WorkerClass.getExistingInstance().addJobAndWake(syncChanges);
 
 			return rid;

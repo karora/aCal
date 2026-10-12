@@ -20,6 +20,8 @@ package org.davical.acal.activity.serverconfig;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import android.content.ContentQueryMap;
@@ -48,6 +50,7 @@ import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
 import org.davical.acal.activity.AcalAppCompatActivity;
 import org.davical.acal.providers.Servers;
+import org.davical.acal.storage.BackendType;
 import org.davical.acal.service.ServiceRequest;
 
 /**
@@ -125,9 +128,16 @@ public class ServerConfigList extends AcalAppCompatActivity implements OnClickLi
 		ContentQueryMap cqm = new ContentQueryMap(mCursor,
 				Servers.FRIENDLY_NAME, false, null);
 		cqm.requery();
-		this.serverData = cqm.getRows();
+		this.serverData = new HashMap<String, ContentValues>(cqm.getRows());
 		mCursor.close();
 		cqm.close();
+
+		// Only the accounts that are servers: the one for what is kept on the
+		// phone has nothing to configure, and must not be deleted.
+		Iterator<ContentValues> rows = this.serverData.values().iterator();
+		while ( rows.hasNext() ) {
+			if ( BackendType.fromServerRow(rows.next()) != BackendType.CALDAV ) rows.remove();
+		}
 
 		// Decrypt passwords for each server
 		for (ContentValues cv : this.serverData.values()) {

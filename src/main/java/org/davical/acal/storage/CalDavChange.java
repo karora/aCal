@@ -18,8 +18,6 @@
 
 package org.davical.acal.storage;
 
-import java.util.UUID;
-
 import org.davical.acal.storage.CommitResult.Outcome;
 
 /**
@@ -64,15 +62,15 @@ final class CalDavChange {
 	 * @param etag the etag the server last gave for it
 	 */
 	static CalDavChange plan(String oldData, String newData, String resourceName, String uid, String etag) {
-		String contentType = contentTypeOf(newData);
+		String contentType = ResourceNaming.contentTypeOf(newData);
 
-		boolean unnamed = (resourceName == null || resourceName.equals("null"));
+		boolean unnamed = !ResourceNaming.hasName(resourceName);
 
 		if ( unnamed && newData == null ) {
 			return new CalDavChange(true, true, null, null, null, contentType);
 		}
 		if ( unnamed ) {
-			resourceName = (isSafeName(uid) ? uid : UUID.randomUUID().toString()) + extensionFor(contentType);
+			resourceName = ResourceNaming.newName(uid, newData);
 		}
 		if ( unnamed || oldData == null ) {
 			return new CalDavChange(false, false, resourceName, "If-None-Match", "*", contentType);
@@ -80,16 +78,6 @@ final class CalDavChange {
 
 		return new CalDavChange(newData == null, false, resourceName, (etag == null ? null : "If-Match"), etag,
 					contentType);
-	}
-
-	/**
-	 * The UID is whatever the writer of the calendar data chose, and the name
-	 * goes on the end of the path of the collection.  One with a slash, a
-	 * question mark or the like in it would send the request somewhere else,
-	 * so only a UID of plain characters is used as a name.
-	 */
-	static boolean isSafeName(String uid) {
-		return uid != null && uid.matches("[A-Za-z0-9][A-Za-z0-9._@-]*");
 	}
 
 	/**
@@ -119,23 +107,5 @@ final class CalDavChange {
 		// next time.  The rest (a redirect we did not follow, a server error,
 		// something that makes no sense as an answer) may be.
 		return (status >= 400 && status < 500 ? Outcome.REFUSED : Outcome.RETRY);
-	}
-
-	static String contentTypeOf(String data) {
-		if ( data == null || data.length() < 15 ) return "text/plain";
-
-		if ( data.substring(6, 15).equalsIgnoreCase("vcalendar") ) {
-			return "text/calendar; charset=\"utf-8\"";
-		}
-		else if ( data.substring(6, 11).equalsIgnoreCase("vcard") ) {
-			return "text/vcard; charset=\"utf-8\"";
-		}
-		return "text/plain";
-	}
-
-	private static String extensionFor(String contentType) {
-		if ( contentType.startsWith("text/calendar") ) return ".ics";
-		if ( contentType.startsWith("text/vcard") ) return ".vcf";
-		return ".txt";
 	}
 }
