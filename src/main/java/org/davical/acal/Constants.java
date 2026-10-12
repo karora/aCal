@@ -56,6 +56,7 @@ public class Constants {
      */
     public static final String STATUS_NOTIFICATION_CHANNEL_ID = "acal_status";
     public static final int DATABASE_RESET_NOTIFICATION_ID = 600_000;
+    public static final int UNSAVED_CHANGES_NOTIFICATION_ID = 600_001;
 
     /**
      * Notification channel and intent extras for certificate pinning

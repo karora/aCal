@@ -287,6 +287,7 @@ public class ResourceManager implements Runnable, IResourceManager {
 		public void deleteInvalidCollectionRecord(long collectionId);
 		public void deletePendingChange(long pendingId);
 		public void recordPendingAttempt(long pendingId, boolean refused, int status);
+		public void resolvePendingChange(long pendingId, boolean tryAgain);
 		public long addPending(long l, long m, String oldBlob, String newBlob, String uid);
 		public void updateCollection(long collectionId, ContentValues collectionData);
 
@@ -672,6 +673,63 @@ public class ResourceManager implements Runnable, IResourceManager {
 									System.currentTimeMillis(), pendingId });
 			}
 			finally {
+				if ( openedInternally ) closeDB();
+			}
+		}
+
+
+		/**
+		 * Do what the user chose for a change that was refused.
+		 *
+		 * @param tryAgain true to put it back among the changes waiting to be
+		 *        committed.  False to discard it: the resource goes back to
+		 *        what it was before the change, and one that was never
+		 *        committed at all is removed.
+		 */
+		public void resolvePendingChange(long pendingId, boolean tryAgain) {
+			Cursor mCursor = null;
+			boolean openedInternally = doWeNeedADatabase(OPEN_WRITE);
+			boolean transactionInternally = doWeNeedATransaction();
+			boolean success = false;
+			try {
+				if ( tryAgain ) {
+					ContentValues waiting = new ContentValues();
+					waiting.put(PEND_STATE, PENDING_WAITING);
+					waiting.put(PEND_ATTEMPTS, 0);
+					waiting.putNull(PEND_LAST_TRIED);
+					db.update(PENDING_DATABASE_TABLE, waiting, PENDING_ID+" = ?", new String[] { pendingId+"" });
+				}
+				else {
+					mCursor = db.query(PENDING_DATABASE_TABLE, new String[] { PEND_RESOURCE_ID },
+							PENDING_ID+" = ?", new String[] { pendingId+"" }, null, null, null);
+					if ( mCursor.moveToFirst() ) {
+						long resourceId = mCursor.getLong(0);
+						db.delete(PENDING_DATABASE_TABLE, PENDING_ID+" = ?", new String[] { pendingId+"" });
+
+						ContentValues resource = getResource(resourceId);
+						if ( resource != null ) {
+							if ( resource.getAsString(RESOURCE_NAME) == null ) {
+								// Nowhere but here, and not wanted here
+								this.delete(RESOURCE_ID+" = "+resourceId, null);
+							}
+							else {
+								// Seen again as it was before the change
+								this.addChange(new DataChangeEvent(QUERY_ACTION.UPDATE, resource));
+							}
+						}
+					}
+				}
+				success = true;
+			}
+			catch ( Exception e ) {
+				Log.e(TAG, "Error resolving pending change "+pendingId, e);
+			}
+			finally {
+				if ( mCursor != null && !mCursor.isClosed() ) mCursor.close();
+				if ( transactionInternally ) {
+					if ( success ) setTxSuccessful();
+					endTx();
+				}
 				if ( openedInternally ) closeDB();
 			}
 		}

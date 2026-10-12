@@ -295,6 +295,11 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="org.davical.acal.activity.UnsavedChangesActivity"
+            android:exported="false"
+            android:label="@string/unsaved_title"
+            android:launchMode="singleTop" />
+        <activity
             android:name="org.davical.acal.activity.CertificatePinActivity"
             android:exported="false"
             android:label="@string/cert_title_new"

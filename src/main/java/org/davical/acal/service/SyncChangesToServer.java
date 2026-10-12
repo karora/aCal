@@ -34,6 +34,7 @@ import android.net.NetworkInfo;
 import android.util.Log;
 
 import org.davical.acal.Constants;
+import org.davical.acal.activity.UnsavedChangesActivity;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.ResourceTableManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.WriteableResourceTableManager;
@@ -147,7 +148,23 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 			runAgainBy(System.currentTimeMillis() + RetryPolicy.FIRST_WAIT);
 		}
 
+		tellTheUserWhatWasRefused();
 		setProcessed();
+	}
+
+
+	private void tellTheUserWhatWasRefused() {
+		try {
+			int refused = 0;
+			for ( ContentValues pending : processor.getPendingResources() ) {
+				Integer state = pending.getAsInteger(ResourceTableManager.PEND_STATE);
+				if ( state != null && state == ResourceTableManager.PENDING_REFUSED ) refused++;
+			}
+			UnsavedChangesActivity.updateNotification(processor.getContext(), refused);
+		}
+		catch ( Exception e ) {
+			Log.e(TAG,Log.getStackTraceString(e));
+		}
 	}
 
 

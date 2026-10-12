@@ -467,6 +467,30 @@
     <string name="nav_about">About / Changes</string>
     <string name="nav_other">Other</string>
     <string name="UpgradingDatabase">Upgrading database…</string>
+    <string name="unsaved_title">Changes not saved</string>
+    <string name="unsaved_intro">The server refused these changes. They are still on this phone, shown as you made them, until you choose what to do with each.</string>
+    <string name="unsaved_none">Every change has been saved.</string>
+    <string name="unsaved_kind_new">New</string>
+    <string name="unsaved_kind_changed">Changed</string>
+    <string name="unsaved_kind_deleted">Deleted</string>
+    <string name="unsaved_untitled">(no title)</string>
+    <string name="unsaved_try_again">Try again</string>
+    <string name="unsaved_discard">Discard</string>
+    <string name="unsaved_discard_title">Discard this change?</string>
+    <string name="unsaved_discard_new">It will be removed from this phone. It is not stored anywhere else.</string>
+    <string name="unsaved_discard_changed">Your change will be lost, and the server\'s version will be shown again.</string>
+    <string name="unsaved_discard_deleted">It will not be deleted, and will be shown again.</string>
+    <string name="unsaved_reason_forbidden">The server does not allow this. The calendar may be read-only for you.</string>
+    <string name="unsaved_reason_gone">It is no longer on the server.</string>
+    <string name="unsaved_reason_conflict">The server\'s copy has changed since you made this change. Trying again will send your version in its place.</string>
+    <string name="unsaved_reason_exists">The server already has something under the same name.</string>
+    <string name="unsaved_reason_too_large">It is too large for the server to accept.</string>
+    <string name="unsaved_reason_other">The server refused it (status %1$d).</string>
+    <plurals name="unsaved_notif_title">
+        <item quantity="one">%1$d change could not be saved</item>
+        <item quantity="other">%1$d changes could not be saved</item>
+    </plurals>
+    <string name="unsaved_notif_text">The server refused them. Tap to see them and choose what to do.</string>
     <string name="Database_reset_title">aCal data was reset</string>
     <string name="Database_reset_text">aCal could not unlock its encrypted data on this device, so it has started again with an empty database. Please add your server again. Changes that had not yet been sent to the server were lost.</string>
 </resources>

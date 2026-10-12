@@ -130,7 +130,7 @@ public class AcalApplication extends Application {
                 "App Status",
                 NotificationManager.IMPORTANCE_DEFAULT
             );
-            status.setDescription("Tells you when aCal has had to reset its local data");
+            status.setDescription("Tells you when aCal could not save a change to the server, or has had to reset its local data");
             manager.createNotificationChannel(status);
         }
     }
