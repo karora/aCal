@@ -22,6 +22,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -41,6 +42,7 @@ import org.davical.acal.ServiceManager;
 import org.davical.acal.aCal;
 import org.davical.acal.activity.AcalActivity;
 import org.davical.acal.providers.Servers;
+import org.davical.acal.storage.LocalCalendars;
 import org.davical.acal.service.ServiceRequest;
 
 /**
@@ -101,7 +103,15 @@ public class NewServerConfiguration extends AcalActivity implements ServerConfig
 		Cursor result = null;
 		try {
 			result = getContentResolver().query(Servers.CONTENT_URI, null, null, null, null);
-			if ( result.getCount() == 0 ) return false;
+			// The account for what is kept on the phone is always there, and is
+			// not a server anybody configured.
+			int servers = 0;
+			for ( result.moveToFirst(); !result.isAfterLast(); result.moveToNext() ) {
+				ContentValues row = new ContentValues();
+				DatabaseUtils.cursorRowToContentValues(result, row);
+				if ( !LocalCalendars.isLocalAccount(row) ) servers++;
+			}
+			if ( servers == 0 ) return false;
 		}
 		catch( Exception e ) {
 			Log.e(TAG, "Could not query servers!", e);
@@ -111,6 +121,23 @@ public class NewServerConfiguration extends AcalActivity implements ServerConfig
 		}
 		prefs.edit().putInt(PrefNames.serverIsConfigured, 1).apply();
 		return true;
+	}
+
+
+	/**
+	 * Carry on with no server: there is a calendar on the phone to use, and
+	 * a server can be added from the settings at any time.
+	 */
+	private void useWithoutAServer() {
+		try {
+			LocalCalendars.ensureOne(getContentResolver(), getString(R.string.LocalCalendarDefaultName));
+		}
+		catch ( Exception e ) {
+			Log.e(TAG, "Could not make a calendar on the phone", e);
+		}
+		prefs.edit().putInt(PrefNames.serverIsConfigured, 1).apply();
+		aCal.startPreferredView(prefs, this, false);
+		finish();
 	}
 
 
@@ -127,7 +154,7 @@ public class NewServerConfiguration extends AcalActivity implements ServerConfig
 		AcalTheme.setContainerFromTheme(btnSkip, AcalTheme.BUTTON);
 		btnSkip.setOnClickListener(new OnClickListener() {
 		    public void onClick(View v) {
-	            finish();
+		    	useWithoutAServer();
 		    }
         });
 

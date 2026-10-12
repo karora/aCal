@@ -30,6 +30,8 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+
 import org.davical.acal.AcalTheme;
 import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
@@ -39,6 +41,7 @@ import org.davical.acal.service.ServiceJob;
 import org.davical.acal.service.ServiceRequest;
 import org.davical.acal.service.SyncChangesToServer;
 import org.davical.acal.service.WorkerClass;
+import org.davical.acal.storage.LocalCalendars;
 import org.davical.acal.storage.StorageBackend;
 import org.davical.acal.storage.StorageBackends;
 
@@ -65,6 +68,10 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 	private Button cancel;
 
 	private ServiceManager serviceManager;
+	/** True if the collection does not exist yet, and saving will make it */
+	private boolean isNew = false;
+	/** True if the collection is one kept on the phone, with no server behind it */
+	private boolean isLocal = false;
 
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
@@ -97,34 +104,24 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 			return;
 		}
 
-		if (!	collectionData.containsKey(DavCollections._ID) &&
-				collectionData.containsKey(DavCollections.DISPLAYNAME) &&
-				collectionData.containsKey(DavCollections.SERVER_ID) &&
-				collectionData.containsKey(DavCollections.ACTIVE_ADDRESSBOOK) &&
-				collectionData.containsKey(DavCollections.ACTIVE_EVENTS) &&
-				collectionData.containsKey(DavCollections.ACTIVE_JOURNAL) &&
-				collectionData.containsKey(DavCollections.ACTIVE_TASKS) &&
-				collectionData.containsKey(DavCollections.HOLDS_ADDRESSBOOK) &&
-				collectionData.containsKey(DavCollections.HOLDS_EVENTS) &&
-				collectionData.containsKey(DavCollections.HOLDS_JOURNAL) &&
-				collectionData.containsKey(DavCollections.HOLDS_TASKS) &&
-				collectionData.containsKey(DavCollections.COLLECTION_PATH) &&
-				collectionData.containsKey(DavCollections.COLOUR) &&
-				collectionData.containsKey(DavCollections.DEFAULT_TIMEZONE) &&
-				collectionData.containsKey(DavCollections.MAX_SYNC_AGE_3G) &&
-				collectionData.containsKey(DavCollections.MAX_SYNC_AGE_WIFI) &&
-				collectionData.containsKey(DavCollections.USE_ALARMS)) {
+		// With no id it is a collection to be made, and the only kind made here
+		// is one kept on the phone.  Any other comes from its server.
+		isNew = !collectionData.containsKey(DavCollections._ID);
+		isLocal = LocalCalendars.isLocal(collectionData, getContentResolver());
+		if (isNew && !isLocal) {
 			Log.e(TAG, "CollectionConfiguration called with incorrect data.");
 			finish();
 			return;
 		}
+		if (isNew) apply.setEnabled(true);
 
 		originalCollectionData = new ContentValues();
 		originalCollectionData.putAll(collectionData);
 
 		if (getSupportActionBar() != null) {
 			String name = collectionData.getAsString(DavCollections.DISPLAYNAME);
-			getSupportActionBar().setTitle(name != null && !name.isEmpty() ? name : getString(R.string.appActivityCollectionConfigList));
+			getSupportActionBar().setTitle(isNew ? getString(R.string.AddLocalCalendar)
+					: (name != null && !name.isEmpty() ? name : getString(R.string.appActivityCollectionConfigList)));
 		}
 
 		if (bundle == null) {
@@ -176,8 +173,15 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 	}
 
 	private void saveData() {
-		Uri provider = ContentUris.withAppendedId(DavCollections.CONTENT_URI, collectionData.getAsInteger(DavCollections._ID));
-		getContentResolver().update(provider, collectionData, null, null);
+		if (isNew) {
+			Uri inserted = getContentResolver().insert(DavCollections.CONTENT_URI, collectionData);
+			collectionData.put(DavCollections._ID, Integer.parseInt(inserted.getLastPathSegment()));
+			isNew = false;
+		}
+		else {
+			Uri provider = ContentUris.withAppendedId(DavCollections.CONTENT_URI, collectionData.getAsInteger(DavCollections._ID));
+			getContentResolver().update(provider, collectionData, null, null);
+		}
 		Collection.flush();
 
 		Intent res = new Intent();
@@ -195,7 +199,36 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 						: backend.refreshCollection(collectionData.getAsInteger(DavCollections._ID), false));
 		}
 
-		if ( job != null ) WorkerClass.getExistingInstance().addJobAndWake(job);
+		WorkerClass worker = WorkerClass.getExistingInstance();
+		if ( job != null && worker != null ) worker.addJobAndWake(job);
+	}
+
+	boolean isNew() {
+		return isNew;
+	}
+
+	boolean isLocal() {
+		return isLocal;
+	}
+
+	/**
+	 * Delete this collection, which is one kept on the phone, once the user
+	 * has been told what that means and has agreed.
+	 */
+	void confirmDelete() {
+		if (!isLocal || isNew) return;
+		final Integer collectionId = collectionData.getAsInteger(DavCollections._ID);
+		if (collectionId == null) return;
+		new AlertDialog.Builder(this)
+			.setTitle(R.string.DeleteLocalCalendar)
+			.setMessage(getString(R.string.DeleteLocalCalendarConfirm, collectionData.getAsString(DavCollections.DISPLAYNAME)))
+			.setPositiveButton(R.string.Delete, (dialog, which) -> {
+				LocalCalendars.delete(getApplicationContext(), collectionId);
+				setResult(RESULT_OK, new Intent());
+				finish();
+			})
+			.setNegativeButton(android.R.string.cancel, null)
+			.show();
 	}
 
 	ContentValues getCollectionData() {

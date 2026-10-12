@@ -120,29 +120,45 @@ public class CollectionConfigurationFragment extends PreferenceFragmentCompat
 		}
 		addPreference(collectionColor, getString(R.string.Colour), DavCollections.COLOUR);
 
-		maxSyncAge3g = new EditTextPreference(requireContext());
-		maxSyncAge3g.setOnBindEditTextListener(et -> et.setInputType(InputType.TYPE_CLASS_NUMBER));
-		maxSyncAge3g.setDialogTitle(getString(R.string.pMax_age_on_3g));
-		int currentSyncAge = collectionData.getAsInteger(DavCollections.MAX_SYNC_AGE_3G) != null
-				? collectionData.getAsInteger(DavCollections.MAX_SYNC_AGE_3G) : 3600000;
-		maxSyncAge3g.setDefaultValue(Integer.toString(currentSyncAge / 60000));
-		maxSyncAge3g.setText(Integer.toString(currentSyncAge / 60000));
-		addPreference(maxSyncAge3g, getString(R.string.pMax_age_on_3g), DavCollections.MAX_SYNC_AGE_3G);
+		CollectionConfiguration activity = (CollectionConfiguration) requireActivity();
+		if (!activity.isLocal()) {
+			maxSyncAge3g = new EditTextPreference(requireContext());
+			maxSyncAge3g.setOnBindEditTextListener(et -> et.setInputType(InputType.TYPE_CLASS_NUMBER));
+			maxSyncAge3g.setDialogTitle(getString(R.string.pMax_age_on_3g));
+			int currentSyncAge = collectionData.getAsInteger(DavCollections.MAX_SYNC_AGE_3G) != null
+					? collectionData.getAsInteger(DavCollections.MAX_SYNC_AGE_3G) : 3600000;
+			maxSyncAge3g.setDefaultValue(Integer.toString(currentSyncAge / 60000));
+			maxSyncAge3g.setText(Integer.toString(currentSyncAge / 60000));
+			addPreference(maxSyncAge3g, getString(R.string.pMax_age_on_3g), DavCollections.MAX_SYNC_AGE_3G);
 
-		maxSyncAgeWifi = new EditTextPreference(requireContext());
-		maxSyncAgeWifi.setOnBindEditTextListener(et -> et.setInputType(InputType.TYPE_CLASS_NUMBER));
-		maxSyncAgeWifi.setDialogTitle(getString(R.string.pMax_age_on_wifi));
-		int currentWifiAge = collectionData.getAsInteger(DavCollections.MAX_SYNC_AGE_WIFI) != null
-				? collectionData.getAsInteger(DavCollections.MAX_SYNC_AGE_WIFI) : 300000;
-		maxSyncAgeWifi.setDefaultValue(Integer.toString(currentWifiAge / 60000));
-		maxSyncAgeWifi.setText(Integer.toString(currentWifiAge / 60000));
-		addPreference(maxSyncAgeWifi, getString(R.string.pMax_age_on_wifi), DavCollections.MAX_SYNC_AGE_WIFI);
+			maxSyncAgeWifi = new EditTextPreference(requireContext());
+			maxSyncAgeWifi.setOnBindEditTextListener(et -> et.setInputType(InputType.TYPE_CLASS_NUMBER));
+			maxSyncAgeWifi.setDialogTitle(getString(R.string.pMax_age_on_wifi));
+			int currentWifiAge = collectionData.getAsInteger(DavCollections.MAX_SYNC_AGE_WIFI) != null
+					? collectionData.getAsInteger(DavCollections.MAX_SYNC_AGE_WIFI) : 300000;
+			maxSyncAgeWifi.setDefaultValue(Integer.toString(currentWifiAge / 60000));
+			maxSyncAgeWifi.setText(Integer.toString(currentWifiAge / 60000));
+			addPreference(maxSyncAgeWifi, getString(R.string.pMax_age_on_wifi), DavCollections.MAX_SYNC_AGE_WIFI);
 
-		if (collectionData.getAsInteger(DavCollections._ID) != null) {
-			addSyncActionPreference(getString(R.string.Sync_collection_now),
-					getString(R.string.Sync_collection_now_summary), false);
-			addSyncActionPreference(getString(R.string.Force_full_resync),
-					getString(R.string.Force_full_resync_summary), true);
+			if (collectionData.getAsInteger(DavCollections._ID) != null) {
+				addSyncActionPreference(getString(R.string.Sync_collection_now),
+						getString(R.string.Sync_collection_now_summary), false);
+				addSyncActionPreference(getString(R.string.Force_full_resync),
+						getString(R.string.Force_full_resync_summary), true);
+			}
+		}
+		else if (!activity.isNew()) {
+			// Kept on the phone: there is nothing to synchronise with, but it
+			// is ours to delete.
+			Preference delete = new Preference(requireContext());
+			delete.setPersistent(false);
+			delete.setTitle(R.string.DeleteLocalCalendar);
+			delete.setSummary(R.string.DeleteLocalCalendarSummary);
+			delete.setOnPreferenceClickListener(p -> {
+				((CollectionConfiguration) requireActivity()).confirmDelete();
+				return true;
+			});
+			getPreferenceScreen().addPreference(delete);
 		}
 
 		updateTextSummaries();

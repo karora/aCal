@@ -468,6 +468,15 @@
     <string name="nav_about">About / Changes</string>
     <string name="nav_other">Other</string>
     <string name="UpgradingDatabase">Upgrading database…</string>
+    <string name="ThisPhone">This phone</string>
+    <string name="KeptOnThisPhone">Kept on this phone only</string>
+    <string name="AddLocalCalendar">Add a calendar on this phone</string>
+    <string name="AddLocalCalendarSummary">For events, tasks and notes that are not kept on a server</string>
+    <string name="LocalCalendarDefaultName">My calendar</string>
+    <string name="Use_without_server">No server</string>
+    <string name="DeleteLocalCalendar">Delete this calendar</string>
+    <string name="DeleteLocalCalendarSummary">Removes it, and everything in it, from this phone</string>
+    <string name="DeleteLocalCalendarConfirm">“%1$s” and everything in it will be deleted. It is not stored anywhere else, so this cannot be undone.</string>
     <string name="unsaved_title">Changes not saved</string>
     <string name="unsaved_intro">The server refused these changes. They are still on this phone, shown as you made them, until you choose what to do with each.</string>
     <string name="unsaved_none">Every change has been saved.</string>

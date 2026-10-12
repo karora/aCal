@@ -147,7 +147,7 @@
 					android:layout_height="wrap_content"
 					android:layout_gravity="center"
 					android:height="38sp"
-					android:text="@string/Skip"
+					android:text="@string/Use_without_server"
 					android:width="180sp" />
 			</LinearLayout>
 		</LinearLayout>

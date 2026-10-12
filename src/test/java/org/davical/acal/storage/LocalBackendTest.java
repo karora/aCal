@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.davical.acal.providers.DavCollections;
+import org.davical.acal.providers.Servers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -104,6 +105,38 @@ public class LocalBackendTest {
 
 		assertTrue(first, first.startsWith("local:"));
 		assertNotEquals(first, second);
+	}
+
+	/**
+	 * The screen that edits a collection reads these as numbers, as they come
+	 * back from the database, and falls over on anything else.
+	 */
+	@Test
+	public void theFlagsOfANewLocalCalendarAreNumbers() {
+		ContentValues collection = LocalCalendars.valuesFor(7, "One", null, true, false, true);
+
+		assertEquals(Integer.valueOf(1), collection.getAsInteger(DavCollections.HOLDS_EVENTS));
+		assertEquals(Integer.valueOf(0), collection.getAsInteger(DavCollections.HOLDS_TASKS));
+		assertEquals(Integer.valueOf(1), collection.getAsInteger(DavCollections.HOLDS_JOURNAL));
+		assertEquals(Integer.valueOf(0), collection.getAsInteger(DavCollections.HOLDS_ADDRESSBOOK));
+		assertEquals(Integer.valueOf(1), collection.getAsInteger(DavCollections.ACTIVE_EVENTS));
+		assertEquals(Integer.valueOf(0), collection.getAsInteger(DavCollections.ACTIVE_TASKS));
+		assertEquals(Integer.valueOf(0), collection.getAsInteger(DavCollections.ACTIVE_ADDRESSBOOK));
+		assertEquals(Integer.valueOf(1), collection.getAsInteger(DavCollections.USE_ALARMS));
+		assertEquals(Integer.valueOf(0), collection.getAsInteger(DavCollections.SYNC_METADATA));
+	}
+
+	@Test
+	public void theAccountForThisPhoneIsToldFromAServer() {
+		ContentValues local = new ContentValues();
+		local.put(Servers.BACKEND_TYPE, BackendType.LOCAL.value);
+		ContentValues server = new ContentValues();
+		server.put(Servers.BACKEND_TYPE, BackendType.CALDAV.value);
+
+		assertTrue(LocalCalendars.isLocalAccount(local));
+		assertFalse(LocalCalendars.isLocalAccount(server));
+		assertFalse(LocalCalendars.isLocalAccount(new ContentValues()));
+		assertFalse(LocalCalendars.isLocalAccount(null));
 	}
 
 	@Test

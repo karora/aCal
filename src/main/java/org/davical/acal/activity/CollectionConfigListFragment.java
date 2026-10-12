@@ -36,13 +36,17 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
 import org.davical.acal.Constants;
+import org.davical.acal.R;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.providers.Servers;
+import org.davical.acal.storage.LocalCalendars;
 
 public class CollectionConfigListFragment extends PreferenceFragmentCompat
 		implements Preference.OnPreferenceClickListener {
 
 	public static final String TAG = "CollectionConfigListFragment";
+
+	private static final String KEY_ADD_LOCAL = "add_local_calendar";
 
 	// Data from the Collection Table
 	int collectionListCount = 0;
@@ -55,6 +59,7 @@ public class CollectionConfigListFragment extends PreferenceFragmentCompat
 	private OnCollectionSelectedListener listener;
 
 	public interface OnCollectionSelectedListener {
+		void onAddLocalCalendarRequested();
 		void onCollectionSelected(int collectionId, ContentValues collectionValues);
 		void onAccountCreationRequested(int collectionId);
 	}
@@ -125,8 +130,11 @@ public class CollectionConfigListFragment extends PreferenceFragmentCompat
 		Context context = getPreferenceManager().getContext();
 		PreferenceScreen preferenceRoot = getPreferenceManager().createPreferenceScreen(context);
 
-		this.preferenceListIds = new int[collectionListCount + serverListCount];
+		// Room for every collection and heading, and for the heading and the
+		// row to add a calendar which what is kept on the phone always has.
+		this.preferenceListIds = new int[collectionListCount + serverListCount + 2];
 		PreferenceCategory currentCategory = null;
+		PreferenceCategory localCategory = null;
 		int lastServerId = -1;
 		int prefRowId = 0;
 
@@ -136,19 +144,23 @@ public class CollectionConfigListFragment extends PreferenceFragmentCompat
 			int serverId = cv.getAsInteger(DavCollections.SERVER_ID);
 			if (serverData.get(serverId) == null || 1 != serverData.get(serverId).getAsInteger(Servers.ACTIVE))
 				continue;
+			boolean local = LocalCalendars.isLocalAccount(serverData.get(serverId));
 			if (lastServerId != serverId) {
 				currentCategory = new PreferenceCategory(context);
-				currentCategory.setTitle(serverData.get(serverId).getAsString(Servers.FRIENDLY_NAME));
+				currentCategory.setTitle(local ? getString(R.string.ThisPhone)
+						: serverData.get(serverId).getAsString(Servers.FRIENDLY_NAME));
 				currentCategory.setPersistent(false);
 				preferenceRoot.addPreference(currentCategory);
 				preferenceListIds[prefRowId++] = 0;
 				lastServerId = serverId;
+				if (local) localCategory = currentCategory;
 			}
 			String collectionColour = cv.getAsString(DavCollections.COLOUR);
 			Preference thisPreference = new Preference(context);
 			currentCategory.addPreference(thisPreference);
 			thisPreference.setTitle(cv.getAsString(DavCollections.DISPLAYNAME));
-			thisPreference.setSummary(cv.getAsString(DavCollections.COLLECTION_PATH));
+			thisPreference.setSummary(local ? getString(R.string.KeptOnThisPhone)
+					: cv.getAsString(DavCollections.COLLECTION_PATH));
 			thisPreference.setPersistent(false);
 			thisPreference.setKey(Integer.toString(collectionId));
 			thisPreference.setOnPreferenceClickListener(this);
@@ -157,11 +169,37 @@ public class CollectionConfigListFragment extends PreferenceFragmentCompat
 			Log.println(Constants.LOGD, TAG, "Created preference for " + thisPreference.getTitle());
 		}
 
+		// What is kept on the phone always has its heading, with the way to
+		// add to it.  Not when an addressbook is being chosen for an account:
+		// the phone keeps no addressbooks.
+		Intent activityIntent = requireActivity().getIntent();
+		if (activityIntent == null || !CollectionConfigList.ACTION_CHOOSE_ADDRESSBOOK.equals(activityIntent.getAction())) {
+			if (localCategory == null) {
+				localCategory = new PreferenceCategory(context);
+				localCategory.setTitle(R.string.ThisPhone);
+				localCategory.setPersistent(false);
+				preferenceRoot.addPreference(localCategory);
+				preferenceListIds[prefRowId++] = 0;
+			}
+			Preference addLocal = new Preference(context);
+			localCategory.addPreference(addLocal);
+			addLocal.setTitle(R.string.AddLocalCalendar);
+			addLocal.setSummary(R.string.AddLocalCalendarSummary);
+			addLocal.setPersistent(false);
+			addLocal.setKey(KEY_ADD_LOCAL);
+			addLocal.setOnPreferenceClickListener(this);
+			preferenceListIds[prefRowId++] = 0;
+		}
+
 		setPreferenceScreen(preferenceRoot);
 	}
 
 	@Override
 	public boolean onPreferenceClick(Preference preference) {
+		if (KEY_ADD_LOCAL.equals(preference.getKey())) {
+			if (listener != null) listener.onAddLocalCalendarRequested();
+			return true;
+		}
 		int collectionId = Integer.parseInt(preference.getKey());
 		Intent activityIntent = requireActivity().getIntent();
 		if (activityIntent != null && CollectionConfigList.ACTION_CHOOSE_ADDRESSBOOK.equals(activityIntent.getAction())) {

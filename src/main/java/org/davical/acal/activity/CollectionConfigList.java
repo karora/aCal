@@ -43,6 +43,7 @@ import org.davical.acal.ServiceManager;
 import org.davical.acal.ServiceManagerCallBack;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.providers.Servers;
+import org.davical.acal.storage.LocalCalendars;
 import org.davical.acal.service.AcalAuthenticator;
 import org.davical.acal.service.ServiceRequest;
 
@@ -113,6 +114,15 @@ public class CollectionConfigList extends AcalAppCompatActivity
 		Intent collectionConfigIntent = new Intent();
 		collectionConfigIntent.setClassName("org.davical.acal", "org.davical.acal.activity.CollectionConfiguration");
 		collectionConfigIntent.putExtra("CollectionData", collectionValues);
+		startActivityForResult(collectionConfigIntent, UPDATE_COLLECTION_CONFIG);
+	}
+
+	@Override
+	public void onAddLocalCalendarRequested() {
+		Intent collectionConfigIntent = new Intent();
+		collectionConfigIntent.setClassName("org.davical.acal", "org.davical.acal.activity.CollectionConfiguration");
+		collectionConfigIntent.putExtra("CollectionData",
+				LocalCalendars.newCalendar(getContentResolver(), getString(R.string.LocalCalendarDefaultName)));
 		startActivityForResult(collectionConfigIntent, UPDATE_COLLECTION_CONFIG);
 	}
 
