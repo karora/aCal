@@ -31,6 +31,7 @@ import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
@@ -39,9 +40,12 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
+import okhttp3.internal.tls.OkHostnameVerifier;
 
 import org.davical.acal.Constants;
 import org.davical.acal.R;
@@ -69,11 +73,6 @@ public class EasyX509TrustManager implements X509TrustManager {
     private static final Set<String> pendingNotifications =
             Collections.synchronizedSet(new HashSet<>());
 
-    // Thread-locals carry cert state from checkServerTrusted() to verifyPin(),
-    // which is called on the same thread by OkHttp's hostname verifier.
-    private static final ThreadLocal<Boolean> tLastWasCaValid = new ThreadLocal<>();
-    private static final ThreadLocal<X509Certificate[]> tLastChain = new ThreadLocal<>();
-
     private final X509TrustManager standardTrustManager;
     private final Context context;
 
@@ -98,22 +97,17 @@ public class EasyX509TrustManager implements X509TrustManager {
     }
 
     /**
-     * Records the chain and whether CA validation passed in thread-locals.
-     * Does NOT throw for CA-invalid certs — verifyPin() makes the final decision.
+     * Lets the handshake finish whatever the certificate is, so long as there
+     * is one.  This decides nothing: a certificate no CA vouches for may be one
+     * the user has accepted, which cannot be told without the name of the host.
+     * {@link #verify(String, SSLSession)} decides, and a connection made with
+     * this trust manager must not be used until it has said yes.
      */
     @Override
     public void checkServerTrusted(X509Certificate[] certificates, String authType)
             throws CertificateException {
         if (certificates == null || certificates.length < 1) {
             throw new CertificateException("No certificates provided");
-        }
-        tLastChain.set(certificates);
-        try {
-            standardTrustManager.checkServerTrusted(certificates, authType);
-            tLastWasCaValid.set(true);
-        } catch (CertificateException e) {
-            tLastWasCaValid.set(false);
-            // Don't throw — verifyPin() will accept or reject based on pinning state.
         }
     }
 
@@ -123,22 +117,59 @@ public class EasyX509TrustManager implements X509TrustManager {
     }
 
     /**
-     * Called by OkHttp's hostname verifier immediately after checkServerTrusted().
-     * Implements the TOFU pinning decision for CA-invalid certs.
+     * Decides whether a connection may be used.  This is the hostname verifier
+     * of the HTTP client, and is asked about every connection, new or resumed.
+     *
+     * The decision is made from the certificates of the session it is given.
+     * Nothing is carried over from the handshake: that may have been on
+     * another thread, or may not have happened at all for a resumed session.
      */
-    public boolean verifyPin(String hostname, int port) {
-        X509Certificate[] chain = tLastChain.get();
-        Boolean caValid = tLastWasCaValid.get();
-        if (chain == null || caValid == null) return false;
+    public boolean verify(String hostname, SSLSession session) {
+        X509Certificate[] chain;
+        try {
+            Certificate[] presented = session.getPeerCertificates();
+            chain = new X509Certificate[presented.length];
+            for (int i = 0; i < presented.length; i++) chain[i] = (X509Certificate) presented[i];
+        }
+        catch (Exception e) {
+            Log.w(TAG, "No usable certificates from " + hostname + ": " + e);
+            return false;
+        }
+        return verify(hostname, session.getPeerPort(), chain);
+    }
 
-        if (caValid) {
-            // CA validation passed — always trust.  Clear any stale pin in case
-            // the server upgraded from self-signed to a real certificate.
+    /**
+     * @param chain the certificates the server presented, its own first
+     * @return true if a connection to this host and port may be used
+     */
+    public boolean verify(String hostname, int port, X509Certificate[] chain) {
+        if (hostname == null || chain == null || chain.length < 1 || chain[0] == null) return false;
+
+        boolean caValid;
+        try {
+            standardTrustManager.checkServerTrusted(chain, chain[0].getPublicKey().getAlgorithm());
+            caValid = true;
+        }
+        catch (CertificateException e) {
+            caValid = false;
+        }
+
+        if (caValid && OkHostnameVerifier.INSTANCE.verify(hostname, chain[0])) {
+            // Clear any stale pin in case the server upgraded from self-signed
+            // to a real certificate.
             clearPin(hostname, port);
             return true;
         }
 
-        // CA-invalid (self-signed) from here:
+        if (caValid) {
+            // A CA vouches for the certificate, but only for the names in it.
+            // One issued to somebody else is no proof of who we are talking to,
+            // so it is treated as one nobody vouches for: the user is asked.
+            Log.w(TAG, "The certificate from " + hostname + " is valid, but is for "
+                    + chain[0].getSubjectX500Principal().getName() + " and not for that host.");
+        }
+
+        // Nobody we trust vouches for this certificate being this host's from here:
         String hostKey = hostname + ":" + port;
         X509Certificate cert = chain[0];
         String currentFingerprint = getCertificateFingerprint(cert);

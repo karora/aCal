@@ -50,7 +50,8 @@ import androidx.test.core.app.ApplicationProvider;
 @RunWith(RobolectricTestRunner.class)
 public class EasyX509TrustManagerTest {
 
-	private static final String HOST = "dav.example.net";
+	// The name the trusted certificate is for
+	private static final String HOST = "trusted.test.invalid";
 	private static final int PORT = 443;
 
 	// As reported by: openssl x509 -noout -fingerprint -sha256
@@ -91,8 +92,7 @@ public class EasyX509TrustManagerTest {
 
 	/** What a connection to this port of the host is told when the server presents this certificate. */
 	private boolean connect(X509Certificate presented, int port) throws Exception {
-		trustManager.checkServerTrusted(new X509Certificate[] { presented }, "RSA");
-		return trustManager.verifyPin(HOST, port);
+		return trustManager.verify(HOST, port, new X509Certificate[] { presented });
 	}
 
 	private boolean connect(X509Certificate presented) throws Exception {
@@ -223,17 +223,97 @@ public class EasyX509TrustManagerTest {
 		assertEquals(1, notificationsShowing());
 	}
 
+	/**
+	 * A certificate a CA vouches for was accepted for any host at all, so
+	 * anyone holding a valid certificate for a site of their own could stand in
+	 * for the server and be given the password.
+	 */
 	@Test
-	public void nothingIsAllowedBeforeACertificateHasBeenSeen() throws Exception {
-		final boolean[] allowed = { true };
-		// On a new thread, because what was last seen is kept for each thread
+	public void aTrustedCertificateForAnotherHostIsRefused() throws Exception {
+		try {
+			assertFalse(trustManager.verify("dav.example.net", PORT, new X509Certificate[] { trusted }));
+			assertFalse(trustManager.verify("test.invalid", PORT, new X509Certificate[] { trusted }));
+			assertFalse(trustManager.verify("trusted.test.invalid.example.net", PORT, new X509Certificate[] { trusted }));
+		}
+		finally {
+			for ( String host : new String[] { "dav.example.net", "test.invalid", "trusted.test.invalid.example.net" } )
+				EasyX509TrustManager.clearPendingNotification(host, PORT);
+		}
+	}
+
+	/** It is as good as one nobody vouches for, and is dealt with the same way. */
+	@Test
+	public void theUserIsAskedAboutATrustedCertificateForAnotherHost() throws Exception {
+		try {
+			assertFalse(trustManager.verify("dav.example.net", PORT, new X509Certificate[] { trusted }));
+			assertEquals(1, notificationsShowing());
+
+			EasyX509TrustManager.pinCertificate(context, "dav.example.net", PORT, fingerprint(trusted));
+			assertTrue(trustManager.verify("dav.example.net", PORT, new X509Certificate[] { trusted }));
+		}
+		finally {
+			EasyX509TrustManager.clearPendingNotification("dav.example.net", PORT);
+		}
+	}
+
+	/** Nor does it clear what the user decided about that other host. */
+	@Test
+	public void aTrustedCertificateForAnotherHostLeavesThePinAlone() throws Exception {
+		try {
+			EasyX509TrustManager.pinCertificate(context, "dav.example.net", PORT, fingerprint(selfSigned));
+
+			assertFalse(trustManager.verify("dav.example.net", PORT, new X509Certificate[] { trusted }));
+			assertTrue(trustManager.verify("dav.example.net", PORT, new X509Certificate[] { selfSigned }));
+		}
+		finally {
+			EasyX509TrustManager.clearPendingNotification("dav.example.net", PORT);
+		}
+	}
+
+	@Test
+	public void nothingIsAllowedWithoutACertificate() throws Exception {
+		assertFalse(trustManager.verify(HOST, PORT, null));
+		assertFalse(trustManager.verify(HOST, PORT, new X509Certificate[0]));
+		assertFalse(trustManager.verify(null, PORT, new X509Certificate[] { trusted }));
+	}
+
+	/**
+	 * What had been seen was kept for each thread, between the handshake and
+	 * the decision.  A connection whose handshake was on another thread, or
+	 * which resumed a session and had none, was refused or was judged by the
+	 * certificate of whatever that thread had connected to last.
+	 */
+	@Test
+	public void theDecisionIsAboutTheCertificateGivenOnWhateverThread() throws Exception {
+		// This thread last saw a certificate that is trusted ...
+		assertTrue(connect(trusted));
+
+		// ... which says nothing about the next one it is asked about
+		assertFalse(connect(selfSigned));
+
+		final boolean[] allowed = { false, true };
 		Thread thread = new Thread(new Runnable() {
 			public void run() {
-				allowed[0] = trustManager.verifyPin(HOST, PORT);
+				try {
+					allowed[0] = connect(trusted);
+					allowed[1] = trustManager.verify("dav.example.net", PORT, new X509Certificate[] { selfSigned });
+				}
+				catch ( Exception e ) {
+					throw new RuntimeException(e);
+				}
 			}
 		});
 		thread.start();
 		thread.join();
-		assertFalse(allowed[0]);
+		assertTrue(allowed[0]);
+		assertFalse(allowed[1]);
+	}
+
+	/** The handshake is let through, because only with the host's name can the pin be looked up. */
+	@Test
+	public void theHandshakeAloneDecidesNothing() throws Exception {
+		trustManager.checkServerTrusted(new X509Certificate[] { selfSigned }, "RSA");
+		trustManager.checkServerTrusted(new X509Certificate[] { trusted }, "RSA");
+		assertEquals(0, notificationsShowing());
 	}
 }

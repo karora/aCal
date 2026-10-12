@@ -88,12 +88,11 @@ public class AcalConnectionPool {
 				.readTimeout(socketTimeOut, TimeUnit.MILLISECONDS)
 				.writeTimeout(socketTimeOut, TimeUnit.MILLISECONDS)
 				.sslSocketFactory(sslContext.getSocketFactory(), trustManager)
-				.hostnameVerifier((hostname, session) -> {
-					// For CA-valid certs, verifyPin() returns true immediately.
-					// For self-signed certs it enforces TOFU pinning.
-					int port = session.getPeerPort();
-					return trustManager.verifyPin(hostname, port);
-				})
+				// The trust manager lets every handshake finish, and this is where
+				// the connection is accepted or refused: a certificate a CA vouches
+				// for has to be for this host, and any other has to be one the user
+				// has accepted for it.
+				.hostnameVerifier((hostname, session) -> trustManager.verify(hostname, session))
 				.connectionPool(new ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION_MINUTES, TimeUnit.MINUTES))
 				.followRedirects(false) // Manual redirect handling in AcalRequestor
 				.followSslRedirects(false)
