@@ -197,7 +197,7 @@ public class UnsavedChangesActivity extends AcalAppCompatActivity {
 		PendingIntent pi = PendingIntent.getActivity(context, Constants.UNSAVED_CHANGES_NOTIFICATION_ID, open,
 				PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-		String text = context.getString(R.string.unsaved_notif_text);
+		String text = context.getResources().getQuantityString(R.plurals.unsaved_notif_text, refused);
 		Notification.Builder builder = new Notification.Builder(context)
 				.setSmallIcon(R.drawable.icon)
 				.setContentTitle(context.getResources().getQuantityString(R.plurals.unsaved_notif_title, refused, refused))

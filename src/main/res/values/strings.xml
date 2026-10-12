@@ -468,39 +468,58 @@
     <string name="nav_about">About / Changes</string>
     <string name="nav_other">Other</string>
     <string name="UpgradingDatabase">Upgrading database…</string>
+    <!-- Calendars kept on the phone itself, with no server -->
+    <!-- The heading over them in the list of calendars, where a server's name would be -->
     <string name="ThisPhone">This phone</string>
     <string name="KeptOnThisPhone">Kept on this phone only</string>
     <string name="AddLocalCalendar">Add a calendar on this phone</string>
     <string name="AddLocalCalendarSummary">For events, tasks and notes that are not kept on a server</string>
+    <!-- The name given to the calendar that is made when the app is first used with no server -->
     <string name="LocalCalendarDefaultName">My calendar</string>
+    <!-- A button on the first screen, beside "Configure" and "Add Server". It must be short: the three share one row -->
     <string name="Use_without_server">No server</string>
     <string name="DeleteLocalCalendar">Delete this calendar</string>
     <string name="DeleteLocalCalendarSummary">Removes it, and everything in it, from this phone</string>
+    <!-- %1$s is the name the user gave the calendar -->
     <string name="DeleteLocalCalendarConfirm">“%1$s” and everything in it will be deleted. It is not stored anywhere else, so this cannot be undone.</string>
+    <!-- Changes the server refused, which are listed for the user to try again or discard -->
+    <!-- In these, "it" is an event, a task or a note: which one is not known -->
     <string name="unsaved_title">Changes not saved</string>
     <string name="unsaved_intro">The server refused these changes. They are still on this phone, shown as you made them, until you choose what to do with each.</string>
     <string name="unsaved_none">Every change has been saved.</string>
+    <!-- One word for what kind of change it was, shown before the name of the calendar -->
     <string name="unsaved_kind_new">New</string>
     <string name="unsaved_kind_changed">Changed</string>
     <string name="unsaved_kind_deleted">Deleted</string>
+    <!-- Shown in place of the title of an event, task or note which has none -->
     <string name="unsaved_untitled">(no title)</string>
     <string name="unsaved_try_again">Try again</string>
     <string name="unsaved_discard">Discard</string>
     <string name="unsaved_discard_title">Discard this change?</string>
+    <!-- What discarding will do, for a change of each kind: new, changed and deleted -->
     <string name="unsaved_discard_new">It will be removed from this phone. It is not stored anywhere else.</string>
     <string name="unsaved_discard_changed">Your change will be lost, and the server\'s version will be shown again.</string>
     <string name="unsaved_discard_deleted">It will not be deleted, and will be shown again.</string>
+    <!-- Why the server refused the change -->
     <string name="unsaved_reason_forbidden">The server does not allow this. The calendar may be read-only for you.</string>
     <string name="unsaved_reason_gone">It is no longer on the server.</string>
     <string name="unsaved_reason_conflict">The server\'s copy has changed since you made this change. Trying again will send your version in its place.</string>
     <string name="unsaved_reason_exists">The server already has something under the same name.</string>
     <string name="unsaved_reason_too_large">It is too large for the server to accept.</string>
+    <!-- %1$d is the number of the HTTP status the server answered with, such as 400 -->
     <string name="unsaved_reason_other">The server refused it (status %1$d).</string>
+    <!-- The title and text of the notification. %1$d is how many changes were refused -->
     <plurals name="unsaved_notif_title">
         <item quantity="one">%1$d change could not be saved</item>
         <item quantity="other">%1$d changes could not be saved</item>
     </plurals>
-    <string name="unsaved_notif_text">The server refused them. Tap to see them and choose what to do.</string>
+    <plurals name="unsaved_notif_text">
+        <item quantity="one">The server refused it. Tap to see it and choose what to do.</item>
+        <item quantity="other">The server refused them. Tap to see them and choose what to do.</item>
+    </plurals>
+    <!-- The name and description of a kind of notification, as listed in the system's settings for the app -->
+    <string name="StatusChannelName">App status</string>
+    <string name="StatusChannelDescription">Tells you when aCal could not save a change to the server, or has had to reset its data</string>
     <string name="Database_reset_title">aCal data was reset</string>
     <string name="Database_reset_text">aCal could not unlock its encrypted data on this device, so it has started again with an empty database. Please add your server again. Changes that had not yet been sent to the server were lost.</string>
 </resources>

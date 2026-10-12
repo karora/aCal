@@ -127,10 +127,10 @@ public class AcalApplication extends Application {
             // Status channel: things the app has to tell the user about itself
             NotificationChannel status = new NotificationChannel(
                 Constants.STATUS_NOTIFICATION_CHANNEL_ID,
-                "App Status",
+                getString(R.string.StatusChannelName),
                 NotificationManager.IMPORTANCE_DEFAULT
             );
-            status.setDescription("Tells you when aCal could not save a change to the server, or has had to reset its local data");
+            status.setDescription(getString(R.string.StatusChannelDescription));
             manager.createNotificationChannel(status);
         }
     }
