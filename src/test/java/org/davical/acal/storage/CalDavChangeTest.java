@@ -70,6 +70,42 @@ public class CalDavChangeTest {
 		assertFalse(first.equals(second));
 	}
 
+	/**
+	 * A resource whose first upload was given up on stays in the database with
+	 * no name.  Changing it was sent as an update of "null" in the collection.
+	 */
+	@Test
+	public void aChangeToAResourceWithNoNameIsSentAsNew() {
+		for ( String noName : new String[] { null, "null" } ) {
+			CalDavChange change = CalDavChange.plan(EVENT, EVENT.replace("abc", "abd"), noName, "abc", null);
+
+			assertEquals("PUT", change.method());
+			assertFalse(change.localOnly);
+			assertEquals("abc.ics", change.resourceName);
+			assertEquals("If-None-Match", change.matchHeader);
+			assertEquals("*", change.matchValue);
+		}
+	}
+
+	/** There is nothing on the server to delete, and "null" in the collection is not it. */
+	@Test
+	public void deletingAResourceWithNoNameSendsNothing() {
+		for ( String noName : new String[] { null, "null" } ) {
+			assertTrue(CalDavChange.plan(EVENT, null, noName, "abc", null).localOnly);
+			assertTrue(CalDavChange.plan(EVENT, null, noName, "abc", null).isDelete);
+			// Made and then deleted before it was ever sent.
+			assertTrue(CalDavChange.plan(null, null, noName, "abc", null).localOnly);
+		}
+	}
+
+	@Test
+	public void everyChangeToAResourceWithANameIsSent() {
+		assertFalse(CalDavChange.plan(null, EVENT, "abc.ics", "abc", null).localOnly);
+		assertFalse(CalDavChange.plan(EVENT, EVENT, "abc.ics", "abc", "\"etag-1\"").localOnly);
+		assertFalse(CalDavChange.plan(EVENT, null, "abc.ics", "abc", "\"etag-1\"").localOnly);
+		assertFalse(CalDavChange.plan(EVENT, null, "abc.ics", "abc", null).localOnly);
+	}
+
 	@Test
 	public void anOrdinaryUidIsUsedAsTheName() {
 		for ( String uid : new String[] { "abc", "20261012T101500Z-1234@example.net",

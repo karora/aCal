@@ -36,6 +36,8 @@ final class CalDavChange {
 	}
 
 	final boolean isDelete;
+	/** True if the server has never had the resource, so there is nothing to send to it. */
+	final boolean localOnly;
 	/** The name of the resource within its collection. */
 	final String resourceName;
 	/** If-Match or If-None-Match, or null to send neither. */
@@ -43,9 +45,10 @@ final class CalDavChange {
 	final String matchValue;
 	final String contentType;
 
-	private CalDavChange(boolean isDelete, String resourceName, String matchHeader, String matchValue,
-				String contentType) {
+	private CalDavChange(boolean isDelete, boolean localOnly, String resourceName, String matchHeader,
+				String matchValue, String contentType) {
 		this.isDelete = isDelete;
+		this.localOnly = localOnly;
 		this.resourceName = resourceName;
 		this.matchHeader = matchHeader;
 		this.matchValue = matchValue;
@@ -57,6 +60,10 @@ final class CalDavChange {
 	}
 
 	/**
+	 * A resource gets its name when the server accepts it, so one with no name
+	 * is not on the server whatever went before: a change to it is sent as new,
+	 * and deleting it needs nothing sent at all.
+	 *
 	 * @param oldData what the resource was before the change, null if it is new
 	 * @param newData what it is to become, null if it is being deleted
 	 * @param resourceName the name it has on the server, if it has one yet
@@ -66,14 +73,20 @@ final class CalDavChange {
 	static CalDavChange plan(String oldData, String newData, String resourceName, String uid, String etag) {
 		String contentType = contentTypeOf(newData);
 
-		if ( oldData == null ) {
-			if ( resourceName == null || resourceName.equals("null") ) {
-				resourceName = (isSafeName(uid) ? uid : UUID.randomUUID().toString()) + extensionFor(contentType);
-			}
-			return new CalDavChange(false, resourceName, "If-None-Match", "*", contentType);
+		boolean unnamed = (resourceName == null || resourceName.equals("null"));
+
+		if ( unnamed && newData == null ) {
+			return new CalDavChange(true, true, null, null, null, contentType);
+		}
+		if ( unnamed ) {
+			resourceName = (isSafeName(uid) ? uid : UUID.randomUUID().toString()) + extensionFor(contentType);
+		}
+		if ( unnamed || oldData == null ) {
+			return new CalDavChange(false, false, resourceName, "If-None-Match", "*", contentType);
 		}
 
-		return new CalDavChange(newData == null, resourceName, (etag == null ? null : "If-Match"), etag, contentType);
+		return new CalDavChange(newData == null, false, resourceName, (etag == null ? null : "If-Match"), etag,
+					contentType);
 	}
 
 	/**
