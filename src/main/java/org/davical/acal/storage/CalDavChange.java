@@ -20,20 +20,13 @@ package org.davical.acal.storage;
 
 import java.util.UUID;
 
+import org.davical.acal.storage.CommitResult.Outcome;
+
 /**
  * What to send to a CalDAV server to commit one pending change, and what the
  * answer means.  Nothing in here touches the database or the network.
  */
 final class CalDavChange {
-
-	enum Outcome {
-		/** The server has the change. */
-		APPLIED,
-		/** The server will never accept the change, so it is dropped. */
-		ABANDONED,
-		/** The server could not deal with it this time. */
-		RETRY
-	}
 
 	final boolean isDelete;
 	/** True if the server has never had the resource, so there is nothing to send to it. */
@@ -99,14 +92,33 @@ final class CalDavChange {
 		return uid != null && uid.matches("[A-Za-z0-9][A-Za-z0-9._@-]*");
 	}
 
-	static Outcome outcomeOf(int status) {
+	/**
+	 * @param status what the server answered when this change was sent
+	 */
+	Outcome outcomeOf(int status) {
 		switch ( status ) {
 			case 200: // OK, normal for an update
 			case 201: // Created, normal for a new resource
 			case 204: // No Content, normal for a delete
 				return Outcome.APPLIED;
+
+			case 404: // Not Found
+			case 410: // Gone
+				// What we wanted rid of is not there, which is all we asked
+				return (isDelete ? Outcome.APPLIED : Outcome.REFUSED);
+
+			case 401: // Unauthorized: the password may be put right
+			case 407: // Proxy Authentication Required
+			case 408: // Request Timeout
+			case 423: // Locked, by someone who will let go of it
+			case 425: // Too Early
+			case 429: // Too Many Requests
+				return Outcome.RETRY;
 		}
-		return (status < 500 ? Outcome.ABANDONED : Outcome.RETRY);
+		// Anything else the server blames on the request will be no different
+		// next time.  The rest (a redirect we did not follow, a server error,
+		// something that makes no sense as an answer) may be.
+		return (status >= 400 && status < 500 ? Outcome.REFUSED : Outcome.RETRY);
 	}
 
 	static String contentTypeOf(String data) {

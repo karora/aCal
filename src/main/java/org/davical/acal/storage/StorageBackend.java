@@ -42,15 +42,16 @@ public interface StorageBackend {
 	public boolean needsNetwork();
 
 	/**
-	 * Commit one row of pending_change to wherever the collection is kept, and
-	 * retire the row if that is the end of the matter.
+	 * Commit one row of pending_change to wherever the collection is kept.
+	 * If that is done the resource is made what the change made it and the row
+	 * is retired.  If not the row is left as it was: it is for the caller to
+	 * keep count of the attempts and decide what happens next.
 	 *
 	 * @param serverData the dav_server row of the account
 	 * @param collectionData the dav_collection row of the collection
 	 * @param pending the row, as returned by getPendingResources()
-	 * @return true if the collection should be refreshed afterwards
 	 */
-	public boolean commitPendingChange(WriteableResourceTableManager processor, ContentValues serverData,
+	public CommitResult commitPendingChange(WriteableResourceTableManager processor, ContentValues serverData,
 				ContentValues collectionData, ContentValues pending) throws IOException;
 
 	/**

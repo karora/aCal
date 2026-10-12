@@ -45,6 +45,7 @@ import org.davical.acal.service.SyncCollectionContents;
 import org.davical.acal.service.connector.AcalRequestor;
 import org.davical.acal.service.connector.ConnectionFailedException;
 import org.davical.acal.service.connector.SendRequestFailedException;
+import org.davical.acal.storage.CommitResult.Outcome;
 
 /**
  * Collections kept on a CalDAV or CardDAV server.
@@ -90,7 +91,7 @@ public class CalDavBackend implements StorageBackend {
 	}
 
 	@Override
-	public boolean commitPendingChange(WriteableResourceTableManager processor, ContentValues serverData,
+	public CommitResult commitPendingChange(WriteableResourceTableManager processor, ContentValues serverData,
 				ContentValues collectionData, ContentValues pending) throws IOException {
 
 		requestorFor(processor, serverData);
@@ -116,7 +117,7 @@ public class CalDavBackend implements StorageBackend {
 		if ( change.localOnly ) {
 			Log.i(TAG, "Deleting resource "+resourceId+" which the server never had.");
 			applyLocally(processor, change, new ContentValues(), resourceId, pendingId);
-			return false;
+			return new CommitResult(Outcome.APPLIED, 0, false);
 		}
 
 		String method = change.method();
@@ -144,11 +145,11 @@ public class CalDavBackend implements StorageBackend {
 		}
 		catch (ConnectionFailedException e) {
 			Log.w(TAG,"HTTP Connection failed: "+e.getMessage());
-			return false;
+			return new CommitResult(Outcome.RETRY, 0, false);
 		}
 		catch (SendRequestFailedException e) {
 			Log.w(TAG,"HTTP Request failed: "+e.getMessage());
-			return false;
+			return new CommitResult(Outcome.RETRY, 0, false);
 		}
 
 		int status = requestor.getStatusCode();
@@ -162,7 +163,8 @@ public class CalDavBackend implements StorageBackend {
         }
         catch ( IOException e ) { }
 
-		switch ( CalDavChange.outcomeOf(status) ) {
+		Outcome outcome = change.outcomeOf(status);
+		switch ( outcome ) {
 			case APPLIED:
 				ContentValues resourceData = new ContentValues();
 				resourceData.put(ResourceTableManager.RESOURCE_ID, resourceId);
@@ -186,20 +188,19 @@ public class CalDavBackend implements StorageBackend {
 				applyLocally(processor, change, resourceData, resourceId, pendingId);
 				break;
 
-			case ABANDONED:
-				Log.w(TAG, "Status " + status + " for " +method+" "+ path + " - giving up on change.");
+			case REFUSED:
+				Log.w(TAG, "Status " + status + " for " +method+" "+ path + " - the change was refused.");
                 Log.i(TAG,"Full server response was:\n"+responseData);
-				processor.deletePendingChange(pendingId);
 				break;
 
 			case RETRY:
-				Log.w(TAG, "Status " + status + " for " +method+" "+ path);
+				Log.w(TAG, "Status " + status + " for " +method+" "+ path + " - the change will be tried again.");
 				Log.i(TAG,"Full server response was:\n"+responseData);
 				break;
 		}
 
 		// The server answered, so look at what it now has as soon as we are done.
-		return true;
+		return new CommitResult(outcome, status, true);
 	}
 
 

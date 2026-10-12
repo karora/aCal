@@ -84,6 +84,9 @@ public class ServiceRequestHandlerImpl extends ServiceRequest.Stub {
 
     @Override
     public void syncCollectionNow(long collectionId) throws RemoteException {
+        // The user asked, so what is waiting to be tried again is tried now
+        worker.addJobAndWake(new SyncChangesToServer(true));
+
         StorageBackend backend = StorageBackends.forCollection(collectionId, context.getContentResolver());
         ServiceJob job = (backend == null ? null : backend.refreshCollection(collectionId, true));
         if ( job != null ) worker.addJobAndWake(job);

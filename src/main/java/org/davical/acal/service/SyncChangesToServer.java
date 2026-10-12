@@ -41,6 +41,8 @@ import org.davical.acal.database.resourcesmanager.ResourceProcessingException;
 import org.davical.acal.database.resourcesmanager.requesttypes.BlockingResourceRequest;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.storage.BackendType;
+import org.davical.acal.storage.CommitResult;
+import org.davical.acal.storage.RetryPolicy;
 import org.davical.acal.storage.StorageBackend;
 import org.davical.acal.storage.StorageBackends;
 
@@ -55,7 +57,7 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 
 	private static boolean DEBUG = true && Constants.DEBUG_MODE;
 
-	private final long timeToWait = 90000;
+	private final boolean tryEverythingNow;
 	private aCalService acalService;
 
 	// One backend of each type for the whole run, so a backend can keep hold
@@ -66,7 +68,8 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 
 	private boolean online;
 
-	private boolean updateSyncStatus = false;
+	// When to run again, or 0 if nothing is left that running again would help
+	private long runAgainAt = 0;
 
 	private WriteableResourceTableManager processor;
 
@@ -74,8 +77,16 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 
 
 	public SyncChangesToServer() {
-		this.TIME_TO_EXECUTE = System.currentTimeMillis();
+		this(false);
+	}
 
+	/**
+	 * @param tryEverythingNow true to try the changes which are waiting their
+	 *        turn to be tried again as well, as when the user asks for a sync.
+	 */
+	public SyncChangesToServer(boolean tryEverythingNow) {
+		this.tryEverythingNow = tryEverythingNow;
+		this.TIME_TO_EXECUTE = System.currentTimeMillis();
 	}
 
 	@Override
@@ -85,9 +96,11 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 		//send request
 		rm.sendBlockingRequest(this);
 
-		if ( this.updateSyncStatus ) {
-			this.TIME_TO_EXECUTE = System.currentTimeMillis() + timeToWait;
-			context.addWorkerJob(this);
+		if ( runAgainAt > 0 ) {
+			// Whatever is still waiting then is waiting its turn like the rest
+			ServiceJob again = new SyncChangesToServer();
+			again.TIME_TO_EXECUTE = runAgainAt;
+			context.addWorkerJob(again);
 		}
 
 	}
@@ -114,10 +127,12 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 			Log.println(Constants.LOGD,TAG, "No connectivity available to sync local changes.");
 
 		collectionsToRefresh = new HashMap<Long, StorageBackend>();
+		runAgainAt = 0;
 
 		try {
 		    for( ContentValues collectionData : syncCollectionMetadataList ) {
 		        commitCollectionProperties(collectionData);
+		        runAgainBy(System.currentTimeMillis() + RetryPolicy.FIRST_WAIT);
 		    }
 			for( ContentValues pendingChange :  pendingChangesList )
 				commitOneChange(pendingChange);
@@ -129,10 +144,20 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 		}
 		catch( Exception e ) {
 			Log.e(TAG,Log.getStackTraceString(e));
+			runAgainBy(System.currentTimeMillis() + RetryPolicy.FIRST_WAIT);
 		}
 
-		updateSyncStatus = updateSyncStatus();
 		setProcessed();
+	}
+
+
+	/**
+	 * Something is still waiting which can next be tried at this time.
+	 */
+	private void runAgainBy(long when) {
+		// Not sooner than the shortest wait, however many changes are due
+		when = Math.max(when, System.currentTimeMillis() + RetryPolicy.FIRST_WAIT);
+		if ( runAgainAt == 0 || when < runAgainAt ) runAgainAt = when;
 	}
 
 
@@ -187,6 +212,22 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 
 	private void commitOneChange(ContentValues pending) throws IOException {
 
+		long pendingId = pending.getAsLong(ResourceTableManager.PENDING_ID);
+		Integer state = pending.getAsInteger(ResourceTableManager.PEND_STATE);
+		if ( state != null && state == ResourceTableManager.PENDING_REFUSED ) {
+			// Not until the user says so
+			return;
+		}
+
+		Integer attempts = pending.getAsInteger(ResourceTableManager.PEND_ATTEMPTS);
+		if ( attempts == null ) attempts = 0;
+		Long lastTried = pending.getAsLong(ResourceTableManager.PEND_LAST_TRIED);
+		long now = System.currentTimeMillis();
+		if ( !tryEverythingNow && !RetryPolicy.isDue(attempts, lastTried, now) ) {
+			runAgainBy(RetryPolicy.dueAt(attempts, lastTried));
+			return;
+		}
+
 		long collectionId = pending.getAsLong(ResourceTableManager.PEND_COLLECTION_ID);
 		ContentValues collectionData = processor.getCollectionRow(collectionId);
 		if (collectionData == null) {
@@ -206,10 +247,27 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 		}
 
 		StorageBackend backend = backendToCommitWith(serverData);
-		if ( backend == null ) return;
+		if ( backend == null ) {
+			runAgainBy(now + RetryPolicy.FIRST_WAIT);
+			return;
+		}
 
-		if ( backend.commitPendingChange(processor, serverData, collectionData, pending) )
-			collectionsToRefresh.put(collectionId, backend);
+		CommitResult result = backend.commitPendingChange(processor, serverData, collectionData, pending);
+		if ( result.refreshCollection ) collectionsToRefresh.put(collectionId, backend);
+
+		switch ( result.outcome ) {
+			case APPLIED:
+				break;
+
+			case RETRY:
+				processor.recordPendingAttempt(pendingId, false, result.status);
+				runAgainBy(RetryPolicy.dueAt(attempts + 1, System.currentTimeMillis()));
+				break;
+
+			case REFUSED:
+				processor.recordPendingAttempt(pendingId, true, result.status);
+				break;
+		}
 	}
 
 
@@ -228,11 +286,6 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 	private void invalidPendingChange(long pendingId, String msg) {
 		Log.e(TAG, msg );
 		processor.deletePendingChange(pendingId);
-	}
-
-
-	private boolean updateSyncStatus() {
-		return true;
 	}
 
 

@@ -112,7 +112,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	/**
 	 * The version of this database. Used to determine if an upgrade is required.
 	 */
-	public static final int DB_VERSION = 25;
+	public static final int DB_VERSION = 26;
 
 
 
@@ -244,6 +244,11 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	 * changes SHOULD be merged where that is possible (i.e. where the status
 	 * does not indicate it has already been submitted to the server and we are
 	 * merely waiting to see it back again...
+	 *
+	 * A change is never dropped because it could not be committed.  One that
+	 * may be accepted later is tried again, at longer and longer intervals as
+	 * 'attempts' goes up.  One that was refused has a 'state' of 1, and stays
+	 * until the user says to try it again or to discard it.
 	 */
 	public static final String PENDING_CHANGE_TABLE_SQL =
 			"CREATE TABLE pending_change ("
@@ -253,8 +258,28 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				+",old_data BLOB"
 				+",new_data BLOB"
 				+",uid TEXT"
+				+",state INTEGER NOT NULL DEFAULT 0"
+				+",attempts INTEGER NOT NULL DEFAULT 0"
+				+",last_status INTEGER"
+				+",last_tried INTEGER"
 				+",UNIQUE(collection_id,resource_id)"
 			+");";
+
+	/**
+	 * <p>Version 26 gave pending_change a record of how committing each change
+	 * has gone so far.</p>
+	 *
+	 * <p>In a class of its own so that a test can use it without loading this
+	 * one, which needs the SQLCipher library.</p>
+	 */
+	public static final class PendingChangeProgress {
+		public static final String[] ADD_COLUMNS_SQL = new String[] {
+				"ALTER TABLE pending_change ADD COLUMN state INTEGER NOT NULL DEFAULT 0",
+				"ALTER TABLE pending_change ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0",
+				"ALTER TABLE pending_change ADD COLUMN last_status INTEGER",
+				"ALTER TABLE pending_change ADD COLUMN last_tried INTEGER"
+		};
+	}
 
 
 	/**
@@ -546,6 +571,11 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				Log.i(TAG,"Updating database from version " + oldVersion);
 				oldVersion++;
 				db.execSQL(QUEUE_UNSENT_RESOURCES_SQL);
+			}
+			if (oldVersion == 25) {
+				Log.i(TAG,"Updating database from version " + oldVersion);
+				oldVersion++;
+				for ( String sql : PendingChangeProgress.ADD_COLUMNS_SQL ) db.execSQL(sql);
 			}
 		}
 		catch( Exception e ) {

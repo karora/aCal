@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.davical.acal.storage.CalDavChange.Outcome;
+import org.davical.acal.storage.CommitResult.Outcome;
 import org.junit.Test;
 
 public class CalDavChangeTest {
@@ -163,32 +163,68 @@ public class CalDavChangeTest {
 		assertEquals("text/plain", CalDavChange.contentTypeOf(null));
 	}
 
+	private static final CalDavChange CREATE = CalDavChange.plan(null, EVENT, null, "abc", null);
+	private static final CalDavChange UPDATE = CalDavChange.plan(EVENT, EVENT, "abc.ics", "abc", "\"etag-1\"");
+	private static final CalDavChange DELETE = CalDavChange.plan(EVENT, null, "abc.ics", "abc", "\"etag-1\"");
+	private static final CalDavChange[] ANY = { CREATE, UPDATE, DELETE };
+
 	@Test
 	public void successIsApplied() {
-		assertEquals(Outcome.APPLIED, CalDavChange.outcomeOf(200));
-		assertEquals(Outcome.APPLIED, CalDavChange.outcomeOf(201));
-		assertEquals(Outcome.APPLIED, CalDavChange.outcomeOf(204));
-	}
-
-	@Test
-	public void aRefusalIsAbandoned() {
-		for ( int status : new int[] { 403, 404, 405, 409, 412 } ) {
-			assertEquals("status " + status, Outcome.ABANDONED, CalDavChange.outcomeOf(status));
-		}
-	}
-
-	/** Characterisation: anything else below 500 is dropped as well, even a 401. */
-	@Test
-	public void anyOtherAnswerBelow500IsAbandoned() {
-		for ( int status : new int[] { 207, 302, 400, 401, 423 } ) {
-			assertEquals("status " + status, Outcome.ABANDONED, CalDavChange.outcomeOf(status));
+		for ( CalDavChange change : ANY ) {
+			assertEquals(Outcome.APPLIED, change.outcomeOf(200));
+			assertEquals(Outcome.APPLIED, change.outcomeOf(201));
+			assertEquals(Outcome.APPLIED, change.outcomeOf(204));
 		}
 	}
 
 	@Test
-	public void aServerErrorIsTriedAgainLater() {
-		for ( int status : new int[] { 500, 502, 503, 507 } ) {
-			assertEquals("status " + status, Outcome.RETRY, CalDavChange.outcomeOf(status));
+	public void aRefusalIsRefused() {
+		for ( CalDavChange change : ANY ) {
+			for ( int status : new int[] { 400, 403, 405, 409, 412, 413, 415 } ) {
+				assertEquals("status " + status, Outcome.REFUSED, change.outcomeOf(status));
+			}
 		}
+	}
+
+	/** These were all given up on, and the change was lost with nothing said. */
+	@Test
+	public void whatMayPassLaterIsTriedAgain() {
+		for ( CalDavChange change : ANY ) {
+			for ( int status : new int[] { 401, 407, 408, 423, 425, 429 } ) {
+				assertEquals("status " + status, Outcome.RETRY, change.outcomeOf(status));
+			}
+		}
+	}
+
+	@Test
+	public void aServerErrorIsTriedAgain() {
+		for ( CalDavChange change : ANY ) {
+			for ( int status : new int[] { 500, 502, 503, 507 } ) {
+				assertEquals("status " + status, Outcome.RETRY, change.outcomeOf(status));
+			}
+		}
+	}
+
+	/** A redirect that was not followed, or an answer that is not one, says nothing about the change. */
+	@Test
+	public void anAnswerThatSettlesNothingIsTriedAgain() {
+		for ( CalDavChange change : ANY ) {
+			for ( int status : new int[] { -1, 0, 100, 202, 207, 301, 302, 307, 308 } ) {
+				assertEquals("status " + status, Outcome.RETRY, change.outcomeOf(status));
+			}
+		}
+	}
+
+	@Test
+	public void deletingWhatIsNotThereIsDone() {
+		assertEquals(Outcome.APPLIED, DELETE.outcomeOf(404));
+		assertEquals(Outcome.APPLIED, DELETE.outcomeOf(410));
+	}
+
+	@Test
+	public void changingWhatIsNotThereIsRefused() {
+		assertEquals(Outcome.REFUSED, UPDATE.outcomeOf(404));
+		assertEquals(Outcome.REFUSED, UPDATE.outcomeOf(410));
+		assertEquals(Outcome.REFUSED, CREATE.outcomeOf(404));
 	}
 }

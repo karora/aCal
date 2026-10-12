@@ -286,6 +286,7 @@ public class ResourceManager implements Runnable, IResourceManager {
 		public void deleteByCollectionId(long id);
 		public void deleteInvalidCollectionRecord(long collectionId);
 		public void deletePendingChange(long pendingId);
+		public void recordPendingAttempt(long pendingId, boolean refused, int status);
 		public long addPending(long l, long m, String oldBlob, String newBlob, String uid);
 		public void updateCollection(long collectionId, ContentValues collectionData);
 
@@ -351,6 +352,16 @@ public class ResourceManager implements Runnable, IResourceManager {
 		public static final String		OLD_DATA					= "old_data";
 		public static final String		NEW_DATA					= "new_data";
 		public static final String		UID							= "uid";
+		public static final String		PEND_STATE					= "state";
+		public static final String		PEND_ATTEMPTS				= "attempts";
+		public static final String		PEND_LAST_STATUS			= "last_status";
+		public static final String		PEND_LAST_TRIED				= "last_tried";
+
+		// Values of PEND_STATE
+		/** Waiting to be committed, for the first time or again */
+		public static final int			PENDING_WAITING				= 0;
+		/** Refused, and kept until the user says what to do with it */
+		public static final int			PENDING_REFUSED				= 1;
 
 
 		public static final String TYPE_EVENT = "'VEVENT'";
@@ -645,6 +656,27 @@ public class ResourceManager implements Runnable, IResourceManager {
 		}
 
 
+		/**
+		 * Note that a pending change was tried and is still pending.
+		 * @param refused true if it is not to be tried again until the user says so
+		 * @param status what the answer was, or 0 if there was none
+		 */
+		public void recordPendingAttempt(long pendingId, boolean refused, int status) {
+			boolean openedInternally = doWeNeedADatabase(OPEN_WRITE);
+			try {
+				db.execSQL("UPDATE "+PENDING_DATABASE_TABLE+" SET "
+							+PEND_ATTEMPTS+" = "+PEND_ATTEMPTS+" + 1, "
+							+PEND_STATE+" = ?, "+PEND_LAST_STATUS+" = ?, "+PEND_LAST_TRIED+" = ?"
+							+" WHERE "+PENDING_ID+" = ?",
+						new Object[] { (refused ? PENDING_REFUSED : PENDING_WAITING), status,
+									System.currentTimeMillis(), pendingId });
+			}
+			finally {
+				if ( openedInternally ) closeDB();
+			}
+		}
+
+
 		public void updateCollection(long collectionId, ContentValues collectionData) {
 			boolean openedInternally = doWeNeedADatabase(OPEN_WRITE);
 			try {
@@ -720,6 +752,11 @@ public class ResourceManager implements Runnable, IResourceManager {
 						DatabaseUtils.cursorRowToContentValues(mCursor, newResource);
 						newResource.put(NEW_DATA, newBlob);
 						newResource.put(UID, uid);
+						// It is a different change now, so whatever became of the last one is history
+						newResource.put(PEND_STATE, PENDING_WAITING);
+						newResource.put(PEND_ATTEMPTS, 0);
+						newResource.putNull(PEND_LAST_STATUS);
+						newResource.putNull(PEND_LAST_TRIED);
 						if ( ResourceManager.DEBUG ) Log.println(Constants.LOGD,TAG, "Updating Pending Table row for existing resource ID: "+rid);
 						db.update(PENDING_DATABASE_TABLE, newResource,
 									PEND_RESOURCE_ID+" = ? AND "+PEND_COLLECTION_ID+" = ?",
@@ -790,6 +827,10 @@ public class ResourceManager implements Runnable, IResourceManager {
 						PENDING_DATABASE_TABLE+"."+OLD_DATA,
 						PENDING_DATABASE_TABLE+"."+NEW_DATA,
 						PENDING_DATABASE_TABLE+"."+UID,
+						PENDING_DATABASE_TABLE+"."+PEND_STATE,
+						PENDING_DATABASE_TABLE+"."+PEND_ATTEMPTS,
+						PENDING_DATABASE_TABLE+"."+PEND_LAST_STATUS,
+						PENDING_DATABASE_TABLE+"."+PEND_LAST_TRIED,
 						RESOURCE_DATABASE_TABLE+"."+RESOURCE_NAME,
 						RESOURCE_DATABASE_TABLE+"."+ETAG,
 						RESOURCE_DATABASE_TABLE+"."+LAST_MODIFIED,
