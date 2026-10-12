@@ -468,6 +468,8 @@ public class JournalEdit extends AcalActivity
 		Collection newCollection = Collection.getInstance(collectionId,this); 
 		if ( newCollection != null && newCollection != currentCollection ) {
 			currentCollection = newCollection;
+			// What has been typed must be in the note before the screen is drawn from it
+			if ( journal != null ) checkpointCurrentValues();
 			this.updateLayout();
 		}
 

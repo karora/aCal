@@ -696,7 +696,7 @@ public class TodoEdit extends AcalActivity
 
 		if ( Collection.getInstance(collectionId,this) != null && (currentCollection == null || collectionId != currentCollection.collectionId) ) {
 			currentCollection = Collection.getInstance(collectionId,this);
-			this.updateLayout();
+			updateLayoutKeepingText();
 		}
 	}
 
@@ -778,7 +778,17 @@ public class TodoEdit extends AcalActivity
 
 	@Override
 	public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
-		this.updateLayout();
+		updateLayoutKeepingText();
+	}
+
+	/**
+	 * Update the screen after the user has changed something on it.  The
+	 * screen is drawn from the task, so what has been typed has to be in the
+	 * task first or it is replaced by what the task had before.
+	 */
+	private void updateLayoutKeepingText() {
+		if ( todo != null ) checkpointCurrentValues();
+		updateLayout();
 	}
 
 	private void checkpointCurrentValues() {
@@ -843,7 +853,7 @@ public class TodoEdit extends AcalActivity
 						new DateTimeSetListener() {
 							public void onDateTimeSet(AcalDateTime newDateTime) {
 								todo.setStart( newDateTime );
-								updateLayout();
+								updateLayoutKeepingText();
 							}
 						});
 
@@ -852,7 +862,7 @@ public class TodoEdit extends AcalActivity
 						new DateTimeSetListener() {
 							public void onDateTimeSet(AcalDateTime newDateTime) {
 								todo.setDue( newDateTime );
-								updateLayout();
+								updateLayoutKeepingText();
 							}
 						});
 
@@ -863,7 +873,7 @@ public class TodoEdit extends AcalActivity
 								todo.setCompleted( newDateTime );
 								todo.setPercentComplete(100);
 								todo.setStatus(VTodo.Status.COMPLETED);
-								updateLayout();
+								updateLayoutKeepingText();
 							}
 						});
 
@@ -891,7 +901,7 @@ public class TodoEdit extends AcalActivity
 							alarmList.add( new AcalAlarm( relateWith, todo.getDescription(), alarmValues[item],
 									ActionType.AUDIO, start, todo.getDue() ) );
 							todo.updateAlarmComponents( alarmList );
-							updateLayout();
+							updateLayoutKeepingText();
 						}
 					}
 				} );
@@ -948,7 +958,7 @@ public class TodoEdit extends AcalActivity
 							}
 						}
 						todo.setRepetition( newRule );
-						updateLayout();
+						updateLayoutKeepingText();
 
 					}
 				} );
@@ -973,7 +983,7 @@ public class TodoEdit extends AcalActivity
 				}
 			}
 			todo.setRepetition(newRule);
-			updateLayout();
+			updateLayoutKeepingText();
 		}
 	}
 
@@ -985,7 +995,7 @@ public class TodoEdit extends AcalActivity
 			public void onAlarmSet(AcalAlarm alarmValue) {
 				alarmList.add( alarmValue );
 		    	todo.updateAlarmComponents(alarmList);
-		    	updateLayout();
+		    	updateLayoutKeepingText();
 			}
 			
 		};
@@ -1011,7 +1021,7 @@ public class TodoEdit extends AcalActivity
 		cancel.setOnClickListener(new OnClickListener(){
 			public void onClick(View v) {
 				alarmList.remove(alarm);
-				updateLayout();
+				updateLayoutKeepingText();
 			}
 		});
 		return rowLayout;
@@ -1033,7 +1043,7 @@ public class TodoEdit extends AcalActivity
 			else {
 				todo.setStatus(VTodo.Status.COMPLETED);
 				todo.setCompleted(new AcalDateTime() );
-				updateLayout();
+				updateLayoutKeepingText();
 			}
 		}
 	}

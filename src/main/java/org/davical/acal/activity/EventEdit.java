@@ -419,6 +419,8 @@ public class EventEdit extends AcalActivity implements  OnClickListener, OnCheck
 				break;
 			}
 		}
+		// What has been typed must be in the event before the screen is drawn from it
+		if ( event != null ) checkpointCurrentValues();
 		this.updateLayout();
 	}
 
