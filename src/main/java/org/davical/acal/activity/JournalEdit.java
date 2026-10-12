@@ -300,15 +300,18 @@ public class JournalEdit extends AcalActivity
 			currentCollection = Collection.getInstance(preferredCollectionId, this);
 
 			this.action = ACTION_CREATE;
-			setJournal(new VJournal());
+			setJournal(new VJournal(), -1);
 			this.journal.setStart(new AcalDateTime());
 		}
 	}
 
 	
-	private void setJournal( VJournal newJournal ) {
+	/**
+	 * @param collectionId the collection the note is in, or -1 for a new one,
+	 *        which goes in whichever is chosen
+	 */
+	private void setJournal( VJournal newJournal, long collectionId ) {
 		this.journal = newJournal;
-		long collectionId = -1;		
 		if ( currentOperation == ACTION_EDIT ) {
 			this.action = ACTION_MODIFY_ALL;
 		}
@@ -316,7 +319,7 @@ public class JournalEdit extends AcalActivity
 			this.action = ACTION_CREATE;
 		}
 
-		if ( Collection.getInstance(collectionId,this) != null )
+		if ( collectionId >= 0 && Collection.getInstance(collectionId,this) != null )
 			currentCollection = Collection.getInstance(collectionId,this);
 
 	}
@@ -439,6 +442,8 @@ public class JournalEdit extends AcalActivity
 		if ( spinnerPosition < collectionsArray.length )
 			//set the default according to value
 			spinnerCollection.setSelection(spinnerPosition);
+		// Only something new can be put in another collection
+		spinnerCollection.setEnabled(!isModifyAction() && collectionsArray.length > 1);
 
 		try {
 			// Attempt to set text colour that works with (hopefully) background colour. 
@@ -465,8 +470,11 @@ public class JournalEdit extends AcalActivity
 
 	private void setSelectedCollection(long collectionId) {
 
+		// A note that exists stays in the collection it is in
+		if ( isModifyAction() ) return;
+
 		Collection newCollection = Collection.getInstance(collectionId,this); 
-		if ( newCollection != null && newCollection != currentCollection ) {
+		if ( newCollection != null && (currentCollection == null || collectionId != currentCollection.getCollectionId()) ) {
 			currentCollection = newCollection;
 			// What has been typed must be in the note before the screen is drawn from it
 			if ( journal != null ) checkpointCurrentValues();
@@ -606,7 +614,8 @@ public class JournalEdit extends AcalActivity
 		}
 		else if (result instanceof CalendarInstance) {
 			if (response.wasSuccessful()) {
-				setJournal( new VJournal((JournalInstance) response.result()) );
+				JournalInstance instance = (JournalInstance) response.result();
+				setJournal( new VJournal(instance), instance.getCollectionId() );
 				msg = REFRESH;
 			}
 			mHandler.sendMessage(mHandler.obtainMessage(msg));		

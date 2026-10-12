@@ -380,9 +380,12 @@ public class TodoEdit extends AcalActivity
 	}
 
 	
-	private void setTodo( VTodo newTodo ) {
+	/**
+	 * @param collectionId the collection the task is in, or -1 for a new one,
+	 *        which goes in whichever is chosen
+	 */
+	private void setTodo( VTodo newTodo, long collectionId ) {
 		this.todo = newTodo;
-		long collectionId = -1;		
 		if ( currentOperation == ACTION_EDIT ) {
 			this.action = ACTION_MODIFY_ALL;
 			if ( isModifyAction() ) {
@@ -403,7 +406,7 @@ public class TodoEdit extends AcalActivity
 			this.action = ACTION_CREATE;
 		}
 
-		if ( Collection.getInstance(collectionId,this) != null )
+		if ( collectionId >= 0 && Collection.getInstance(collectionId,this) != null )
 			currentCollection = Collection.getInstance(collectionId,this);
 
 		if ( todo.getCompleted() != null ) todo.setPercentComplete( 100 );
@@ -557,6 +560,8 @@ public class TodoEdit extends AcalActivity
 		if ( spinnerPosition < collectionsArray.length )
 			//set the default according to value
 			spinnerCollection.setSelection(spinnerPosition);
+		// Only something new can be put in another collection
+		spinnerCollection.setEnabled(!isModifyAction() && collectionsArray.length > 1);
 
 		try {
 			// Attempt to set text colour that works with (hopefully) background colour. 
@@ -693,6 +698,8 @@ public class TodoEdit extends AcalActivity
 
 
 	private void setSelectedCollection(long collectionId) {
+		// A task that exists stays in the collection it is in
+		if ( isModifyAction() ) return;
 
 		if ( Collection.getInstance(collectionId,this) != null && (currentCollection == null || collectionId != currentCollection.collectionId) ) {
 			currentCollection = Collection.getInstance(collectionId,this);
@@ -1075,7 +1082,8 @@ public class TodoEdit extends AcalActivity
 		}
 		else if (result instanceof CalendarInstance) {
 			if (response.wasSuccessful()) {
-				setTodo( new VTodo((TodoInstance) response.result()) );
+				TodoInstance instance = (TodoInstance) response.result();
+				setTodo( new VTodo(instance), instance.getCollectionId() );
 				msg = REFRESH;
 			}
 			mHandler.sendMessage(mHandler.obtainMessage(msg));		

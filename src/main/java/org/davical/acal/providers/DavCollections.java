@@ -24,6 +24,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.net.Uri;
@@ -258,9 +259,30 @@ CREATE TABLE dav_collection (
 	 * (non-Javadoc)
 	 * @see android.content.ContentProvider#query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String)
 	 */
+	/**
+	 * @return true if the URI is one that says which collections are wanted
+	 */
+	static boolean isQueryable(Uri uri) {
+		switch ( uriMatcher.match(uri) ) {
+			case ALL_COLLECTIONS:
+			case BY_COLLECTION_ID:
+			case BY_SERVER_ID:
+			case BY_PATH_AND_SERVER_ID:
+				return true;
+		}
+		return false;
+	}
+
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
+
+		if ( !isQueryable(uri) ) {
+			// Not every collection, which is what no condition at all would give.
+			// An id of -1, as is used for "none", is one way to get here.
+			Log.w(TAG, "Nothing matches a query for " + uri);
+			return new MatrixCursor(projection == null ? new String[] { _ID } : projection);
+		}
 
 		SQLiteQueryBuilder sqlBuilder = new SQLiteQueryBuilder();
 		sqlBuilder.setTables(DATABASE_TABLE);
@@ -333,6 +355,8 @@ CREATE TABLE dav_collection (
 	 * @return A ContentValues object which is the database row, or null if not found. 
 	 */
 	public static ContentValues getRow(long collectionId, ContentResolver contentResolver) {
+		// No collection has an id below zero: -1 is used for "none"
+		if ( collectionId < 0 ) return null;
 		ContentValues collectionData = null;
 		Cursor c = null;
 		try {
