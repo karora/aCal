@@ -51,9 +51,7 @@ public class aCalTasks extends AcalActivity {
 	 */
 	private void initializeApp() {
 		// make sure aCalService is running
-		Intent serviceIntent = new Intent(this, aCalService.class);
-		serviceIntent.putExtra("UISTARTED", System.currentTimeMillis());
-		this.startService(serviceIntent);
+		aCal.startServiceForUi(this);
 
 		// Set all default preferences to reasonable values
 		PreferenceManager.setDefaultValues(this, R.xml.main_preferences, false);

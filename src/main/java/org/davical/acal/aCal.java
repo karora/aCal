@@ -75,11 +75,14 @@ public class aCal extends AcalActivity {
 	/**
 	 * Complete the startup process after all permissions are granted.
 	 */
-	private void completeStartup() {
-		// make sure aCalService is running.  Starting it opens the database on
-		// this thread, so if the database is still being encrypted after an
-		// upgrade that is left until it has finished.
-		final Context appContext = getApplicationContext();
+	/**
+	 * Make sure aCalService is running, for any of the activities the app can
+	 * be started from.  Starting it opens the database on this thread, so if
+	 * the database is still being encrypted after an upgrade that is left
+	 * until it has finished.
+	 */
+	static void startServiceForUi(Context context) {
+		final Context appContext = context.getApplicationContext();
 		final Intent serviceIntent = new Intent(appContext, aCalService.class);
 		serviceIntent.putExtra("UISTARTED", System.currentTimeMillis());
 		AcalDBHelper.whenReady(new Runnable() {
@@ -89,11 +92,16 @@ public class aCal extends AcalActivity {
 					appContext.startService(serviceIntent);
 				}
 				catch ( IllegalStateException e ) {
-					// We have gone into the background in the meantime.
+					// We are in the background as far as the system is concerned,
+					// or have gone there in the meantime, and may not start it.
 					Log.w(TAG, "Could not start aCalService: " + e.getMessage());
 				}
 			}
 		});
+	}
+
+	private void completeStartup() {
+		startServiceForUi(this);
 
 		// Set all default preferences to reasonable values
 		PreferenceManager.setDefaultValues(this, R.xml.main_preferences, false);
