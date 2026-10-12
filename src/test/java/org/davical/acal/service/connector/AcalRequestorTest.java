@@ -149,6 +149,34 @@ public class AcalRequestorTest {
 
 	// ---- what is sent
 
+	/**
+	 * Every body was sent as text/xml whatever the caller said it was, and a
+	 * CalDAV server refuses a calendar that says it is XML.
+	 */
+	@Test
+	public void sendsTheBodyAsTheContentTypeItWasGiven() throws Exception {
+		String event = "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:abc\r\nSUMMARY:Caf\u00e9\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+		for ( String name : new String[] { "Content-Type", "Content-type" } ) {
+			server.enqueue(response(201).build());
+			Header[] headers = { new BasicHeader("If-None-Match", "*"),
+						new BasicHeader(name, "text/calendar; charset=\"utf-8\"") };
+			requestor.doRequest("PUT", "/cal/abc.ics", headers, event);
+
+			RecordedRequest sent = next(server);
+			assertEquals(1, sent.getHeaders().values("Content-Type").size());
+			assertEquals("text/calendar; charset=\"utf-8\"", sent.getHeaders().get("Content-Type"));
+			assertEquals(event, sent.getBody().utf8());
+		}
+	}
+
+	@Test
+	public void sendsABodyWithNoContentTypeGivenAsXml() throws Exception {
+		server.enqueue(multistatus());
+		requestor.doRequest("PROPFIND", "/cal/home/", new Header[] { new BasicHeader("Depth", "1") }, PROPFIND_BODY);
+
+		assertEquals("text/xml; charset=utf-8", next(server).getHeaders().get("Content-Type"));
+	}
+
 	@Test
 	public void sendsTheMethodPathHeadersAndBody() throws Exception {
 		server.enqueue(multistatus());

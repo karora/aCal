@@ -18,6 +18,7 @@
 
 package org.davical.acal.service.connector;
 
+import java.nio.charset.StandardCharsets;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -760,10 +761,15 @@ public class AcalRequestor {
 				.url(this.fullUrl())
 				.header("User-Agent", AcalConnectionPool.getUserAgent());
 
-			// Add custom headers
+			// Add custom headers.  OkHttp takes the content type from the body
+			// and not from a header, so that one is kept for making the body.
+			String contentType = "text/xml; charset=utf-8";
 			if ( headers != null ) {
 				for (Header h : headers) {
-					requestBuilder.header(h.getName(), h.getValue());
+					if ( h.getName().equalsIgnoreCase("Content-Type") )
+						contentType = h.getValue();
+					else
+						requestBuilder.header(h.getName(), h.getValue());
 				}
 			}
 
@@ -784,7 +790,7 @@ public class AcalRequestor {
 			// Set method and body
 			RequestBody body = null;
 			if (entityString != null) {
-				body = RequestBody.create(entityString, MediaType.parse("text/xml; charset=utf-8"));
+				body = RequestBody.create(entityString.getBytes(StandardCharsets.UTF_8), MediaType.parse(contentType));
 				up = entityString.length();
 			}
 
