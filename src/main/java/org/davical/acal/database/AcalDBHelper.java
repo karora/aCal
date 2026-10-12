@@ -112,7 +112,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	/**
 	 * The version of this database. Used to determine if an upgrade is required.
 	 */
-	public static final int DB_VERSION = 24;
+	public static final int DB_VERSION = 25;
 
 
 
@@ -255,6 +255,36 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				+",uid TEXT"
 				+",UNIQUE(collection_id,resource_id)"
 			+");";
+
+
+	/**
+	 * <p>Version 25 queues the resources a CalDAV server never accepted to be
+	 * sent again.  From the move to OkHttp until version 1.70 every calendar
+	 * was sent as text/xml, which the server refused, and the change was then
+	 * given up on: each resource made in that time is in dav_resource with no
+	 * name, and nowhere else.</p>
+	 *
+	 * <p>Each gets a pending_change with no old_data, which is sent as a new
+	 * resource and only if the server has nothing of that name.  The UID to
+	 * name it after is the first UID line in the data; if that turns out not
+	 * to be usable as a name the resource is given another.</p>
+	 */
+	public static final String QUEUE_UNSENT_RESOURCES_SQL =
+			"INSERT INTO pending_change (collection_id, resource_id, old_data, new_data, uid)"
+			+" SELECT collection_id, _id, NULL, data,"
+				+" CASE WHEN uid_at > 0 THEN"
+					+" rtrim(substr(after_uid, 1, instr(after_uid || char(10), char(10)) - 1), char(13))"
+				+" END"
+			+" FROM ("
+				+"SELECT r.collection_id, r._id, r.data,"
+					+" instr(r.data, char(10) || 'UID:') AS uid_at,"
+					+" substr(r.data, instr(r.data, char(10) || 'UID:') + 5) AS after_uid"
+				+" FROM dav_resource r"
+					+" JOIN dav_collection c ON (c._id = r.collection_id)"
+					+" JOIN dav_server s ON (s._id = c.server_id)"
+				+" WHERE r.name IS NULL AND r.data IS NOT NULL AND s.backend_type = 0"
+					+" AND r._id NOT IN (SELECT resource_id FROM pending_change WHERE resource_id IS NOT NULL)"
+			+")";
 
 
 	/**
@@ -511,6 +541,11 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 				Log.i(TAG,"Updating database from version " + oldVersion);
 				oldVersion++;
 				db.execSQL(ADD_SERVER_BACKEND_TYPE_SQL);
+			}
+			if (oldVersion == 24) {
+				Log.i(TAG,"Updating database from version " + oldVersion);
+				oldVersion++;
+				db.execSQL(QUEUE_UNSENT_RESOURCES_SQL);
 			}
 		}
 		catch( Exception e ) {
