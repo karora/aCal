@@ -337,6 +337,14 @@ public class EventListAdapter extends BaseAdapter implements OnClickListener, Li
 	
 	
 
+	/**
+	 * Stop listening for changes.  To be called when the list has no more use
+	 * for this adapter, or it goes on fetching data for nobody at every change.
+	 */
+	public void close() {
+		cacheManager.removeListener(this);
+	}
+
 	public void cacheChanged(CacheChangedEvent change) {
 		if (change.isWindowOnly()) return;
 		AcalDateRange myRange = new AcalDateRange(viewDate,viewDateEnd);

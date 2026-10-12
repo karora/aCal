@@ -150,6 +150,7 @@ public class TodoListView extends AcalAppCompatActivity implements OnClickListen
 	
 	private void updateLayout() {
 		if ( this.todoList == null ) createListView(true);
+		if ( this.todoListAdapter != null ) this.todoListAdapter.close();
 		this.todoListAdapter = new TodoListAdapter(this, showCompleted, showFuture );
 		this.todoList.setAdapter(todoListAdapter);
 		restoreCurrentPosition();

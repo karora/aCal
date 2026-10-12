@@ -313,6 +313,14 @@ public class TodoListAdapter extends BaseAdapter
 		
 	}
 
+	/**
+	 * Stop listening for changes.  To be called when the list has no more use
+	 * for this adapter, or it goes on fetching data for nobody at every change.
+	 */
+	public void close() {
+		cacheManager.removeListener(this);
+	}
+
 	@Override
 	public void cacheChanged(CacheChangedEvent event) {
 		AcalDateTime rangeEnd = AcalDateTime.getInstance().addDays(7);

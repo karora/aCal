@@ -141,6 +141,7 @@ public class JournalListView extends AcalAppCompatActivity implements OnClickLis
 	
 	private void updateLayout() {
 		if ( this.journalList == null ) createListView(true);
+		if ( this.journalListAdapter != null ) this.journalListAdapter.close();
 		this.journalListAdapter = new JournalListAdapter(this);
 		this.journalList.setAdapter(journalListAdapter);
 		restoreCurrentPosition();

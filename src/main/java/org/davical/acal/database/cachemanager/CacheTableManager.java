@@ -213,7 +213,13 @@ public final class CacheTableManager extends ProviderTableManager {
         synchronized (listeners) {
             for (CacheChangedListener listener : listeners) {
                 CacheChangedEvent cce = new CacheChangedEvent(new ArrayList<DataChangeEvent>(changes), windowOnly);
-                listener.cacheChanged(cce);
+                try {
+                    listener.cacheChanged(cce);
+                }
+                catch (Exception e) {
+                    // One listener in trouble must not keep the news from the rest
+                    Log.e(TAG, "A listener failed on a change to the cache: " + Log.getStackTraceString(e));
+                }
             }
         }
         // Update widgets

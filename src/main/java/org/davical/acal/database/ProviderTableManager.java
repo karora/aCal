@@ -208,23 +208,27 @@ public abstract class ProviderTableManager implements TableManager {
 	public boolean processActions(DMQueryList queryList) {
 		boolean transactionInternally = doWeNeedATransaction();
 		boolean res = false;
+		ArrayList<DataChangeEvent> changed = null;
 		try {
 		    startChangeSet();
 			for (DMAction action : queryList.getActions()) {
 				action.process(this);
 			}
 			res = !changesProcessed.isEmpty();
-			finaliseChangeSet();
 		}
 		catch ( Exception e ) {
 			Log.e(TAG, "Exception processing request: " + e + Log.getStackTraceString(e));
 		}
 		finally {
+			changed = finaliseChangeSet();
 			if ( transactionInternally ) {
 				if ( res ) setTxSuccessful();
 				endTx();
 			}
 		}
+		// Whoever is listening is told once the changes are there to be read.
+		// If we are inside someone else's transaction that is their job.
+		if ( res && transactionInternally && changed != null ) dataChanged(changed);
 		return res;
 	}
 }

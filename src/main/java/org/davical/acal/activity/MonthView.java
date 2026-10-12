@@ -679,6 +679,7 @@ public class MonthView extends AcalAppCompatActivity implements OnGestureListene
 			eventListTop = 0;
 			eventListIndex = 0;
 		}
+		if ( eventListAdapter != null ) eventListAdapter.close();
 		eventListAdapter = new EventListAdapter(this, selectedDate.clone());
 
 		if ( eventList == null ) createListView(true);
