@@ -23,11 +23,59 @@ import java.io.StringReader;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.http.Header;
 import org.junit.Test;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
 public class CalDavBackendTest {
+
+	private static final String EVENT = "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:abc\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+
+	private static String describe(Header[] headers) {
+		StringBuilder described = new StringBuilder();
+		for ( Header header : headers ) {
+			described.append(header.getName()).append(": ").append(header.getValue()).append("\n");
+		}
+		return described.toString();
+	}
+
+	@Test
+	public void aNewResourceIsSentOnlyIfNothingIsThere() {
+		assertEquals("If-None-Match: *\n"
+					+ "Content-type: text/calendar; charset=\"utf-8\"\n"
+					+ "Prefer: return=representation\n",
+					describe(CalDavBackend.headersFor(CalDavChange.plan(null, EVENT, null, "abc", null))));
+	}
+
+	@Test
+	public void anUpdateIsSentOnlyIfTheEtagStillMatches() {
+		assertEquals("If-Match: \"etag-1\"\n"
+					+ "Content-type: text/calendar; charset=\"utf-8\"\n"
+					+ "Prefer: return=representation\n",
+					describe(CalDavBackend.headersFor(CalDavChange.plan(EVENT, EVENT, "abc.ics", "abc", "\"etag-1\""))));
+	}
+
+	@Test
+	public void aDeleteAsksForNothingBack() {
+		assertEquals("If-Match: \"etag-1\"\n"
+					+ "Content-type: text/plain\n",
+					describe(CalDavBackend.headersFor(CalDavChange.plan(EVENT, null, "abc.ics", "abc", "\"etag-1\""))));
+	}
+
+	/**
+	 * There was a null in the place of the missing condition, which the
+	 * request could not be built from, so the change was never sent and
+	 * stayed waiting for good.
+	 */
+	@Test
+	public void aChangeWithNoEtagHasNoHeaderWhereTheConditionWouldBe() {
+		assertEquals("Content-type: text/calendar; charset=\"utf-8\"\n"
+					+ "Prefer: return=representation\n",
+					describe(CalDavBackend.headersFor(CalDavChange.plan(EVENT, EVENT, "abc.ics", "abc", null))));
+		assertEquals("Content-type: text/plain\n",
+					describe(CalDavBackend.headersFor(CalDavChange.plan(EVENT, null, "abc.ics", "abc", null))));
+	}
 
 	@Test
 	public void ordinaryTextIsOneSection() {

@@ -20,6 +20,8 @@ package org.davical.acal.storage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
@@ -128,22 +130,7 @@ public class CalDavBackend implements StorageBackend {
 						);
 		}
 
-		BasicHeader eTagHeader = (change.matchHeader == null ? null
-					: new BasicHeader(change.matchHeader, change.matchValue));
-		BasicHeader contentHeader = new BasicHeader("Content-type", change.contentType );
-
-		Header[] headers;
-		if ( change.isDelete )
-            headers = new Header[] {
-                                    eTagHeader,
-                                    contentHeader
-                             };
-		else
-            headers = new Header[] {
-                                    eTagHeader,
-                                    contentHeader,
-                                    new BasicHeader("Prefer","return=representation")
-                             };
+		Header[] headers = headersFor(change);
 
 		InputStream in = null;
 		try {
@@ -165,7 +152,7 @@ public class CalDavBackend implements StorageBackend {
         boolean useResponseData = false;
         if ( !change.isDelete ) try {
             responseData = AcalRequestor.convertStreamToString(in);
-            useResponseData = contentHeader.getValue().equals(CalDavChange.contentTypeOf(responseData));
+            useResponseData = change.contentType.equals(CalDavChange.contentTypeOf(responseData));
         }
         catch ( IOException e ) { }
 
@@ -222,6 +209,19 @@ public class CalDavBackend implements StorageBackend {
 
 		// The server answered, so look at what it now has as soon as we are done.
 		return true;
+	}
+
+
+	/**
+	 * @return the headers to send with a change.  A change to a resource we
+	 *         have no etag for has no condition to send, and is sent without one.
+	 */
+	static Header[] headersFor(CalDavChange change) {
+		List<Header> headers = new ArrayList<Header>();
+		if ( change.matchHeader != null ) headers.add(new BasicHeader(change.matchHeader, change.matchValue));
+		headers.add(new BasicHeader("Content-type", change.contentType));
+		if ( !change.isDelete ) headers.add(new BasicHeader("Prefer","return=representation"));
+		return headers.toArray(new Header[0]);
 	}
 
 
