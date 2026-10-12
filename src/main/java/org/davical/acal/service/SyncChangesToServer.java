@@ -135,8 +135,20 @@ public class SyncChangesToServer extends ServiceJob implements BlockingResourceR
 		        commitCollectionProperties(collectionData);
 		        runAgainBy(System.currentTimeMillis() + RetryPolicy.FIRST_WAIT);
 		    }
-			for( ContentValues pendingChange :  pendingChangesList )
-				commitOneChange(pendingChange);
+			for( ContentValues pendingChange :  pendingChangesList ) {
+				try {
+					commitOneChange(pendingChange);
+				}
+				catch( Exception e ) {
+					// What stopped this one is no reason not to try the rest: they may
+					// be for another account, or for none that needs a network at all.
+					Log.e(TAG, "Could not commit pending change "
+								+pendingChange.getAsString(ResourceTableManager.PENDING_ID)+": "+e);
+					Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
+					processor.recordPendingAttempt(pendingChange.getAsLong(ResourceTableManager.PENDING_ID), false, 0);
+					runAgainBy(System.currentTimeMillis() + RetryPolicy.FIRST_WAIT);
+				}
+			}
 
 			for( Map.Entry<Long, StorageBackend> toRefresh : collectionsToRefresh.entrySet() ) {
 				ServiceJob job = toRefresh.getValue().refreshCollection(toRefresh.getKey(), true);

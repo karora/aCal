@@ -18,6 +18,7 @@
 package org.davical.acal.storage;
 
 import android.content.ContentValues;
+import android.util.Log;
 
 import org.davical.acal.database.resourcesmanager.ResourceManager.ResourceTableManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.WriteableResourceTableManager;
@@ -31,6 +32,8 @@ import org.davical.acal.storage.CommitResult.Outcome;
  * to fetch or to find.
  */
 public class LocalBackend implements StorageBackend {
+
+	public static final String	TAG		= "aCal LocalBackend";
 
 	@Override
 	public boolean needsNetwork() {
@@ -57,6 +60,7 @@ public class LocalBackend implements StorageBackend {
 			resourceData.put(ResourceTableManager.NEEDS_SYNC, 0);
 		}
 
+		Log.i(TAG, (newData == null ? "Deleting" : "Saving")+" resource "+resourceId+" in a collection kept on the phone.");
 		CommittedChange.record(processor, newData == null, resourceData, resourceId, pendingId);
 		return new CommitResult(Outcome.APPLIED, 0, false);
 	}
