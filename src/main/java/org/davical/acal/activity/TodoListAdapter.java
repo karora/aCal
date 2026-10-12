@@ -321,11 +321,11 @@ public class TodoListAdapter extends BaseAdapter
 		//up-date only if the change could have affected us
 		boolean update = false;
 		for (DataChangeEvent dce : event.getChanges()) {
-			if ( !listCompleted && dce.getData().getAsLong(CacheTableManager.FIELD_COMPLETED) < Long.MAX_VALUE ) continue;
-			Long sMills = dce.getData().getAsLong(CacheTableManager.FIELD_DTSTART);
-			Long eMills = dce.getData().getAsLong(CacheTableManager.FIELD_DTEND);
-			if (sMills == null || eMills == null) { update = true; break; }
-			if (sMills < myRange.end.getMillis() && eMills > myRange.start.getMillis()) { update = true; break; }
+			if ( CacheChangedEvent.mayAffectList(dce.getData(), listCompleted,
+						myRange.start.getMillis(), myRange.end.getMillis()) ) {
+				update = true;
+				break;
+			}
 		}
 		
 		if (update)

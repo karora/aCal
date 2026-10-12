@@ -318,6 +318,7 @@
     <string name="incompleteTasksDue">Incomplete tasks due within a week</string>
     <string name="allTasksTitle">All Tasks</string>
     <string name="NewTaskTitle">New Task</string>
+    <string name="NewNoteTitle">New Note</string>
     <string name="TaskSaved">Task Saved.</string>
     <string name="TaskModifiedAll">Modified all instances of this task.</string>
     <string name="TaskModifiedOne">Modified single instance of this task.</string>
