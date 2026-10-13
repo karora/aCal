@@ -106,6 +106,15 @@ public final class TestDatabase {
 		return db;
 	}
 
+	/**
+	 * Open the database as it is, with its key, and without the app's helper
+	 * getting to upgrade it.
+	 */
+	public static SQLiteDatabase openAsItIs() throws java.security.GeneralSecurityException {
+		return SQLiteDatabase.openDatabase(file().getPath(), DatabaseKeyManager.getExistingKey(context()), null,
+				SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS, null);
+	}
+
 	public static SQLiteDatabase openPlain( File file ) {
 		return SQLiteDatabase.openDatabase(file.getPath(), null,
 				SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS);

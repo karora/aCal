@@ -30,6 +30,8 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
+
 import org.davical.acal.Constants;
 import org.davical.acal.database.AcalDBHelper;
 
@@ -79,8 +81,16 @@ public class DebugDatabase extends ServiceJob {
 		if (Constants.LOG_DEBUG) Log.println(Constants.LOGD,TAG,"Reverting database...");
 		try {
 			AcalDBHelper dbHelper = new AcalDBHelper(this.context);
-			dbHelper.onUpgrade(dbHelper.getWritableDatabase(), -1, -1);
-			dbHelper.close();
+			SQLiteDatabase db = dbHelper.getWritableDatabase();
+			db.beginTransaction();
+			try {
+				AcalDBHelper.recoverDatabase(db);
+				db.setTransactionSuccessful();
+			}
+			finally {
+				db.endTransaction();
+			}
+			dbHelper.close(db);
 			if (Constants.LOG_DEBUG) Log.println(Constants.LOGD,TAG,"Reversion complete.");
 		} catch (Exception e) {
 			Log.e(TAG,"Error reverting database: "+e.getMessage());

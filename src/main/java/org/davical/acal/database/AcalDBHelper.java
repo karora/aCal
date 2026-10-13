@@ -114,6 +114,26 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	 */
 	public static final int DB_VERSION = 27;
 
+	/**
+	 * The oldest version there is an upgrade from.  The application id changed
+	 * from com.morphoss.acal to org.davical.acal when the database was at this
+	 * version, and an install under the new id starts with no data, so no
+	 * older database can have been made by this app.
+	 */
+	public static final int OLDEST_UPGRADABLE_VERSION = 22;
+
+	/**
+	 * Thrown when a database cannot be brought up to this version.  It is left
+	 * as it was.
+	 */
+	public static class UpgradeFailedException extends SQLiteException {
+		private static final long serialVersionUID = 1L;
+
+		public UpgradeFailedException(String message, Throwable cause) {
+			super(message, cause);
+		}
+	}
+
 
 
 	/**
@@ -447,168 +467,92 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	}
 
 	/**
-	 * <p>
-	 * Executed if exiting DB version does not match the one defined by DB_VERSION.
-	 * Currently drops all but the dav_server table and recreates them.  It will
-	 * eventually do a rescan of the servers after that, re-discovering collections
-	 * and rebuilding our local cache.
-	 * </p>
+	 * Bring a database made by an earlier version up to this one, a version
+	 * at a time.  Nothing is caught here: whoever called has this in a
+	 * transaction, and a step that fails has to leave the database exactly as
+	 * it was, at its old version, to be upgraded by a release that puts the
+	 * step right.
+	 *
+	 * <p>A step must not use the statements a new database is made with, such
+	 * as DAV_SERVER_TABLE_SQL.  Those change with every later version, and a
+	 * later step that adds a column then finds it already there.  A step
+	 * spells out what it does as it was at that version.</p>
+	 *
+	 * <p>Every change here needs a file in src/androidTest/assets/schema: see
+	 * the README there.</p>
 	 *
 	 * @see SQLiteOpenHelper#onUpgrade(SQLiteDatabase, int, int)
-	 * @author Morphoss Ltd
 	 */
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
 		Log.i(TAG,"Attempting to upgrade database from "+oldVersion+" to "+newVersion);
 
-		// We drop tables in the reverse order to avoid constraint issues
+		if ( oldVersion > newVersion )
+			throw new SQLiteException("The database is at version " + oldVersion
+					+ ", from a newer aCal than this one, which knows up to " + newVersion);
 
-		try {
-			if ( oldVersion == 9 ) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				Log.i(TAG,"Updating database to version " + oldVersion);
-			}
-
-			if ( oldVersion == 10 ) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL("ALTER TABLE dav_server ADD COLUMN use_advanced BOOLEAN");
-				db.execSQL("ALTER TABLE dav_server ADD COLUMN prepared_config TEXT");
-			}
-			if ( oldVersion == 11 ) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL("ALTER TABLE dav_resource ADD COLUMN effective_type TEXT");
-				db.execSQL("UPDATE dav_resource SET effective_type = 'VCARD' WHERE lower(data) LIKE 'begin:vcard';");
-				db.execSQL("UPDATE dav_resource SET effective_type = 'VEVENT' WHERE lower(data) LIKE 'begin:vevent';");
-				db.execSQL("UPDATE dav_resource SET effective_type = 'VJOURNAL' WHERE lower(data) LIKE 'begin:vjournal';");
-				db.execSQL("UPDATE dav_resource SET effective_type = 'VTODO' WHERE lower(data) LIKE 'begin:vtodo';");
-				db.execSQL(EVENT_INDEX_SQL);
-				db.execSQL(TODO_INDEX_SQL);
-			}
-			if ( oldVersion == 12 ) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL("PRAGMA writable_schema = 1");
-				db.execSQL("UPDATE SQLITE_MASTER SET SQL = '"+DAV_SERVER_TABLE_SQL+"' WHERE name = '"+Servers.DATABASE_TABLE+"'");
-				db.execSQL("PRAGMA writable_schema = 0");
-			}
-
-			if ( oldVersion == 13 ) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL(SHOW_UPCOMING_WIDGET_TABLE_SQL);
-			}
-
-			if (oldVersion == 14) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL("DROP TABLE show_upcoming_widget_data");
-				db.execSQL(SHOW_UPCOMING_WIDGET_TABLE_SQL);
-			}
-
-			if (oldVersion == 15) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL(RESOURCE_CACHE_TABLE_SQL);
-				db.execSQL(RESOURCE_CACHE_META_TABLE_SQL);
-				db.execSQL(SET_RESOURCE_CACHE_DIRTY_SQL);
-			}
-
-			if (oldVersion == 16) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL("DROP TABLE event_cache");
-				db.execSQL(RESOURCE_CACHE_TABLE_SQL);
-				db.execSQL("DELETE FROM event_cache_meta");
-				db.execSQL(SET_RESOURCE_CACHE_DIRTY_SQL);
-				db.execSQL("UPDATE dav_collection SET needs_sync=1, sync_token=NULL, collection_tag=NULL");
-				db.execSQL("DELETE FROM dav_resource");
-			}
-
-			if (oldVersion == 17) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL("DROP TABLE pending_change");
-				db.execSQL(PENDING_CHANGE_TABLE_SQL);
-			}
-			if (oldVersion == 18) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL(ALARM_TABLE_SQL);
-				db.execSQL(ALARM_META_TABLE_SQL);
-				db.execSQL(SET_ALARM_TABLE_DIRTY_SQL);
-			}
-			if (oldVersion == 19) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL(TIMEZONE_TABLE_SQL);
-				db.execSQL(TIMEZONE_NAME_TABLE_SQL);
-				db.execSQL(TIMEZONE_ALIAS_TABLE_SQL);
-				db.execSQL("ALTER TABLE dav_collection ADD COLUMN manually_added BOOLEAN");
-			}
-            if (oldVersion == 19) {
-                Log.i(TAG,"Updating database from version " + oldVersion);
-                oldVersion++;
-                db.execSQL("DROP TABLE alarms");
-                db.execSQL(ALARM_TABLE_SQL);
-                db.execSQL(SET_ALARM_TABLE_DIRTY_SQL);
-            }
-			if (oldVersion == 20) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				// Version 21 was a no-op structural change
-			}
-			if (oldVersion == 21) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				// Migrate plaintext passwords to encrypted storage
-				migratePasswordsToEncrypted(db);
-			}
-			if (oldVersion == 22) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				// Re-encrypt passwords with a key held in the Android Keystore
-				migratePasswordsToEncrypted(db);
-			}
-			if (oldVersion == 23) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL(ADD_SERVER_BACKEND_TYPE_SQL);
-			}
-			if (oldVersion == 24) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL(QUEUE_UNSENT_RESOURCES_SQL);
-			}
-			if (oldVersion == 25) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				for ( String sql : PendingChangeProgress.ADD_COLUMNS_SQL ) db.execSQL(sql);
-			}
-			if (oldVersion == 26) {
-				Log.i(TAG,"Updating database from version " + oldVersion);
-				oldVersion++;
-				db.execSQL(ENSURE_LOCAL_ACCOUNT_SQL);
-			}
+		if ( oldVersion < OLDEST_UPGRADABLE_VERSION ) {
+			startAgain(db, oldVersion);
+			return;
 		}
-		catch( Exception e ) {
-			Log.e(TAG,"Failed to upgrade database carefully.", e);
+
+		if (oldVersion == 22) {
+			Log.i(TAG,"Updating database from version " + oldVersion);
+			oldVersion++;
+			// Re-encrypt passwords with a key held in the Android Keystore
+			migratePasswordsToEncrypted(db);
+		}
+		if (oldVersion == 23) {
+			Log.i(TAG,"Updating database from version " + oldVersion);
+			oldVersion++;
+			db.execSQL(ADD_SERVER_BACKEND_TYPE_SQL);
+		}
+		if (oldVersion == 24) {
+			Log.i(TAG,"Updating database from version " + oldVersion);
+			oldVersion++;
+			db.execSQL(QUEUE_UNSENT_RESOURCES_SQL);
+		}
+		if (oldVersion == 25) {
+			Log.i(TAG,"Updating database from version " + oldVersion);
+			oldVersion++;
+			for ( String sql : PendingChangeProgress.ADD_COLUMNS_SQL ) db.execSQL(sql);
+		}
+		if (oldVersion == 26) {
+			Log.i(TAG,"Updating database from version " + oldVersion);
+			oldVersion++;
+			db.execSQL(ENSURE_LOCAL_ACCOUNT_SQL);
+		}
+
+		if ( oldVersion != newVersion )
+			throw new SQLiteException("There is no upgrade from database version " + oldVersion + " to " + newVersion);
+
+		Log.i(TAG,"Database now upgraded to version " + newVersion);
+	}
+
+	/**
+	 * A database from before OLDEST_UPGRADABLE_VERSION is not one this app
+	 * made, and there is no telling what is in it.  It is replaced with an
+	 * empty one, and the user is told if anything was thrown away.
+	 */
+	private void startAgain( SQLiteDatabase db, int oldVersion ) {
+		Log.e(TAG,"A database at version " + oldVersion + " is too old to upgrade and is being replaced with an empty one");
+		ArrayList<String> tables = new ArrayList<String>();
+		Cursor c = db.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table'"
+				+ " AND name NOT LIKE 'sqlite_%' AND name <> 'android_metadata'", (String[]) null);
+		try {
+			while( c.moveToNext() ) {
+				tables.add(c.getString(0));
+			}
 		}
 		finally {
+			c.close();
 		}
-
-		if ( oldVersion != newVersion ) {
-			// Fallback to try and drop all tables, except the server table and
-			// then recreate them.
-			recoverDatabase(db,true);
+		for( String table : tables ) {
+			db.execSQL("DROP TABLE \"" + table.replace("\"", "\"\"") + "\"");
 		}
-		else {
-			Log.i(TAG,"Database now upgraded to version " + newVersion);
-		}
-
+		onCreate(db);
+		if ( !tables.isEmpty() ) notifyDatabaseReset(context);
 	}
 
 	@Override
@@ -634,11 +578,23 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	private SQLiteDatabase openWritableDatabase( String dbPath ) {
 		SQLiteDatabase db = open( dbPath, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
 		if ( db.getVersion() == DB_VERSION ) return db;
-		db.beginTransaction();
-		onUpgrade(db, db.getVersion(), DB_VERSION);
-		db.setVersion(DB_VERSION);
-		db.setTransactionSuccessful();
-		db.endTransaction();
+		int oldVersion = db.getVersion();
+		try {
+			db.beginTransaction();
+			try {
+				onUpgrade(db, oldVersion, DB_VERSION);
+				db.setVersion(DB_VERSION);
+				db.setTransactionSuccessful();
+			}
+			finally {
+				db.endTransaction();
+			}
+		}
+		catch( RuntimeException e ) {
+			db.close();
+			Log.e(TAG,"The database could not be upgraded from version " + oldVersion + " and has been left as it was", e);
+			throw new UpgradeFailedException("The database could not be upgraded from version " + oldVersion, e);
+		}
 		return db;
 	}
 
@@ -677,6 +633,10 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 			}
 			catch( SQLiteNotADatabaseException e ) {
 				// The key is wrong, which no amount of retrying will fix.
+				throw e;
+			}
+			catch( UpgradeFailedException e ) {
+				// Nor will it fix this.
 				throw e;
 			}
 			catch( SQLiteException e) {
@@ -1146,70 +1106,48 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 
 	public static void createMostTables(SQLiteDatabase db, boolean keepCollections) {
 		Log.i(TAG,"Creating database tables for version " + DB_VERSION);
-		try {
-			if ( !keepCollections ) {
-				db.execSQL(DAV_PATH_SET_TABLE_SQL);
-				db.execSQL(DAV_COLLECTION_TABLE_SQL);
-			}
-			db.execSQL(DAV_RESOURCE_TABLE_SQL);
-			db.execSQL(PENDING_CHANGE_TABLE_SQL);
-			db.execSQL(EVENT_INDEX_SQL);
-			db.execSQL(TODO_INDEX_SQL);
-
-			db.execSQL(RESOURCE_CACHE_TABLE_SQL);
-			db.execSQL(RESOURCE_CACHE_META_TABLE_SQL);
-			db.execSQL(SET_RESOURCE_CACHE_DIRTY_SQL);
-
-			db.execSQL(SHOW_UPCOMING_WIDGET_TABLE_SQL);
-
-			db.execSQL(ALARM_TABLE_SQL);
-			db.execSQL(ALARM_META_TABLE_SQL);
-			db.execSQL(SET_ALARM_TABLE_DIRTY_SQL);
-
-			db.execSQL(TIMEZONE_TABLE_SQL);
-			db.execSQL(TIMEZONE_NAME_TABLE_SQL);
-			db.execSQL(TIMEZONE_ALIAS_TABLE_SQL);
+		if ( !keepCollections ) {
+			db.execSQL(DAV_PATH_SET_TABLE_SQL);
+			db.execSQL(DAV_COLLECTION_TABLE_SQL);
 		}
-		catch( Exception e ) {
-			Log.e(TAG, "Database error creating database tables", e);
-		}
+		db.execSQL(DAV_RESOURCE_TABLE_SQL);
+		db.execSQL(PENDING_CHANGE_TABLE_SQL);
+		db.execSQL(EVENT_INDEX_SQL);
+		db.execSQL(TODO_INDEX_SQL);
+
+		db.execSQL(RESOURCE_CACHE_TABLE_SQL);
+		db.execSQL(RESOURCE_CACHE_META_TABLE_SQL);
+		db.execSQL(SET_RESOURCE_CACHE_DIRTY_SQL);
+
+		db.execSQL(SHOW_UPCOMING_WIDGET_TABLE_SQL);
+
+		db.execSQL(ALARM_TABLE_SQL);
+		db.execSQL(ALARM_META_TABLE_SQL);
+		db.execSQL(SET_ALARM_TABLE_DIRTY_SQL);
+
+		db.execSQL(TIMEZONE_TABLE_SQL);
+		db.execSQL(TIMEZONE_NAME_TABLE_SQL);
+		db.execSQL(TIMEZONE_ALIAS_TABLE_SQL);
 	}
 
-	public static void recoverDatabase(SQLiteDatabase db, boolean keepCollections) {
-		Log.i(TAG,"Recovering database to version " + DB_VERSION);
-		try {
-			// Drop all the tables except the dav_server one.
-			try { db.execSQL("DROP TABLE timezone_alias"); } catch( Exception e ) {}
-			try { db.execSQL("DROP TABLE timezone_name"); } catch( Exception e ) {}
-			try { db.execSQL("DROP TABLE timezone"); } catch( Exception e ) {}
-
-			try { db.execSQL("DROP TABLE alarm_meta"); } catch( Exception e ) {}
-			try { db.execSQL("DROP TABLE alarms"); } catch( Exception e ) {}
-
-			try { db.execSQL("DROP TABLE event_cache_meta"); } catch( Exception e ) {}
-			try { db.execSQL("DROP TABLE event_cache"); } catch( Exception e ) {}
-
-			try { db.execSQL("DROP TABLE show_upcoming_widget_data"); } catch( Exception e ) {}
-
-			try { db.execSQL("DROP TABLE pending_change"); } catch( Exception e ) {}
-			try { db.execSQL("DROP TABLE dav_resource"); } catch( Exception e ) {}
-			if ( !keepCollections ) {
-				try { db.execSQL("DROP TABLE dav_collection"); } catch( Exception e ) {}
-				try { db.execSQL("DROP TABLE dav_path_set"); } catch( Exception e ) {}
-			}
-
-			// Recreate the tables we just dropped.
-			createMostTables(db,keepCollections);
+	/**
+	 * Throw away everything that was fetched or worked out, and what was
+	 * waiting to be sent, keeping the servers and their collections.  This is
+	 * the "revert database" of the debug settings and is used for nothing else.
+	 */
+	public static void recoverDatabase(SQLiteDatabase db) {
+		Log.i(TAG,"Emptying the database of everything but servers and collections");
+		for( String table : new String[] { "timezone_alias", "timezone_name", "timezone", "alarm_meta", "alarms",
+				"event_cache_meta", "event_cache", "show_upcoming_widget_data", "pending_change", "dav_resource" } ) {
+			db.execSQL("DROP TABLE IF EXISTS " + table);
 		}
-		catch( Exception e ) {
-			Log.e(TAG, "Database error recreating database", e);
-		}
+		createMostTables(db,true);
 	}
 
 	/**
 	 * Migrate existing passwords, whether plaintext or encrypted the way
 	 * earlier versions did it, to the current encrypted storage.
-	 * Called during database upgrade to versions 22 and 23.
+	 * Called during database upgrade to version 23.
 	 */
 	private void migratePasswordsToEncrypted(SQLiteDatabase db) {
 		Log.i(TAG, "Migrating passwords to encrypted storage");
