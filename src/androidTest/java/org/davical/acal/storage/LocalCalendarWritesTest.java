@@ -2,7 +2,6 @@ package org.davical.acal.storage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -24,6 +23,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import org.davical.acal.RunningService;
+import org.davical.acal.Saving;
 import org.davical.acal.Wait;
 import org.davical.acal.acaltime.AcalDateRange;
 import org.davical.acal.acaltime.AcalDateTime;
@@ -35,9 +35,6 @@ import org.davical.acal.database.cachemanager.CacheResponse;
 import org.davical.acal.database.cachemanager.CacheResponseListener;
 import org.davical.acal.database.cachemanager.requests.CRObjectsInRange;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
-import org.davical.acal.database.resourcesmanager.ResourceResponse;
-import org.davical.acal.database.resourcesmanager.ResourceResponseListener;
-import org.davical.acal.davacal.VComponent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,21 +97,8 @@ public class LocalCalendarWritesTest {
 				+ "SUMMARY:" + summary + "\r\nEND:VJOURNAL\r\nEND:VCALENDAR\r\n";
 	}
 
-	/** Send what a screen sends when the user saves, and wait for the answer it gets. */
 	private long send( long collectionId, long resourceId, String data, int action ) throws Exception {
-		final CountDownLatch answered = new CountDownLatch(1);
-		final AtomicReference<Long> answer = new AtomicReference<Long>();
-		ResourceManager.getInstance(context).sendRequest(new RRResourceEditedRequest(
-				new ResourceResponseListener<Long>() {
-					@Override
-					public void resourceResponse( ResourceResponse<Long> response ) {
-						answer.set(response.result());
-						answered.countDown();
-					}
-				}, collectionId, resourceId, VComponent.createComponentFromBlob(data), action));
-		assertTrue("The save was not answered", answered.await(30, TimeUnit.SECONDS));
-		assertNotNull("The save was refused", answer.get());
-		return answer.get();
+		return Saving.send(context, collectionId, resourceId, data, action);
 	}
 
 	private long create( String data ) throws Exception {

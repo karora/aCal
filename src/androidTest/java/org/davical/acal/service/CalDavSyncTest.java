@@ -7,9 +7,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -20,13 +17,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import org.davical.acal.RunningService;
+import org.davical.acal.Saving;
 import org.davical.acal.Wait;
 import org.davical.acal.activity.RRResourceEditedRequest;
 import org.davical.acal.database.TestDatabase;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
-import org.davical.acal.database.resourcesmanager.ResourceResponse;
-import org.davical.acal.database.resourcesmanager.ResourceResponseListener;
-import org.davical.acal.davacal.VComponent;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.providers.PathSets;
 import org.davical.acal.providers.Servers;
@@ -166,21 +161,8 @@ public class CalDavSyncTest {
 		});
 	}
 
-	/** Send what a screen sends when the user saves, and wait for the answer it gets. */
 	private long save( long resourceId, String data, int action ) throws Exception {
-		final CountDownLatch answered = new CountDownLatch(1);
-		final AtomicReference<Long> answer = new AtomicReference<Long>();
-		ResourceManager.getInstance(context).sendRequest(new RRResourceEditedRequest(
-				new ResourceResponseListener<Long>() {
-					@Override
-					public void resourceResponse( ResourceResponse<Long> response ) {
-						answer.set(response.result());
-						answered.countDown();
-					}
-				}, calendar, resourceId, VComponent.createComponentFromBlob(data), action));
-		assertTrue("The save was not answered", answered.await(30, TimeUnit.SECONDS));
-		assertNotNull("The save was refused", answer.get());
-		return answer.get();
+		return Saving.send(context, calendar, resourceId, data, action);
 	}
 
 	// ---- From the server to the phone ---------------------------------
