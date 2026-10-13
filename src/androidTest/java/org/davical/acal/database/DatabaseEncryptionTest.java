@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -147,6 +148,41 @@ public class DatabaseEncryptionTest {
 		}
 		assertFalse(TestDatabase.isPlainSqlite(TestDatabase.file()));
 		assertTrue("The user has to be told their settings are gone", isShowing(Constants.DATABASE_RESET_NOTIFICATION_ID));
+	}
+
+	/**
+	 * A key that cannot be fetched just now is not a key that is lost.  The
+	 * database is refused for the moment and is all there once the key is.
+	 */
+	@Test
+	public void aKeyThatCannotBeReadForNowDoesNotCostTheDatabase() throws Exception {
+		SQLiteDatabase db = TestDatabase.open();
+		TestDatabase.addServer(db, "work");
+		db.close();
+		File key = StoredKey.file(TestDatabase.context());
+		File aside = new File(key.getPath() + ".aside");
+		assertTrue(key.renameTo(aside));
+		// Something is there, and reading it fails
+		assertTrue(key.mkdir());
+		TestDatabase.asIfRestarted();
+
+		try {
+			TestDatabase.open().close();
+			fail("The database was opened without its key");
+		}
+		catch( android.database.sqlite.SQLiteException expected ) {
+		}
+
+		assertTrue(key.delete());
+		assertTrue(aside.renameTo(key));
+		TestDatabase.asIfRestarted();
+		db = TestDatabase.open();
+		try {
+			assertEquals("Everything is as it was", 1, TestDatabase.count(db, "dav_server", "friendly_name = 'work'"));
+		}
+		finally {
+			db.close();
+		}
 	}
 
 	@Test
