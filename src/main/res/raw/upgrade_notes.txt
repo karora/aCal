@@ -133,3 +133,16 @@ Your calendars, tasks, notes and contacts are now stored encrypted on the device
 aCal's data is no longer included in Android backups or transfers to a new device, so after moving to a new device you will need to add your server again.
 v70=1.70
 Saved server passwords are now encrypted with a key held in the Android Keystore. Existing passwords are converted the first time this version starts.
+v71=1.71
+New: calendars kept only on this phone, which need no server. Add one from Calendars and Addressbooks.
+New: export a calendar to a file, and import events, tasks and notes from one.
+A change the server refuses is now kept and shown to you to settle, and no longer holds up your other changes.
+Fix editing one instance of a repeating event, which lost the other instances.
+Fix several repeat rule problems: monthly rules skipping short months, rules ending at a UTC time, extra dates (RDATE), dates after January 2038, and rules repeating hourly or more often.
+Fix reminders still firing for an event or calendar that had been deleted.
+Fix deleted events reappearing, and edited ones reverting, in the month and week views.
+New tasks, notes and calendars now appear in their lists straight away.
+Today is now marked in the week view.
+Fix a crash opening Tasks or Notes, and a new note going into the wrong calendar.
+Your password is no longer offered to a different server after a redirect, and a server's certificate must now match its name.
+If an upgrade of aCal's data fails, the data is now left untouched rather than partly cleared.

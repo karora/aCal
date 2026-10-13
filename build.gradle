@@ -40,8 +40,8 @@ android {
         targetSdkVersion 36
 
 	// Remember to also update src/main/res/raw/upgrade_notes.txt
-        versionCode 70
-        versionName "1.70"
+        versionCode 71
+        versionName "1.71"
 
         testInstrumentationRunner 'org.davical.acal.AcalTestRunner'
     }
