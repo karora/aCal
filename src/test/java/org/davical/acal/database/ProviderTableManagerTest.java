@@ -54,6 +54,9 @@ public class ProviderTableManagerTest {
 		static final List<String> rows = new ArrayList<String>();
 		static boolean inTransaction = false;
 		static boolean failInserts = false;
+		static boolean hideRowsFromQueries = false;
+		private static List<String> rowsBefore;
+		private static boolean approved;
 
 		@Override
 		public boolean onCreate() {
@@ -63,6 +66,7 @@ public class ProviderTableManagerTest {
 		@Override
 		public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 			MatrixCursor cursor = new MatrixCursor(new String[] { "_id", "name" });
+			if ( hideRowsFromQueries ) return cursor;
 			for ( int i = 0; i < rows.size(); i++ ) cursor.addRow(new Object[] { i + 1, rows.get(i) });
 			return cursor;
 		}
@@ -84,8 +88,20 @@ public class ProviderTableManagerTest {
 		@Override
 		public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 			String step = uri.getLastPathSegment();
-			if ( "begin".equals(step) ) inTransaction = true;
-			if ( "commit".equals(step) ) inTransaction = false;
+			if ( "begin".equals(step) ) {
+				inTransaction = true;
+				approved = false;
+				rowsBefore = new ArrayList<String>(rows);
+			}
+			if ( "approve".equals(step) ) approved = true;
+			if ( "commit".equals(step) ) {
+				inTransaction = false;
+				if ( !approved ) {
+					// Rolled back
+					rows.clear();
+					rows.addAll(rowsBefore);
+				}
+			}
 			return 1;
 		}
 
@@ -128,6 +144,7 @@ public class ProviderTableManagerTest {
 		RowsProvider.rows.clear();
 		RowsProvider.inTransaction = false;
 		RowsProvider.failInserts = false;
+		RowsProvider.hideRowsFromQueries = false;
 		Robolectric.buildContentProvider(RowsProvider.class).create(AUTHORITY);
 		table = new Table();
 	}
@@ -181,6 +198,41 @@ public class ProviderTableManagerTest {
 		assertEquals(2, table.told.get(0).size());
 		assertEquals(QUERY_ACTION.DELETE, table.told.get(0).get(0).action);
 		assertEquals("first", table.told.get(0).get(0).getData().getAsString("name"));
+	}
+
+	/**
+	 * What is cached is read through a join to its collection, so the rows of
+	 * a collection that has just been deleted cannot be read, though they can
+	 * be deleted.  With nothing read there was nothing to tell of, and that
+	 * was taken to mean nothing had been done: the delete was rolled back,
+	 * and the events of a deleted calendar stayed in the cache.
+	 */
+	@Test
+	public void aDeleteIsKeptThoughTheRowsItRemovedCouldNotBeRead() {
+		table.processActions(inserting("first", "second"));
+		RowsProvider.hideRowsFromQueries = true;
+
+		DMQueryList queries = new DMQueryList();
+		queries.addAction(new DMDeleteQuery(null, null));
+		table.processActions(queries);
+
+		assertEquals(0, RowsProvider.rows.size());
+	}
+
+	@Test
+	public void whatWasDoneBeforeAFailureIsUndone() {
+		table.processActions(inserting("kept"));
+		RowsProvider.failInserts = true;
+
+		DMQueryList queries = new DMQueryList();
+		queries.addAction(new DMDeleteQuery(null, null));
+		ContentValues row = new ContentValues();
+		row.put("name", "fails");
+		queries.addAction(new DMInsertQuery(null, row));
+		assertFalse(table.processActions(queries));
+
+		assertEquals(1, RowsProvider.rows.size());
+		assertEquals("kept", RowsProvider.rows.get(0));
 	}
 
 	@Test

@@ -624,6 +624,12 @@ public class AlarmQueueManager implements Runnable, ResourceChangedListener, IAl
 						case PENDING_RESOURCE:
 							populateTableFromResource(change.getData());
 							break;
+						case DELETE:
+							// The resource has gone, and there is nothing left to remind anyone of
+							Long deleted = ( change.getData() == null ? null
+									: change.getData().getAsLong(ResourceTableManager.RESOURCE_ID) );
+							if ( deleted != null ) super.delete(AlarmDataProvider.RESOURCE_ID+" = "+deleted, null);
+							break;
 						default: break;
 					}
 				}

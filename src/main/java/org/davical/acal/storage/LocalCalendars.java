@@ -17,7 +17,6 @@
  */
 package org.davical.acal.storage;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 import android.content.ContentResolver;
@@ -29,8 +28,6 @@ import android.net.Uri;
 import org.davical.acal.Constants;
 import org.davical.acal.StaticHelpers;
 import org.davical.acal.acaltime.AcalDateTime;
-import org.davical.acal.database.resourcesmanager.ResourceManager;
-import org.davical.acal.database.resourcesmanager.requests.RRDeleteByCollectionId;
 import org.davical.acal.dataservice.Collection;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.providers.Servers;
@@ -131,11 +128,8 @@ public final class LocalCalendars {
 	 */
 	public static void delete(Context context, long collectionId) {
 		ContentResolver cr = context.getContentResolver();
+		// The provider sees to what is in the collection
 		cr.delete(Uri.withAppendedPath(DavCollections.CONTENT_URI, Long.toString(collectionId)), null, null);
-
-		ArrayList<Long> collectionIds = new ArrayList<Long>();
-		collectionIds.add(collectionId);
-		ResourceManager.getInstance(context).sendRequest(new RRDeleteByCollectionId(collectionIds));
 		Collection.flush();
 	}
 

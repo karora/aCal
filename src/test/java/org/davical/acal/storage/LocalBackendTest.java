@@ -38,6 +38,16 @@ public class LocalBackendTest {
 
 	private final LocalBackend backend = new LocalBackend();
 
+	/** There is no server to look on, fetch from or compare with. */
+	@Test
+	public void thereIsNeverAJobToTalkToAServer() {
+		assertNull(backend.discoverCollections(7));
+		assertNull(backend.updateCollections(7));
+		assertNull(backend.refreshCollection(3, true));
+		assertNull(backend.refreshCollection(3, false));
+		assertNull(backend.reloadCollection(3));
+	}
+
 	@Test
 	public void committingNeedsNoNetwork() {
 		assertFalse(backend.needsNetwork());

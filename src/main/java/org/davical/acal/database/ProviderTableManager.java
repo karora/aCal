@@ -208,6 +208,7 @@ public abstract class ProviderTableManager implements TableManager {
 	public boolean processActions(DMQueryList queryList) {
 		boolean transactionInternally = doWeNeedATransaction();
 		boolean res = false;
+		boolean completed = false;
 		ArrayList<DataChangeEvent> changed = null;
 		try {
 		    startChangeSet();
@@ -215,6 +216,7 @@ public abstract class ProviderTableManager implements TableManager {
 				action.process(this);
 			}
 			res = !changesProcessed.isEmpty();
+			completed = true;
 		}
 		catch ( Exception e ) {
 			Log.e(TAG, "Exception processing request: " + e + Log.getStackTraceString(e));
@@ -222,7 +224,11 @@ public abstract class ProviderTableManager implements TableManager {
 		finally {
 			changed = finaliseChangeSet();
 			if ( transactionInternally ) {
-				if ( res ) setTxSuccessful();
+				// Whatever was done is kept unless something failed.  Whether we
+				// have changes to tell of is another matter: a delete has none to
+				// tell of when the rows it removed could not be read first, as
+				// those cached for a collection that has gone cannot.
+				if ( completed ) setTxSuccessful();
 				endTx();
 			}
 		}

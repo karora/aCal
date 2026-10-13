@@ -18,6 +18,8 @@
 
 package org.davical.acal.providers;
 
+import java.util.ArrayList;
+
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -37,7 +39,9 @@ import net.zetetic.database.sqlcipher.SQLiteQueryBuilder;
 import org.davical.acal.Constants;
 import org.davical.acal.database.AcalDBHelper;
 import org.davical.acal.database.cachemanager.CacheTableManager;
+import org.davical.acal.database.alarmmanager.AlarmQueueManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager;
+import org.davical.acal.database.resourcesmanager.requests.RRDeleteByCollectionId;
 
 /**
  * <p>This ContentProvider interfaces with the dav_collection table in the database.</p>
@@ -166,48 +170,60 @@ CREATE TABLE dav_collection (
 	 */
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		int count=0;
-		String server_id;
-		String path;
+		String where;
         switch ( uriMatcher.match(uri) ) {
             case ALL_COLLECTIONS:
-                Log.i(TAG,"Deleting "+DATABASE_TABLE+" WHERE "+selection);
-                count = db().delete(DATABASE_TABLE, selection, selectionArgs);
+                where = selection;
                 break;
             case BY_COLLECTION_ID:
-                String id = uri.getPathSegments().get(0);
-                count = db().delete(DATABASE_TABLE,
-                        _ID + " = " + id + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""),
-                        selectionArgs);
+                where = and(_ID + " = " + Long.parseLong(uri.getPathSegments().get(0)), selection);
                 break;
             case BY_SERVER_ID:
-                server_id = uri.getPathSegments().get(1);
-                count = db().delete(DATABASE_TABLE, SERVER_ID + " = " + server_id +
-                                                      (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
+                where = and(SERVER_ID + " = " + Long.parseLong(uri.getPathSegments().get(1)), selection);
                 break;
             case BY_PATH_AND_SERVER_ID:
-                server_id = uri.getPathSegments().get(1);
-                path = uri.getPathSegments().get(3);
-                count = db().delete(DATABASE_TABLE, SERVER_ID + " = " + server_id + " AND " + COLLECTION_PATH + " = " + path +
-                                                      (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
+                where = and(SERVER_ID + " = " + Long.parseLong(uri.getPathSegments().get(3))
+                		+ " AND " + COLLECTION_PATH + " = " + DatabaseUtils.sqlEscapeString(uri.getPathSegments().get(1)),
+                		selection);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
-		
-		/**
-		 * Delete rows related to any collections that don't exist now.
-		 */
-		String[] riTables = {
-				ResourceManager.ResourceTableManager.PENDING_DATABASE_TABLE,
-				ResourceManager.ResourceTableManager.RESOURCE_DATABASE_TABLE,
-				CacheTableManager.TABLE,
-		};
-		for( String table : riTables ) {
-			db().delete(table, "NOT EXISTS(SELECT 1 FROM "+DATABASE_TABLE+" WHERE "+_ID+"="+table+".collection_id)", null);
+
+		ArrayList<Long> deleted = new ArrayList<Long>();
+		Cursor c = db().query(DATABASE_TABLE, new String[] { _ID }, where, selectionArgs, null, null, null);
+		try {
+			while( c.moveToNext() ) {
+				deleted.add(c.getLong(0));
+			}
 		}
+		finally {
+			c.close();
+		}
+
+		Log.i(TAG,"Deleting "+DATABASE_TABLE+" WHERE "+where);
+		int count = db().delete(DATABASE_TABLE, where, selectionArgs);
+
+		if ( !deleted.isEmpty() ) {
+			// What was in them is deleted by the resource manager, which tells the
+			// cache and the alarm queue of each thing that goes.  Deleted from here
+			// they would never hear of it, and an alarm would be left to go off
+			// for an event that is not there.  The alarm queue only hears if it
+			// has been started.
+			AlarmQueueManager.getInstance(getContext());
+			ResourceManager.getInstance(getContext()).sendRequest(new RRDeleteByCollectionId(deleted));
+		}
+
+		// In case anything was cached for a collection that is not there
+		db().delete(CacheTableManager.TABLE,
+				"NOT EXISTS(SELECT 1 FROM "+DATABASE_TABLE+" WHERE "+_ID+"="+CacheTableManager.TABLE+".collection_id)", null);
+
 		getContext().getContentResolver().notifyChange(uri, null);
-		return count;      
+		return count;
+	}
+
+	private static String and( String condition, String selection ) {
+		return condition + (TextUtils.isEmpty(selection) ? "" : " AND (" + selection + ')');
 	}
 
 	/*
