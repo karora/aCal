@@ -129,6 +129,34 @@ public final class TestDatabase {
 		return Arrays.equals(header, SQLITE_HEADER);
 	}
 
+	/** Count rows as they are now, while the app has the database open as well. */
+	public static long countNow( String table, String where ) throws java.security.GeneralSecurityException {
+		SQLiteDatabase db = openAsItIs();
+		try {
+			return count(db, table, where);
+		}
+		finally {
+			db.close();
+		}
+	}
+
+	/** @return the first column of the first row, or null if there is no row */
+	public static String stringNow( String sql ) throws java.security.GeneralSecurityException {
+		SQLiteDatabase db = openAsItIs();
+		try {
+			android.database.Cursor c = db.rawQuery(sql, (String[]) null);
+			try {
+				return c.moveToFirst() ? c.getString(0) : null;
+			}
+			finally {
+				c.close();
+			}
+		}
+		finally {
+			db.close();
+		}
+	}
+
 	public static void addServer( SQLiteDatabase db, String name ) {
 		db.execSQL("INSERT INTO dav_server (friendly_name, hostname, username, active) VALUES (?, ?, 'someone', 1)",
 				new Object[] { name, name + ".example.net" });

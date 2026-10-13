@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,13 +18,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import org.davical.acal.RunningService;
+import org.davical.acal.Wait;
 import org.davical.acal.acaltime.AcalDateRange;
 import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.activity.RRResourceEditedRequest;
@@ -124,63 +123,11 @@ public class LocalCalendarWritesTest {
 		return id;
 	}
 
-	private static long count( String table, String where ) throws Exception {
-		SQLiteDatabase db = TestDatabase.openAsItIs();
-		try {
-			return TestDatabase.count(db, table, where);
-		}
-		finally {
-			db.close();
-		}
-	}
-
-	private static String string( String sql ) throws Exception {
-		SQLiteDatabase db = TestDatabase.openAsItIs();
-		try {
-			Cursor c = db.rawQuery(sql, (String[]) null);
-			try {
-				return c.moveToFirst() ? c.getString(0) : null;
-			}
-			finally {
-				c.close();
-			}
-		}
-		finally {
-			db.close();
-		}
-	}
-
-	private static void waitUntil( String what, Callable<Boolean> condition ) throws Exception {
-		long giveUp = System.currentTimeMillis() + 30000;
-		Exception last = null;
-		while( System.currentTimeMillis() < giveUp ) {
-			try {
-				if ( condition.call() ) return;
-				last = null;
-			}
-			catch( android.database.sqlite.SQLiteException busy ) {
-				// Something is being written: look again
-				last = busy;
-			}
-			Thread.sleep(100);
-		}
-		fail("Waited 30 seconds and still not true: " + what + (last == null ? "" : " (" + last + ")"));
-	}
-
-	private static void waitUntilThereAreNone( final String table, final String where ) throws Exception {
-		waitUntil("no rows in " + table + " where " + where, new Callable<Boolean>() {
-			@Override
-			public Boolean call() throws Exception {
-				return count(table, where) == 0;
-			}
-		});
-	}
-
 	private static void waitUntilNothingIsWaiting() throws Exception {
-		waitUntil("no change is waiting to be written", new Callable<Boolean>() {
+		Wait.until("no change is waiting to be written", new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return count("pending_change", null) == 0;
+				return TestDatabase.countNow("pending_change", null) == 0;
 			}
 		});
 	}
@@ -204,7 +151,7 @@ public class LocalCalendarWritesTest {
 	}
 
 	private void waitUntilTheDayShows( final String... summaries ) throws Exception {
-		waitUntil("the day shows " + java.util.Arrays.toString(summaries), new Callable<Boolean>() {
+		Wait.until("the day shows " + java.util.Arrays.toString(summaries), new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				ArrayList<String> shown = new ArrayList<String>();
@@ -221,12 +168,12 @@ public class LocalCalendarWritesTest {
 	public void aNewEventIsWrittenStraightToTheCalendar() throws Exception {
 		long id = create(event("one@example.net", "One"));
 
-		assertEquals(1, count("dav_resource", "_id = " + id + " AND collection_id = " + calendar
+		assertEquals(1, TestDatabase.countNow("dav_resource", "_id = " + id + " AND collection_id = " + calendar
 				+ " AND effective_type = 'VEVENT' AND name = 'one@example.net.ics'"));
-		assertTrue(string("SELECT data FROM dav_resource WHERE _id = " + id).contains("SUMMARY:One"));
+		assertTrue(TestDatabase.stringNow("SELECT data FROM dav_resource WHERE _id = " + id).contains("SUMMARY:One"));
 		assertTrue("It has an etag, as a resource that has been saved does",
-				string("SELECT etag FROM dav_resource WHERE _id = " + id).startsWith("\"local-"));
-		assertEquals("Nothing is left waiting to be sent anywhere", 0, count("pending_change", null));
+				TestDatabase.stringNow("SELECT etag FROM dav_resource WHERE _id = " + id).startsWith("\"local-"));
+		assertEquals("Nothing is left waiting to be sent anywhere", 0, TestDatabase.countNow("pending_change", null));
 	}
 
 	@Test
@@ -234,26 +181,26 @@ public class LocalCalendarWritesTest {
 		long task = create(task("task@example.net", "Do it"));
 		long note = create(note("note@example.net", "Remember"));
 
-		assertEquals(1, count("dav_resource", "_id = " + task + " AND effective_type = 'VTODO'"));
-		assertEquals(1, count("dav_resource", "_id = " + note + " AND effective_type = 'VJOURNAL'"));
-		assertEquals(0, count("pending_change", null));
+		assertEquals(1, TestDatabase.countNow("dav_resource", "_id = " + task + " AND effective_type = 'VTODO'"));
+		assertEquals(1, TestDatabase.countNow("dav_resource", "_id = " + note + " AND effective_type = 'VJOURNAL'"));
+		assertEquals(0, TestDatabase.countNow("pending_change", null));
 	}
 
 	@Test
 	public void anEditReplacesWhatWasThere() throws Exception {
 		long id = create(event("one@example.net", "One"));
-		String firstEtag = string("SELECT etag FROM dav_resource WHERE _id = " + id);
+		String firstEtag = TestDatabase.stringNow("SELECT etag FROM dav_resource WHERE _id = " + id);
 
 		Thread.sleep(5);
 		assertEquals(id, send(calendar, id, event("one@example.net", "Changed"), RRResourceEditedRequest.ACTION_UPDATE));
 		waitUntilNothingIsWaiting();
 
-		assertEquals(1, count("dav_resource", "collection_id = " + calendar));
-		String data = string("SELECT data FROM dav_resource WHERE _id = " + id);
+		assertEquals(1, TestDatabase.countNow("dav_resource", "collection_id = " + calendar));
+		String data = TestDatabase.stringNow("SELECT data FROM dav_resource WHERE _id = " + id);
 		assertTrue(data, data.contains("SUMMARY:Changed"));
 		assertNotEquals("A resource that has changed has a new etag", firstEtag,
-				string("SELECT etag FROM dav_resource WHERE _id = " + id));
-		assertEquals("one@example.net.ics", string("SELECT name FROM dav_resource WHERE _id = " + id));
+				TestDatabase.stringNow("SELECT etag FROM dav_resource WHERE _id = " + id));
+		assertEquals("one@example.net.ics", TestDatabase.stringNow("SELECT name FROM dav_resource WHERE _id = " + id));
 	}
 
 	@Test
@@ -264,8 +211,8 @@ public class LocalCalendarWritesTest {
 		send(calendar, id, event("one@example.net", "One"), RRResourceEditedRequest.ACTION_DELETE);
 		waitUntilNothingIsWaiting();
 
-		assertEquals(0, count("dav_resource", "_id = " + id));
-		assertEquals(1, count("dav_resource", "_id = " + keep));
+		assertEquals(0, TestDatabase.countNow("dav_resource", "_id = " + id));
+		assertEquals(1, TestDatabase.countNow("dav_resource", "_id = " + keep));
 	}
 
 	@Test
@@ -286,18 +233,18 @@ public class LocalCalendarWritesTest {
 	@Test
 	public void anAlarmIsQueuedForAnEventAndGoesWhenTheEventDoes() throws Exception {
 		final long id = create(event("one@example.net", "One"));
-		waitUntil("the event has an alarm queued", new Callable<Boolean>() {
+		Wait.until("the event has an alarm queued", new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return count("alarms", "rid = " + id) == 1;
+				return TestDatabase.countNow("alarms", "rid = " + id) == 1;
 			}
 		});
 
 		send(calendar, id, event("one@example.net", "One"), RRResourceEditedRequest.ACTION_DELETE);
-		waitUntil("the alarm has gone with its event", new Callable<Boolean>() {
+		Wait.until("the alarm has gone with its event", new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return count("alarms", "rid = " + id) == 0;
+				return TestDatabase.countNow("alarms", "rid = " + id) == 0;
 			}
 		});
 	}
@@ -310,23 +257,23 @@ public class LocalCalendarWritesTest {
 		long kept = send(other, -1, event("kept@example.net", "Kept"), RRResourceEditedRequest.ACTION_CREATE);
 		waitUntilNothingIsWaiting();
 		waitUntilTheDayShows("Kept", "One");
-		waitUntil("the event has an alarm queued", new Callable<Boolean>() {
+		Wait.until("the event has an alarm queued", new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return count("alarms", "rid = " + id) == 1;
+				return TestDatabase.countNow("alarms", "rid = " + id) == 1;
 			}
 		});
 
 		LocalCalendars.delete(context, calendar);
 
-		waitUntilThereAreNone("dav_resource", "collection_id = " + calendar);
-		waitUntilThereAreNone("pending_change", "collection_id = " + calendar);
-		waitUntilThereAreNone("event_cache", "collection_id = " + calendar);
-		waitUntilThereAreNone("alarms", "rid = " + id);
+		Wait.untilThereAreNone("dav_resource", "collection_id = " + calendar);
+		Wait.untilThereAreNone("pending_change", "collection_id = " + calendar);
+		Wait.untilThereAreNone("event_cache", "collection_id = " + calendar);
+		Wait.untilThereAreNone("alarms", "rid = " + id);
 		assertNull(org.davical.acal.providers.DavCollections.getRow(calendar, cr));
-		assertEquals(1, count("dav_resource", "_id = " + kept));
+		assertEquals(1, TestDatabase.countNow("dav_resource", "_id = " + kept));
 		waitUntilTheDayShows("Kept");
-		assertEquals("The other calendar keeps its alarm", 1, count("alarms", "rid = " + kept));
+		assertEquals("The other calendar keeps its alarm", 1, TestDatabase.countNow("alarms", "rid = " + kept));
 	}
 
 	@Test
@@ -338,14 +285,14 @@ public class LocalCalendarWritesTest {
 				+ " SELECT collection_id, _id, data, 'waiting' FROM dav_resource WHERE collection_id = " + calendar);
 		db.execSQL("UPDATE pending_change SET state = 1");
 		db.close();
-		assertEquals(1, count("pending_change", "collection_id = " + calendar));
+		assertEquals(1, TestDatabase.countNow("pending_change", "collection_id = " + calendar));
 
 		LocalCalendars.delete(context, calendar);
 
-		waitUntil("the change has gone with its calendar", new Callable<Boolean>() {
+		Wait.until("the change has gone with its calendar", new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return count("pending_change", null) == 0 && count("dav_resource", null) == 0;
+				return TestDatabase.countNow("pending_change", null) == 0 && TestDatabase.countNow("dav_resource", null) == 0;
 			}
 		});
 	}

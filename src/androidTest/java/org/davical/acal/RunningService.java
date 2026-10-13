@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 
+import org.davical.acal.service.ServiceRequest;
 import org.davical.acal.service.aCalService;
 
 /**
@@ -20,6 +21,7 @@ public final class RunningService implements ServiceConnection {
 
 	private final Context context;
 	private final CountDownLatch connected = new CountDownLatch(1);
+	private volatile IBinder binder;
 
 	private RunningService( Context context ) {
 		this.context = context;
@@ -34,12 +36,18 @@ public final class RunningService implements ServiceConnection {
 		return service;
 	}
 
+	/** What the screens ask the service to do through. */
+	public ServiceRequest requests() {
+		return ServiceRequest.Stub.asInterface(binder);
+	}
+
 	public void stop() {
 		context.unbindService(this);
 	}
 
 	@Override
 	public void onServiceConnected( ComponentName name, IBinder binder ) {
+		this.binder = binder;
 		connected.countDown();
 	}
 
