@@ -26,13 +26,22 @@ if [ -d "${KEYSTORE_DIR}" ]; then
     MOUNTS+=(-v "${KEYSTORE_DIR}:${KEYSTORE_DIR}:ro")
 fi
 
+# The emulator the instrumented tests run on needs the host's KVM
+DEVICES=()
+if [ -e /dev/kvm ]; then
+    DEVICES+=(--device /dev/kvm --group-add "$(stat -c %g /dev/kvm)")
+fi
+
 # The user we run as has no home directory in the container, and Robolectric
 # keeps the Android runtime it downloads under ~/.m2.  Give Java a home in the
 # cache so that is downloaded once, not for every test run.
 docker run --rm \
     --user "$(id -u):$(id -g)" \
     "${MOUNTS[@]}" \
+    "${DEVICES[@]}" \
     -e GRADLE_USER_HOME=/gradle-cache \
+    -e HOME=/gradle-cache/home \
+    -e ANDROID_USER_HOME=/gradle-cache/home/.android \
     -e JAVA_TOOL_OPTIONS=-Duser.home=/gradle-cache/home \
     -w /workspace \
     "${IMAGE}" \

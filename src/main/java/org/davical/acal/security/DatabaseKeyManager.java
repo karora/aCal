@@ -138,6 +138,14 @@ public final class DatabaseKeyManager {
 		}
 	}
 
+	/**
+	 * Forget the key held in memory, so that the next use reads the stored one
+	 * as a new process would.  For the instrumented tests.
+	 */
+	static synchronized void forgetCachedKey() {
+		cachedKey = null;
+	}
+
 	private static File keyFile(Context context) {
 		return new File(context.getApplicationContext().getNoBackupFilesDir(), KEY_FILE_NAME);
 	}

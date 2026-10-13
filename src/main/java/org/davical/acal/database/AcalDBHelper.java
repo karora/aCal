@@ -776,6 +776,21 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	}
 
 	/**
+	 * Forget how the database is to be opened, which leaves this as it is in
+	 * a process that has only just started.  For the instrumented tests, which
+	 * put one database after another where ours is kept.
+	 */
+	static void forgetPreparation() {
+		synchronized( prepareLock ) {
+			ready = false;
+			databaseKey = null;
+		}
+		synchronized( readyCallbacks ) {
+			preparationAttempted = false;
+		}
+	}
+
+	/**
 	 * Decide, once per process, how the database is to be opened.  An existing
 	 * plain SQLite database is encrypted here, and everything else that wants
 	 * the database waits until that is done.

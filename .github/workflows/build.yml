@@ -39,3 +39,34 @@ jobs:
           path: |
             build/reports/tests/
             build/test-results/
+
+  # The tests that need a device: the encrypted database, its key and its upgrades
+  instrumented-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      # Keep the JDK in step with the Dockerfile used for local builds
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Let the emulator use KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - run: ./gradlew emulatorDebugAndroidTest
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: instrumented-test-reports
+          path: |
+            build/reports/androidTests/
+            build/outputs/androidTest-results/
