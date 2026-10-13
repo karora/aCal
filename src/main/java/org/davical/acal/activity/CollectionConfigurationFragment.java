@@ -121,6 +121,36 @@ public class CollectionConfigurationFragment extends PreferenceFragmentCompat
 		addPreference(collectionColor, getString(R.string.Colour), DavCollections.COLOUR);
 
 		CollectionConfiguration activity = (CollectionConfiguration) requireActivity();
+
+		// A copy of a calendar can be taken as a file, and a file brought in.
+		// Not for contacts, which are another kind of file.
+		boolean isAddressbook = collectionData.getAsInteger(DavCollections.HOLDS_ADDRESSBOOK) != null
+				&& collectionData.getAsInteger(DavCollections.HOLDS_ADDRESSBOOK) == 1;
+		if (!activity.isNew() && !isAddressbook) {
+			Preference export = new Preference(requireContext());
+			export.setPersistent(false);
+			export.setTitle(R.string.ExportCalendar);
+			export.setSummary(R.string.ExportCalendarSummary);
+			export.setOnPreferenceClickListener(p -> {
+				((CollectionConfiguration) requireActivity()).chooseFileToExportTo();
+				return true;
+			});
+			getPreferenceScreen().addPreference(export);
+
+			Integer writable = collectionData.getAsInteger(DavCollections.IS_WRITABLE);
+			if (writable == null || writable != 0) {
+				Preference importFile = new Preference(requireContext());
+				importFile.setPersistent(false);
+				importFile.setTitle(R.string.ImportCalendar);
+				importFile.setSummary(R.string.ImportCalendarSummary);
+				importFile.setOnPreferenceClickListener(p -> {
+					((CollectionConfiguration) requireActivity()).chooseFileToImport();
+					return true;
+				});
+				getPreferenceScreen().addPreference(importFile);
+			}
+		}
+
 		if (!activity.isLocal()) {
 			maxSyncAge3g = new EditTextPreference(requireContext());
 			maxSyncAge3g.setOnBindEditTextListener(et -> et.setInputType(InputType.TYPE_CLASS_NUMBER));

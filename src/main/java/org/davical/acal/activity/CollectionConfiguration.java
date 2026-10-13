@@ -18,8 +18,17 @@
 
 package org.davical.acal.activity;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -30,17 +39,23 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 
 import org.davical.acal.AcalTheme;
 import org.davical.acal.R;
 import org.davical.acal.ServiceManager;
+import org.davical.acal.database.resourcesmanager.ResourceManager;
+import org.davical.acal.database.resourcesmanager.requests.RRCollectionData;
+import org.davical.acal.database.resourcesmanager.requests.RRImportItems;
 import org.davical.acal.dataservice.Collection;
 import org.davical.acal.providers.DavCollections;
 import org.davical.acal.service.ServiceJob;
 import org.davical.acal.service.ServiceRequest;
 import org.davical.acal.service.SyncChangesToServer;
 import org.davical.acal.service.WorkerClass;
+import org.davical.acal.storage.IcsFile;
 import org.davical.acal.storage.LocalCalendars;
 import org.davical.acal.storage.StorageBackend;
 import org.davical.acal.storage.StorageBackends;
@@ -205,6 +220,92 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 
 	boolean isNew() {
 		return isNew;
+	}
+
+	// ---- A copy of the calendar as a file, and a file brought in
+
+	/** A file bigger than this is not a calendar anyone keeps on a phone. */
+	private static final int LARGEST_IMPORT = 32 * 1024 * 1024;
+
+	private final ActivityResultLauncher<String> exportPicker = registerForActivityResult(
+			new ActivityResultContracts.CreateDocument("text/calendar"),
+			target -> { if (target != null) exportTo(target); });
+
+	private final ActivityResultLauncher<String[]> importPicker = registerForActivityResult(
+			new ActivityResultContracts.OpenDocument(),
+			source -> { if (source != null) importFrom(source); });
+
+	void chooseFileToExportTo() {
+		String name = collectionData.getAsString(DavCollections.DISPLAYNAME);
+		if (name == null || name.trim().isEmpty()) name = "calendar";
+		// Nothing in the name that could not be in the name of a file
+		exportPicker.launch(name.trim().replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_") + ".ics");
+	}
+
+	void chooseFileToImport() {
+		// Not every file manager knows a calendar when it sees one
+		importPicker.launch(new String[] { "text/calendar", "application/ics", "text/x-vcalendar", "*/*" });
+	}
+
+	private void exportTo(final Uri target) {
+		final Context context = getApplicationContext();
+		final long collectionId = collectionData.getAsLong(DavCollections._ID);
+		new Thread(() -> {
+			String message;
+			try {
+				ArrayList<String> resources = ResourceManager.getInstance(context)
+						.sendBlockingRequest(new RRCollectionData(collectionId)).result();
+				byte[] file = IcsFile.export(resources).getBytes(StandardCharsets.UTF_8);
+				// "wt" so that a file being replaced is not left with the end of the old one
+				try (OutputStream out = context.getContentResolver().openOutputStream(target, "wt")) {
+					if (out == null) throw new IOException("Could not open " + target);
+					out.write(file);
+				}
+				int count = IcsFile.count(resources);
+				message = getResources().getQuantityString(R.plurals.ExportedCount, count, count);
+			}
+			catch (Exception e) {
+				Log.e(TAG, "Could not export collection " + collectionId + " to " + target, e);
+				message = getString(R.string.ExportFailed);
+			}
+			final String say = message;
+			runOnUiThread(() -> Toast.makeText(context, say, Toast.LENGTH_LONG).show());
+		}, "aCal export").start();
+	}
+
+	private void importFrom(final Uri source) {
+		final Context context = getApplicationContext();
+		final long collectionId = collectionData.getAsLong(DavCollections._ID);
+		new Thread(() -> {
+			String message;
+			try {
+				ByteArrayOutputStream file = new ByteArrayOutputStream();
+				try (InputStream in = context.getContentResolver().openInputStream(source)) {
+					if (in == null) throw new IOException("Could not open " + source);
+					byte[] buffer = new byte[65536];
+					int got;
+					while ((got = in.read(buffer)) > 0) {
+						file.write(buffer, 0, got);
+						if (file.size() > LARGEST_IMPORT) throw new IOException("The file is too large");
+					}
+				}
+				List<IcsFile.Item> items = IcsFile.split(new String(file.toByteArray(), StandardCharsets.UTF_8));
+				if (items.isEmpty()) {
+					message = getString(R.string.ImportNothingFound);
+				}
+				else {
+					RRImportItems.Counts counts = ResourceManager.getInstance(context)
+							.sendBlockingRequest(new RRImportItems(collectionId, items)).result();
+					message = getString(R.string.ImportedCounts, counts.added, counts.replaced, counts.unchanged);
+				}
+			}
+			catch (Exception e) {
+				Log.e(TAG, "Could not import " + source + " into collection " + collectionId, e);
+				message = getString(R.string.ImportFailed);
+			}
+			final String say = message;
+			runOnUiThread(() -> Toast.makeText(context, say, Toast.LENGTH_LONG).show());
+		}, "aCal import").start();
 	}
 
 	boolean isLocal() {

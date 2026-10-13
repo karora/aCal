@@ -3,10 +3,11 @@
 	Backup and device-transfer rules for Android 12 and later
 	(android:dataExtractionRules).
 
-	The database is a copy of what is on the server, and neither it nor the
-	stored passwords can be read without keys that never leave the device,
-	so none of them are backed up or transferred. Keep in step with
-	backup_rules.xml.
+	Neither the database nor the stored passwords can be read without keys
+	that never leave the device, so none of them are backed up or transferred:
+	a copy could not be opened anywhere else.  For what is on a server that
+	loses nothing.  A calendar kept on the phone is in no backup, and the only
+	copy of one is a file the user exports.  Keep in step with backup_rules.xml.
 -->
 <data-extraction-rules>
 	<cloud-backup>

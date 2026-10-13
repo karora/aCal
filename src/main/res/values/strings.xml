@@ -482,6 +482,21 @@
     <string name="DeleteLocalCalendarSummary">Removes it, and everything in it, from this phone</string>
     <!-- %1$s is the name the user gave the calendar -->
     <string name="DeleteLocalCalendarConfirm">“%1$s” and everything in it will be deleted. It is not stored anywhere else, so this cannot be undone.</string>
+    <!-- A copy of a calendar as an iCalendar file, and such a file brought into a calendar -->
+    <string name="ExportCalendar">Export to a file</string>
+    <string name="ExportCalendarSummary">Save a copy of everything in this calendar as an iCalendar (.ics) file</string>
+    <string name="ImportCalendar">Import from a file</string>
+    <string name="ImportCalendarSummary">Add the events, tasks and notes in an iCalendar (.ics) file. Any that are already here are replaced.</string>
+    <!-- %1$d is how many events, tasks and notes were written to the file -->
+    <plurals name="ExportedCount">
+        <item quantity="one">%1$d item exported</item>
+        <item quantity="other">%1$d items exported</item>
+    </plurals>
+    <string name="ExportFailed">The calendar could not be exported</string>
+    <!-- The three numbers are how many events, tasks and notes from the file were new, took the place of one already here, or were here already and the same -->
+    <string name="ImportedCounts">Added: %1$d. Replaced: %2$d. Unchanged: %3$d.</string>
+    <string name="ImportNothingFound">No events, tasks or notes were found in that file</string>
+    <string name="ImportFailed">The file could not be imported</string>
     <!-- Changes the server refused, which are listed for the user to try again or discard -->
     <!-- In these, "it" is an event, a task or a note: which one is not known -->
     <string name="unsaved_title">Changes not saved</string>
