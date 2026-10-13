@@ -57,6 +57,7 @@ public class CollectionConfigListFragment extends PreferenceFragmentCompat
 	int[] preferenceListIds;
 
 	private OnCollectionSelectedListener listener;
+	private boolean shownBefore = false;
 
 	public interface OnCollectionSelectedListener {
 		void onAddLocalCalendarRequested();
@@ -78,6 +79,17 @@ public class CollectionConfigListFragment extends PreferenceFragmentCompat
 	public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
 		getCollectionListItems();
 		createPreferenceHierarchy();
+	}
+
+	/**
+	 * A calendar may have been added, changed or deleted on a screen that was
+	 * in front of this one, and nothing watches the table while this is paused.
+	 */
+	@Override
+	public void onResume() {
+		super.onResume();
+		if (shownBefore) refresh();
+		shownBefore = true;
 	}
 
 	private void getCollectionListItems() {
