@@ -40,7 +40,7 @@ public class RRGetCacheEventsInRange extends ReadOnlyResourceRequestWithResponse
 		AcalDateRange range = window.getRequestedWindow();
 		if (window.getRequestedWindow() == null) {
 			if ( CacheManager.DEBUG ) Log.println(Constants.LOGD, TAG, "Resource request cancelled - cache window already full");
-			super.postResponse(new RREventsInRangeResponse<ArrayList<Resource>>(result));
+			super.postResponseNow(new RREventsInRangeResponse<ArrayList<Resource>>(result));
 			this.setProcessed();
 			return;
 		}
@@ -95,8 +95,12 @@ public class RRGetCacheEventsInRange extends ReadOnlyResourceRequestWithResponse
 		if ( CacheManager.DEBUG ) Log.println(Constants.LOGD,TAG, "Conversion complete. Populating VCalendars and appending events.");
 		
 		
-		//post response
-		super.postResponse(new RREventsInRangeResponse<ArrayList<Resource>>(result));
+		// The cache works out what to show from these and queues it to be
+		// stored.  That has to be queued before a later change to any of them
+		// is, or what was read here is stored over the change: an event that
+		// was deleted comes back, and one that was edited goes back to what it
+		// was.  So the answer is dealt with before this read is finished.
+		super.postResponseNow(new RREventsInRangeResponse<ArrayList<Resource>>(result));
 
 		this.setProcessed();
 	}

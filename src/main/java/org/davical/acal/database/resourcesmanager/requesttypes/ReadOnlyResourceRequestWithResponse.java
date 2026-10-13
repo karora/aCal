@@ -42,6 +42,29 @@ public abstract class ReadOnlyResourceRequestWithResponse<E> implements	ReadOnly
 	 * Beware of Race conditions when sending multiple requests - callbacks may come back in an arbitrary order.
 	 * @param response
 	 */
+	/**
+	 * Give the answer to whoever asked, and do not return until they have
+	 * dealt with it.
+	 *
+	 * Reads are finished before the writes queued behind them are started.
+	 * An answer given this way has therefore been dealt with before anyone
+	 * hears of a later change, which one handed to another thread by
+	 * postResponse() may not have been.
+	 */
+	protected void postResponseNow(final ResourceResponse<E> response) {
+		setProcessed();
+		if (callBack == null) return;
+		try {
+			callBack.resourceResponse(response);
+		}
+		catch( Exception e) {
+			Log.w("aCal ReadOnlyResourceRequestWithResponse",
+					"Request class is: "+this.getClass().getSimpleName()
+					+", Response class is: "+response.getClass().getName()
+					+" Exception:\n"+Log.getStackTraceString(e));
+		}
+	}
+
 	protected void postResponse(final ResourceResponse<E> response) {
 		if (callBack == null) return;
 		CallbackExecutor.execute(() -> {
