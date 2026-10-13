@@ -59,6 +59,12 @@ public class CalDavSyncTest {
 
 	/** The account and its one calendar, as they are once a server has been set up. */
 	private void addTheAccount( boolean serverHasSyncReport ) throws Exception {
+		addTheServer(serverHasSyncReport);
+		addTheCalendar();
+		service = RunningService.start(context);
+	}
+
+	private void addTheServer( boolean serverHasSyncReport ) {
 		ContentValues account = new ContentValues();
 		account.put(Servers.FRIENDLY_NAME, "test");
 		account.put(Servers.HOSTNAME, FakeCalDavServer.HOST);
@@ -74,7 +80,9 @@ public class CalDavSyncTest {
 		account.put(Servers.HAS_SYNC, serverHasSyncReport ? 1 : 0);
 		account.put(Servers.ACTIVE, 1);
 		serverId = (int) ContentUris.parseId(context.getContentResolver().insert(Servers.CONTENT_URI, account));
+	}
 
+	private void addTheCalendar() {
 		ContentValues collection = new ContentValues();
 		collection.put(DavCollections.SERVER_ID, serverId);
 		// As it is stored when the calendar is found on the server: the whole URL
@@ -101,8 +109,6 @@ public class CalDavSyncTest {
 		homeSet.put(PathSets.SET_TYPE, PathSets.CALENDAR_HOME_SET);
 		homeSet.put(PathSets.PATH, FakeCalDavServer.HOME);
 		context.getContentResolver().insert(PathSets.CONTENT_URI, homeSet);
-
-		service = RunningService.start(context);
 	}
 
 	private static String event( String uid, String summary ) {
@@ -469,6 +475,43 @@ public class CalDavSyncTest {
 
 		Wait.untilThereAreNone("dav_collection", "_id = " + calendar);
 		Wait.untilThereAreNone("dav_resource", "collection_id = " + calendar);
+	}
+
+	// ---- Finding where the calendars are ------------------------------
+
+	@Test
+	public void anAccountWithNothingKnownOfItFindsItsCalendarsAndFetchesThem() throws Exception {
+		server.put("one.ics", event("one@example.net", "One"));
+		addTheServer(true);
+		service = RunningService.start(context);
+
+		service.requests().homeSetDiscovery(serverId);
+
+		Wait.untilThereAre(1, "dav_path_set", "server_id = " + serverId + " AND set_type = " + PathSets.CALENDAR_HOME_SET
+				+ " AND path = '" + FakeCalDavServer.HOME + "'");
+		final String url = server.url(FakeCalDavServer.CALENDAR);
+		Wait.untilThereAre(1, "dav_collection", "server_id = " + serverId + " AND collection_path = '" + url + "'");
+		calendar = Long.parseLong(TestDatabase.stringNow("SELECT _id FROM dav_collection WHERE collection_path = '" + url + "'"));
+		syncAndWait();
+		waitUntilThePhoneHas("one.ics", "One");
+	}
+
+	@Test
+	public void whereTheCalendarsAreIsNotForgottenWhenTheServerCannotBeAsked() throws Exception {
+		addTheAccount(true);
+		server.refuse("PROPFIND", 503);
+
+		service.requests().homeSetDiscovery(serverId);
+		Wait.until("the server was asked", new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return !server.asked("PROPFIND").isEmpty();
+			}
+		});
+		Thread.sleep(1000);
+
+		assertEquals(1, TestDatabase.countNow("dav_path_set", "server_id = " + serverId));
+		assertEquals(1, TestDatabase.countNow("dav_collection", "_id = " + calendar));
 	}
 
 	private static void db( String sql ) {

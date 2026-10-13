@@ -35,10 +35,12 @@ public final class FakeCalDavServer {
 	public static final String HOST = "localhost";
 	public static final String USERNAME = "someone";
 	public static final String PASSWORD = "secret";
-	public static final String PRINCIPAL = "/dav/someone/";
+	/** Where DAV starts on this server, which is what /.well-known/caldav leads to. */
+	public static final String DAV_ROOT = "/dav/";
+	public static final String PRINCIPAL = "/dav/principals/someone/";
 	/** Where the user's calendars are: the calendar home set. */
-	public static final String HOME = "/dav/someone/";
-	public static final String CALENDAR = "/dav/someone/calendar/";
+	public static final String HOME = "/dav/calendars/someone/";
+	public static final String CALENDAR = "/dav/calendars/someone/calendar/";
 
 	/** One request aCal made. */
 	public static final class Asked {
@@ -86,6 +88,7 @@ public final class FakeCalDavServer {
 	private boolean refuseOnce = false;
 	private boolean gone = false;
 	private String vanishing = null;
+	private boolean isDav = true;
 	/** Other calendars in the home set, which are listed and nothing more: path to display name. */
 	private final Map<String, String> otherCalendars = new LinkedHashMap<String, String>();
 
@@ -183,6 +186,11 @@ public final class FakeCalDavServer {
 		vanishing = name;
 	}
 
+	/** It is a web server and nothing more. */
+	public synchronized void isNotADavServer() {
+		isDav = false;
+	}
+
 	/** Another calendar appears beside the first, as when one is made in another client. */
 	public synchronized void addCalendar( String path, String displayName ) {
 		otherCalendars.put(path, displayName);
@@ -227,6 +235,16 @@ public final class FakeCalDavServer {
 			headers.put(name.toLowerCase(), request.getHeaders().get(name));
 		}
 
+		if ( !isDav ) {
+			asked.add(new Asked(method, path, body, headers));
+			if ( method.equals("OPTIONS") || method.equals("GET") )
+				return new MockResponse.Builder().code(200).addHeader("Allow", "OPTIONS, GET, HEAD").build();
+			return new MockResponse.Builder().code(405).build();
+		}
+		if ( path.equals("/.well-known/caldav") ) {
+			return new MockResponse.Builder().code(301).addHeader("Location", DAV_ROOT).build();
+		}
+
 		String expected = "Basic " + Base64.encodeToString((USERNAME + ":" + PASSWORD).getBytes(), Base64.NO_WRAP);
 		if ( !expected.equals(headers.get("authorization")) ) {
 			return new MockResponse.Builder().code(401)
@@ -238,6 +256,12 @@ public final class FakeCalDavServer {
 		if ( method.equals(refuseMethod) ) {
 			if ( refuseOnce ) refuseMethod = null;
 			return new MockResponse.Builder().code(refuseStatus).build();
+		}
+		if ( method.equals("PROPFIND") && body.contains("current-user-principal") ) return whoAmI(path);
+		if ( method.equals("PROPFIND") && path.equals(PRINCIPAL) && body.contains("calendar-home-set") ) {
+			return multistatus("<response><href>" + PRINCIPAL + "</href><propstat><prop>"
+					+ "<C:calendar-home-set><href>" + HOME + "</href></C:calendar-home-set>"
+					+ "</prop><status>HTTP/1.1 200 OK</status></propstat></response>\n");
 		}
 		if ( path.equals(HOME) && method.equals("PROPFIND") ) return listCalendars();
 		if ( gone && path.startsWith(CALENDAR) ) return new MockResponse.Builder().code(404).build();
@@ -256,8 +280,21 @@ public final class FakeCalDavServer {
 			if ( method.equals("DELETE") ) return deleteFromClient(name, headers);
 			return new MockResponse.Builder().code(405).build();
 		}
-		if ( method.equals("OPTIONS") ) return options();
+		if ( method.equals("OPTIONS") ) {
+			// Outside where DAV starts it is an ordinary web server
+			if ( path.startsWith(DAV_ROOT) ) return options();
+			return new MockResponse.Builder().code(200).addHeader("Allow", "OPTIONS, GET, HEAD").build();
+		}
 		return new MockResponse.Builder().code(404).build();
+	}
+
+	/** Any DAV resource says who is asking; the principal says that it is one. */
+	private static MockResponse whoAmI( String path ) {
+		if ( !path.startsWith(DAV_ROOT) ) return new MockResponse.Builder().code(404).build();
+		return multistatus("<response><href>" + path + "</href><propstat><prop>"
+				+ "<resourcetype><collection/>" + (path.equals(PRINCIPAL) ? "<principal/>" : "") + "</resourcetype>"
+				+ "<current-user-principal><href>" + PRINCIPAL + "</href></current-user-principal>"
+				+ "</prop><status>HTTP/1.1 200 OK</status></propstat></response>\n");
 	}
 
 	private static MockResponse options() {

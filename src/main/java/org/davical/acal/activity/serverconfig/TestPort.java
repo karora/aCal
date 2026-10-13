@@ -408,7 +408,7 @@ public class TestPort {
 			if ( doPropfindPrincipal(this.path) ) 								hasDAV = true;
 			else if ( !hasDAV && doPropfindPrincipal("/.well-known/caldav") )	hasDAV = true;
 			else if ( !hasDAV && doPropfindPrincipal("/") )						hasDAV = true;
-			setAchievement( this.hasDAV ? NO_DAV_RESPONSE : SERVER_SUPPORTS_DAV);
+			setAchievement( this.hasDAV ? SERVER_SUPPORTS_DAV : NO_DAV_RESPONSE);
 		}
 		if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGD,TAG, "DAV "+(hasDAV?"":"not")+" found on "+requestor.fullUrl());
 		return hasDAV;
@@ -450,8 +450,9 @@ public class TestPort {
 				if ( Constants.debugCheckServerDialog )
 					Log.println(Constants.LOGD,TAG,Log.getStackTraceString(e));
 			}
-			if ( this.hasCalDAV ) setAchievement(HAS_CALDAV);
 		}
+		// It may have been found already, when the port was first tried
+		if ( this.hasCalDAV ) setAchievement(HAS_CALDAV);
 		if ( Constants.debugCheckServerDialog ) Log.println(Constants.LOGI,TAG,
 				"CalDAV "+(hasCalDAV?"":"not")+" found on "+requestor.fullUrl());
 		return hasCalDAV;
