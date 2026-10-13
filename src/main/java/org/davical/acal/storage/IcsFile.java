@@ -44,6 +44,23 @@ public final class IcsFile {
 
 	private static final Pattern TZID_PARAM = Pattern.compile(";TZID=(\"?)([^\":;]+)\\1", Pattern.CASE_INSENSITIVE);
 
+	/**
+	 * The most text that splitting one file may come to.  Each event, task or
+	 * note gets its own copy of the timezones it mentions, so a file of many
+	 * small events and one large timezone comes to far more split up than it
+	 * was whole.  A real calendar of this size has tens of thousands of events.
+	 */
+	public static final int LARGEST_SPLIT = 16 * 1024 * 1024;
+
+	/** Thrown when a file would come to more than is allowed once it is split up. */
+	public static class TooLargeException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
+		public TooLargeException(String message) {
+			super(message);
+		}
+	}
+
 	private IcsFile() {
 	}
 
@@ -219,6 +236,14 @@ public final class IcsFile {
 	 *         mentions.  They are in the order they first appear.
 	 */
 	public static List<Item> split(String file) {
+		return split(file, LARGEST_SPLIT);
+	}
+
+	/**
+	 * @param limit the most characters all that is returned may come to
+	 * @throws TooLargeException if it would come to more
+	 */
+	static List<Item> split(String file, int limit) {
 		Map<String, Block> timezones = new LinkedHashMap<String, Block>();
 		Map<String, List<Block>> byUid = new LinkedHashMap<String, List<Block>>();
 
@@ -242,6 +267,7 @@ public final class IcsFile {
 		}
 
 		List<Item> items = new ArrayList<Item>();
+		long total = 0;
 		for ( List<Block> blocks : byUid.values() ) {
 			Set<String> mentioned = new LinkedHashSet<String>();
 			for ( Block block : blocks ) mentioned.addAll(block.timezonesMentioned());
@@ -255,6 +281,10 @@ public final class IcsFile {
 			for ( Block block : blocks ) block.appendTo(out);
 			end(out);
 
+			total += out.length();
+			if ( total > limit ) {
+				throw new TooLargeException("The calendar comes to more than " + limit + " characters once it is split up");
+			}
 			items.add(new Item(blocks.get(0).property("UID"), blocks.get(0).name, out.toString()));
 		}
 		return items;

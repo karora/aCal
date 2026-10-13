@@ -225,7 +225,7 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 	// ---- A copy of the calendar as a file, and a file brought in
 
 	/** A file bigger than this is not a calendar anyone keeps on a phone. */
-	private static final int LARGEST_IMPORT = 32 * 1024 * 1024;
+	private static final int LARGEST_IMPORT = 8 * 1024 * 1024;
 
 	private final ActivityResultLauncher<String> exportPicker = registerForActivityResult(
 			new ActivityResultContracts.CreateDocument("text/calendar"),
@@ -286,7 +286,7 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 					int got;
 					while ((got = in.read(buffer)) > 0) {
 						file.write(buffer, 0, got);
-						if (file.size() > LARGEST_IMPORT) throw new IOException("The file is too large");
+						if (file.size() > LARGEST_IMPORT) throw new IcsFile.TooLargeException("The file is too large");
 					}
 				}
 				List<IcsFile.Item> items = IcsFile.split(new String(file.toByteArray(), StandardCharsets.UTF_8));
@@ -298,6 +298,10 @@ public class CollectionConfiguration extends AcalAppCompatActivity implements On
 							.sendBlockingRequest(new RRImportItems(collectionId, items)).result();
 					message = getString(R.string.ImportedCounts, counts.added, counts.replaced, counts.unchanged);
 				}
+			}
+			catch (IcsFile.TooLargeException e) {
+				Log.w(TAG, "Not importing " + source + ": " + e.getMessage());
+				message = getString(R.string.ImportTooLarge);
 			}
 			catch (Exception e) {
 				Log.e(TAG, "Could not import " + source + " into collection " + collectionId, e);

@@ -229,6 +229,32 @@ public class IcsFileTest {
 		assertTrue(items.get(0).data.contains("UID:one\r\nDTSTAMP:20260101T000000Z\r\nSUMMARY:First\r\n"));
 	}
 
+	/**
+	 * Each event gets a copy of the timezone it mentions, so a small file of
+	 * many events and one big timezone would come to many times its size.
+	 */
+	@Test
+	public void aFileThatWouldGrowPastTheLimitWhenSplitIsRefused() {
+		StringBuilder bigZone = new StringBuilder("BEGIN:VTIMEZONE\r\nTZID:Made/Up\r\n");
+		for ( int i = 0; i < 200; i++ ) bigZone.append("X-PADDING:").append(i).append(" of a great many lines like this one\r\n");
+		bigZone.append("END:VTIMEZONE\r\n");
+
+		StringBuilder file = new StringBuilder("BEGIN:VCALENDAR\r\nVERSION:2.0\r\n").append(bigZone);
+		for ( int i = 0; i < 100; i++ ) file.append(event("event-" + i, "DTSTART;TZID=Made/Up:20260105T090000\r\n"));
+		file.append("END:VCALENDAR\r\n");
+
+		// It splits when there is room for a hundred copies of the timezone ...
+		assertEquals(100, IcsFile.split(file.toString(), 100 * (bigZone.length() + 400)).size());
+
+		// ... and not when there is only room for what the file itself holds
+		try {
+			IcsFile.split(file.toString(), 2 * file.length());
+			org.junit.Assert.fail("A file that grows fifty times over was split");
+		}
+		catch ( IcsFile.TooLargeException expected ) {
+		}
+	}
+
 	@Test
 	public void whatIsNotACalendarHoldsNothing() {
 		assertEquals(0, IcsFile.split("").size());

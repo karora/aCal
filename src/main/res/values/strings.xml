@@ -497,6 +497,7 @@
     <string name="ImportedCounts">Added: %1$d. Replaced: %2$d. Unchanged: %3$d.</string>
     <string name="ImportNothingFound">No events, tasks or notes were found in that file</string>
     <string name="ImportFailed">The file could not be imported</string>
+    <string name="ImportTooLarge">That file is too large to import</string>
     <!-- Changes the server refused, which are listed for the user to try again or discard -->
     <!-- In these, "it" is an event, a task or a note: which one is not known -->
     <string name="unsaved_title">Changes not saved</string>
