@@ -49,6 +49,11 @@ public abstract class DatabaseTableManager implements TableManager {
 	
 	private static final String TAG = "aCal DatabaseManager";
 
+	// Whether the transaction that is open, or was last, is to be kept, and
+	// how many changes had been noted when it began
+	private boolean txSuccessful = false;
+	private int changesBeforeTx = 0;
+
 	public abstract void dataChanged(ArrayList<DataChangeEvent> changes);
 	protected abstract String getTableName();
 	
@@ -172,7 +177,11 @@ public abstract class DatabaseTableManager implements TableManager {
 		if (Constants.debugDatabaseManager) Log.d(TAG, "Yield Called.");
 		if (db != null && inTx ) {
 			this.dbYielded = System.currentTimeMillis();
-			db.yieldIfContendedSafely();
+			if ( db.yieldIfContendedSafely() ) {
+				// What had been done was committed to let another thread in, and
+				// will stay done whatever becomes of the rest
+				changesBeforeTx = ( changes == null ? 0 : changes.size() );
+			}
 		}
 	}
 
@@ -181,6 +190,8 @@ public abstract class DatabaseTableManager implements TableManager {
 		if ( db == null ) throw new IllegalStateException("Tried to start Tx when database is not open!");
 		if ( inTx) throw new IllegalStateException("Tried to start Tx when already in TX");
 		inTx = true;
+		txSuccessful = false;
+		changesBeforeTx = ( changes == null ? 0 : changes.size() );
 		db.beginTransaction();
 	}
 
@@ -189,6 +200,7 @@ public abstract class DatabaseTableManager implements TableManager {
 		if ( !inTx ) throw new IllegalStateException("Tried to set Tx Successful when not in TX");
 		try {
 			db.setTransactionSuccessful();
+			txSuccessful = true;
 		}
 		catch( IllegalStateException e ) {
 			Log.println(Constants.LOGE, TAG,Log.getStackTraceString(e));
@@ -217,6 +229,11 @@ public abstract class DatabaseTableManager implements TableManager {
 			Log.println(Constants.LOGE, TAG,Log.getStackTraceString(e));
 		}
 		inTx = false;
+		if ( !txSuccessful && changes != null ) {
+			// What was done in it has been undone, so there is nothing to tell
+			// anyone of.  Told, the cache would show what is not there.
+			while( changes.size() > changesBeforeTx ) changes.remove(changes.size() - 1);
+		}
 	}
 
 	protected boolean doWeNeedADatabase(int type) {
