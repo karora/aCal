@@ -122,18 +122,10 @@ public class aCalService extends Service {
 			long uiStarted = inRequest.getLongExtra("UISTARTED", System.currentTimeMillis());
 			if ( serviceStartedAt > uiStarted ) return; // Not if everything just started!
 
-			// Tell the dataService to rebuild it's caches, just to be sure.
-			if ( Constants.LOG_DEBUG )
-				Log.i(TAG,"UI Started, requesting internal cache revalidation.");
-
 			// Only reset the worker if it appears to be hung.  Resetting a
 			// healthy worker mid-job leaves the old thread running its current
 			// job while the new thread starts on the queue.
 			if ( System.currentTimeMillis() > worker.getTimeOfNextAction() ) worker.resetWorker();
-
-			ServiceJob job = new SynchronisationJobs(SynchronisationJobs.CACHE_RESYNC);
-			job.TIME_TO_EXECUTE = 5000L;
-			worker.addJobAndWake(job);
 
 			// Start sync running for all active collections
 			SynchronisationJobs.startCollectionSync(worker, this, 25000L);
