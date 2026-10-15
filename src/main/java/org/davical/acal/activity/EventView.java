@@ -43,6 +43,7 @@ import org.davical.acal.acaltime.AcalDateTime;
 import org.davical.acal.acaltime.AcalDateTimeFormatter;
 import org.davical.acal.acaltime.AcalRepeatRule;
 import org.davical.acal.database.DataChangeEvent;
+import org.davical.acal.database.TableManager.QUERY_ACTION;
 import org.davical.acal.database.cachemanager.CacheObject;
 import org.davical.acal.database.resourcesmanager.ResourceChangedEvent;
 import org.davical.acal.database.resourcesmanager.ResourceChangedListener;
@@ -419,7 +420,13 @@ public class EventView extends AcalActivity implements  OnClickListener, Resourc
 	@Override
 	public void resourceChanged(ResourceChangedEvent event) {
 		for (DataChangeEvent dce: event.getChanges()) {
-			if (dce.getData().getAsLong(ResourceTableManager.RESOURCE_ID) == rid) {
+			Long changed = ( dce.getData() == null ? null : dce.getData().getAsLong(ResourceTableManager.RESOURCE_ID) );
+			if ( changed == null || changed != rid ) continue;
+			if ( dce.action == QUERY_ACTION.DELETE ) {
+				// Asking for it again would find nothing, and be told again that it has gone
+				mHandler.sendMessage(mHandler.obtainMessage(FAIL));
+			}
+			else {
 				//our data has changed!
 				this.event = null;
 				this.cacheObject = null;

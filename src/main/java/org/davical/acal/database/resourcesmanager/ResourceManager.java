@@ -185,7 +185,7 @@ public class ResourceManager implements Runnable, IResourceManager {
                         Log.println(Constants.LOGD, TAG, writeQueue.size()+" items in write queue.");
 
                     //process writes
-					CacheManager.setResourceInTx(context, true);
+					CacheManager.resourcesChanging(context);
 					while ( !writeQueue.isEmpty() ) {
 						final ResourceRequest request = writeQueue.poll();
 						if ( ResourceManager.DEBUG )
@@ -196,7 +196,7 @@ public class ResourceManager implements Runnable, IResourceManager {
 							Log.e(TAG, "Error processing write request: "+Log.getStackTraceString(e));
 						}
 					}
-					CacheManager.setResourceInTx(context, false);
+					CacheManager.resourcesChanged(context);
 				}
 			}
 			// do stuff
@@ -290,6 +290,7 @@ public class ResourceManager implements Runnable, IResourceManager {
 		public void deletePendingChange(long pendingId);
 		public void recordPendingAttempt(long pendingId, boolean refused, int status);
 		public void resolvePendingChange(long pendingId, boolean tryAgain);
+		public void forgetMissingResource(long resourceId);
 		public long addPending(long l, long m, String oldBlob, String newBlob, String uid);
 		public void updateCollection(long collectionId, ContentValues collectionData);
 
@@ -732,6 +733,29 @@ public class ResourceManager implements Runnable, IResourceManager {
 					if ( success ) setTxSuccessful();
 					endTx();
 				}
+				if ( openedInternally ) closeDB();
+			}
+		}
+
+
+		/**
+		 * Tell whatever keeps something of a resource that it is not here,
+		 * as if it had just been deleted, so that what is kept of it goes
+		 * too.  Nothing is said if it is here after all.
+		 */
+		public void forgetMissingResource(long resourceId) {
+			boolean openedInternally = doWeNeedADatabase(OPEN_WRITE);
+			boolean transactionInternally = doWeNeedATransaction();
+			try {
+				if ( getResource(resourceId) == null ) {
+					ContentValues gone = new ContentValues();
+					gone.put(RESOURCE_ID, resourceId);
+					this.addChange(new DataChangeEvent(QUERY_ACTION.DELETE, gone));
+				}
+				if ( transactionInternally ) setTxSuccessful();
+			}
+			finally {
+				if ( transactionInternally ) endTx();
 				if ( openedInternally ) closeDB();
 			}
 		}

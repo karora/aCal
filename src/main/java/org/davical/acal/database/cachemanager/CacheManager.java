@@ -13,6 +13,8 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
 import android.os.ConditionVariable;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -106,6 +108,9 @@ public class CacheManager implements Runnable, ResourceChangedListener, Resource
 
 	//Request Processor Instance
 	private CacheTableManager CTMinstance;
+
+	/** How many times resources have started changing, guarded by this class */
+	private static long resourceWritesStarted = 0;
 
 	private static Semaphore lockSem = new Semaphore(1, true);
 	private static volatile boolean lockdb = false;
@@ -255,7 +260,40 @@ public class CacheManager implements Runnable, ResourceChangedListener, Resource
 		lockdb = false;
 	}
 
-    public synchronized static void setResourceInTx(Context c, boolean inTxn) {
+	/**
+	 * Resources are about to change, and until the cache has caught up with
+	 * them it is marked as not to be trusted, so that it is made again from
+	 * the resources if the app stops before then.
+	 */
+	public synchronized static void resourcesChanging(Context c) {
+		resourceWritesStarted++;
+		writeClosedState(c, CLOSED_STATE_DIRTY);
+	}
+
+	/**
+	 * Resources have changed, and anything listening has been told.  The
+	 * cache is marked clean once it has done what it was told, which is when
+	 * a request queued now is processed, and only if no more resources have
+	 * started changing by then.  With no cache running nothing was told to
+	 * it, and it stays marked dirty.
+	 */
+	public synchronized static void resourcesChanged(Context c) {
+		if ( instance == null ) return;
+		final long writes = resourceWritesStarted;
+		final Context context = c;
+		instance.sendRequest(new CacheRequest() {
+			@Override
+			public void process(CacheTableManager processor) {
+				markCleanIfSettled(context, writes);
+			}
+		});
+	}
+
+	private synchronized static void markCleanIfSettled(Context c, long writes) {
+		if ( writes == resourceWritesStarted ) writeClosedState(c, CLOSED_STATE_CLEAN);
+	}
+
+	private static void writeClosedState(Context c, int closedState) {
 		ContentValues data = new ContentValues();
 		ContentResolver cr = c.getContentResolver();
 
@@ -274,8 +312,8 @@ public class CacheManager implements Runnable, ResourceChangedListener, Resource
 				DatabaseUtils.cursorRowToContentValues(cursor, data);
 				cursor.close();
 				cursor = null;
-				data.put(FIELD_CLOSED, (inTxn ? CLOSED_STATE_DIRTY : CLOSED_STATE_CLEAN));
-				if (!inTxn && instance != null) {
+				data.put(FIELD_CLOSED, closedState);
+				if (closedState == CLOSED_STATE_CLEAN && instance != null) {
 					data.put(FIELD_START, currentRange.start.getMillis());
 					data.put(FIELD_END, currentRange.end.getMillis());
 				}
@@ -283,9 +321,9 @@ public class CacheManager implements Runnable, ResourceChangedListener, Resource
 			}
 			else {
 				data = new ContentValues();
-				data.put(FIELD_CLOSED, (inTxn ? CLOSED_STATE_DIRTY : CLOSED_STATE_CLEAN));
+				data.put(FIELD_CLOSED, closedState);
 				data.put(FIELD_COUNT, 0);
-				if (!inTxn && instance != null) {
+				if (closedState == CLOSED_STATE_CLEAN && instance != null) {
 					data.put(FIELD_START, currentRange.start.getMillis());
 					data.put(FIELD_END, currentRange.end.getMillis());
 				}
@@ -313,6 +351,8 @@ public class CacheManager implements Runnable, ResourceChangedListener, Resource
 	 * Ensures that this classes closes properly. MUST be called before it is terminated
 	 */
 	public void close() {
+		// Closed already, and another may have taken its place since
+		if ( workerThread == null ) return;
 		this.running = false;
 		//Keep waking worker thread until it dies
 		while (workerThread.isAlive()) {
@@ -414,7 +454,13 @@ public class CacheManager implements Runnable, ResourceChangedListener, Resource
 
 		if ( closedState == CLOSED_STATE_DIRTY ) {
 			Log.println(Constants.LOGI,TAG, "Application not closed correctly last time. Resetting cache.");
-			Toast.makeText(context, "Rebuilding cache - It may take some time before events are visible.",Toast.LENGTH_LONG).show();
+			// The cache may be first wanted on a thread that cannot show a toast
+			new Handler(Looper.getMainLooper()).post(new Runnable() {
+				@Override
+				public void run() {
+					Toast.makeText(context, "Rebuilding cache - It may take some time before events are visible.",Toast.LENGTH_LONG).show();
+				}
+			});
 			this.CTMinstance.clearCache();
 			data.put(FIELD_COUNT, 0);
             start = defaultWindow.getMillis();

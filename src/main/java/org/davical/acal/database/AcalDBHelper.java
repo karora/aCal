@@ -112,7 +112,7 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 	/**
 	 * The version of this database. Used to determine if an upgrade is required.
 	 */
-	public static final int DB_VERSION = 27;
+	public static final int DB_VERSION = 28;
 
 	/**
 	 * The oldest version there is an upgrade from.  The application id changed
@@ -181,6 +181,15 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 			"INSERT INTO dav_server (friendly_name, active, backend_type)"
 			+" SELECT 'This phone', 1, 1"
 			+" WHERE NOT EXISTS (SELECT 1 FROM dav_server WHERE backend_type = 1)";
+
+	/**
+	 * <p>Version 28 has the cache of events made again from the resources.
+	 * Until then it was marked as safe once resources had been written,
+	 * whether or not it had caught up with them, and kept rows for events
+	 * that had since gone: opened, these said they had been changed or
+	 * deleted, and no sync took them away.</p>
+	 */
+	public static final String REMAKE_CACHE_SQL = "UPDATE event_cache_meta SET closed = 0";
 
 	/**
 	 * <p>The dav_path_set table holds the paths which are collections containing
@@ -522,6 +531,11 @@ public class AcalDBHelper extends SQLiteOpenHelper {
 			Log.i(TAG,"Updating database from version " + oldVersion);
 			oldVersion++;
 			db.execSQL(ENSURE_LOCAL_ACCOUNT_SQL);
+		}
+		if (oldVersion == 27) {
+			Log.i(TAG,"Updating database from version " + oldVersion);
+			oldVersion++;
+			db.execSQL(REMAKE_CACHE_SQL);
 		}
 
 		if ( oldVersion != newVersion )

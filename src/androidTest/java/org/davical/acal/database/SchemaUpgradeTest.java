@@ -74,6 +74,7 @@ public class SchemaUpgradeTest {
 				"data", EVENT, "effective_type", "VEVENT");
 		boolean hadPending = insert(old, "pending_change", "collection_id", 1, "resource_id", 1,
 				"old_data", EVENT, "new_data", EVENT.replace("SUMMARY:One", "SUMMARY:Changed"), "uid", "one@example.net");
+		old.execSQL("UPDATE event_cache_meta SET closed = 1");
 		old.close();
 
 		TestDatabase.asIfRestarted();
@@ -104,6 +105,9 @@ public class SchemaUpgradeTest {
 				assertEquals("A change not yet sent exists nowhere else", 1, TestDatabase.count(db, "pending_change",
 						"resource_id = 1 AND uid = 'one@example.net' AND new_data LIKE '%SUMMARY:Changed%' AND state = 0"));
 			}
+			assertEquals("The cache may hold events that have gone, so it is to be made again", 1,
+					TestDatabase.count(db, "event_cache_meta", "closed = 0"));
+			assertEquals(1, TestDatabase.count(db, "event_cache_meta", null));
 		}
 		finally {
 			db.close();

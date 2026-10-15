@@ -7,6 +7,7 @@ import android.util.Log;
 
 import org.davical.acal.Constants;
 import org.davical.acal.database.cachemanager.CacheObject;
+import org.davical.acal.database.resourcesmanager.ResourceManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.ReadOnlyResourceTableManager;
 import org.davical.acal.database.resourcesmanager.ResourceManager.ResourceTableManager;
 import org.davical.acal.database.resourcesmanager.ResourceProcessingException;
@@ -57,6 +58,11 @@ public class RRRequestInstance extends ReadOnlyResourceRequestWithResponse<Calen
 				}
 			}
 			if (!isProcessed()) {
+				if ( cv.isEmpty() ) {
+					// Whatever pointed here, such as a row in the cache, is out of date
+					ResourceManager.getInstance(processor.getContext()).sendRequest(new RRForgetMissingResource(rid));
+					throw new Exception("Resource "+rid+" is not there.");
+				}
 				Resource res = Resource.fromContentValues(cv.get(0));
 				CalendarInstance ci = CalendarInstance.fromResourceAndRRId(res, rrid);
 				this.postResponse(new RRRequestInstanceResponse(ci));
